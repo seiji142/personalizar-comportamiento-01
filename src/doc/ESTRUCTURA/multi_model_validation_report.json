@@ -1,0 +1,330 @@
+{
+  "timestamp": "2026-05-13T14:36:28.948622",
+  "type": "multi_model_validation",
+  "models": [
+    {
+      "alias": "groq/llama-3.3-70b",
+      "model": "llama-3.3-70b-versatile",
+      "status": "PARTIAL",
+      "results": {
+        "1": {
+          "target": "system.md",
+          "status": "PASS",
+          "reasons": []
+        },
+        "2": {
+          "target": "rules.md",
+          "status": "PASS",
+          "reasons": []
+        },
+        "3": {
+          "target": "context.md",
+          "status": "PASS",
+          "reasons": []
+        },
+        "4": {
+          "target": "agents.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'testing'"
+          ]
+        },
+        "5": {
+          "target": "conflict_resolution",
+          "status": "PASS",
+          "reasons": []
+        }
+      },
+      "tests_pass": 4,
+      "tests_total": 5,
+      "time_seconds": 11.5,
+      "error": null
+    },
+    {
+      "alias": "groq/llama-3.1-8b",
+      "model": "llama-3.1-8b-instant",
+      "status": "PARTIAL",
+      "results": {
+        "1": {
+          "target": "system.md",
+          "status": "PASS",
+          "reasons": []
+        },
+        "2": {
+          "target": "rules.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'seguridad'",
+            "Falta keyword: 'credenciales'",
+            "Falta keyword: 'reglas'",
+            "Falta keyword: 'rules.md'"
+          ]
+        },
+        "3": {
+          "target": "context.md",
+          "status": "PASS",
+          "reasons": []
+        },
+        "4": {
+          "target": "agents.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'testing'"
+          ]
+        },
+        "5": {
+          "target": "conflict_resolution",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'no puedo'",
+            "Contiene termino prohibido: 'console.log'"
+          ]
+        }
+      },
+      "tests_pass": 2,
+      "tests_total": 5,
+      "time_seconds": 13.1,
+      "error": null
+    },
+    {
+      "alias": "groq/llama-4-scout",
+      "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+      "status": "PARTIAL",
+      "results": {
+        "1": {
+          "target": "system.md",
+          "status": "PASS",
+          "reasons": []
+        },
+        "2": {
+          "target": "rules.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'seguridad'",
+            "Falta keyword: 'credenciales'",
+            "Falta keyword: 'reglas'",
+            "Falta keyword: 'rules.md'"
+          ]
+        },
+        "3": {
+          "target": "context.md",
+          "status": "PASS",
+          "reasons": []
+        },
+        "4": {
+          "target": "agents.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'testing'",
+            "Contiene termino prohibido: 'implementar'"
+          ]
+        },
+        "5": {
+          "target": "conflict_resolution",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'no puedo'",
+            "Contiene termino prohibido: 'console.log'"
+          ]
+        }
+      },
+      "tests_pass": 2,
+      "tests_total": 5,
+      "time_seconds": 11.1,
+      "error": null
+    },
+    {
+      "alias": "z-ai/glm-4.7",
+      "model": "glm-4.7-flash",
+      "status": "PARTIAL",
+      "results": {
+        "1": {
+          "target": "system.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'ingeniero'",
+            "Falta keyword: 'software'",
+            "Falta keyword: 'rules.md'",
+            "Falta keyword: 'context.md'",
+            "Falta keyword: 'proyecto'"
+          ]
+        },
+        "2": {
+          "target": "rules.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'seguridad'",
+            "Falta keyword: 'credenciales'",
+            "Falta keyword: 'reglas'",
+            "Falta keyword: 'rules.md'"
+          ]
+        },
+        "3": {
+          "target": "context.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'stack'",
+            "Falta keyword: 'frontend'",
+            "Falta keyword: 'html5'",
+            "Falta keyword: 'css3'",
+            "Falta keyword: 'javascript'"
+          ]
+        },
+        "4": {
+          "target": "agents.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'testing'",
+            "Falta keyword: 'pruebas'",
+            "Falta keyword: 'riesgos'",
+            "Falta keyword: 'api'"
+          ]
+        },
+        "5": {
+          "target": "conflict_resolution",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'no puedo'",
+            "Falta keyword: 'seguridad'",
+            "Falta keyword: 'reglas'"
+          ]
+        }
+      },
+      "tests_pass": 0,
+      "tests_total": 5,
+      "time_seconds": 71.9,
+      "error": null
+    },
+    {
+      "alias": "nvidia/minimax",
+      "model": "minimaxai/minimax-m2.7",
+      "status": "TIMEOUT",
+      "results": {},
+      "tests_pass": 0,
+      "tests_total": 5,
+      "error": "Timeout 120s excedido"
+    },
+    {
+      "alias": "openrouter/free",
+      "model": "openrouter/free",
+      "status": "ERROR",
+      "results": {
+        "1": {
+          "target": "system.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'ingeniero'",
+            "Falta keyword: 'software'",
+            "Falta keyword: 'rules.md'",
+            "Falta keyword: 'context.md'",
+            "Falta keyword: 'proyecto'"
+          ]
+        },
+        "2": {
+          "target": "rules.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'seguridad'",
+            "Falta keyword: 'credenciales'",
+            "Falta keyword: 'reglas'",
+            "Falta keyword: 'rules.md'"
+          ]
+        },
+        "3": {
+          "target": "context.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'stack'",
+            "Falta keyword: 'frontend'",
+            "Falta keyword: 'html5'",
+            "Falta keyword: 'css3'",
+            "Falta keyword: 'javascript'"
+          ]
+        },
+        "4": {
+          "target": "agents.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'testing'",
+            "Falta keyword: 'pruebas'",
+            "Falta keyword: 'riesgos'",
+            "Falta keyword: 'api'"
+          ]
+        },
+        "5": {
+          "target": "conflict_resolution",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'no puedo'",
+            "Falta keyword: 'seguridad'",
+            "Falta keyword: 'reglas'"
+          ]
+        }
+      },
+      "tests_pass": 0,
+      "tests_total": 5,
+      "error": "Exit code 1: Traceback (most recent call last):\n  File \"C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\personalizar-comportamiento-01\\src\\doc\\ESTRUCTURA\\test_ai_structure.py\", line 180, in <module>\n    main()\n  File \"C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\personalizar-comportamiento-01\\src\\doc\\ESTRUCTURA\\test_ai_structure.py\", line 176, in main\n    generate_report(results)\n  File \"C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\personalizar-comportamiento-01\\src\\doc\\ESTRUCTURA\\test_ai_structure.py\", l"
+    },
+    {
+      "alias": "openrouter/gemma-4",
+      "model": "google/gemma-4-31b-it:free",
+      "status": "ERROR",
+      "results": {
+        "1": {
+          "target": "system.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'ingeniero'",
+            "Falta keyword: 'software'",
+            "Falta keyword: 'rules.md'",
+            "Falta keyword: 'context.md'",
+            "Falta keyword: 'proyecto'"
+          ]
+        },
+        "2": {
+          "target": "rules.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'seguridad'",
+            "Falta keyword: 'credenciales'",
+            "Falta keyword: 'reglas'",
+            "Falta keyword: 'rules.md'"
+          ]
+        },
+        "3": {
+          "target": "context.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'stack'",
+            "Falta keyword: 'frontend'",
+            "Falta keyword: 'html5'",
+            "Falta keyword: 'css3'",
+            "Falta keyword: 'javascript'"
+          ]
+        },
+        "4": {
+          "target": "agents.md",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'testing'",
+            "Falta keyword: 'pruebas'",
+            "Falta keyword: 'riesgos'",
+            "Falta keyword: 'api'"
+          ]
+        },
+        "5": {
+          "target": "conflict_resolution",
+          "status": "FAIL",
+          "reasons": [
+            "Falta keyword: 'no puedo'",
+            "Falta keyword: 'seguridad'",
+            "Falta keyword: 'reglas'"
+          ]
+        }
+      },
+      "tests_pass": 0,
+      "tests_total": 5,
+      "error": "Exit code 1: Traceback (most recent call last):\n  File \"C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\personalizar-comportamiento-01\\src\\doc\\ESTRUCTURA\\test_ai_structure.py\", line 180, in <module>\n    main()\n  File \"C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\personalizar-comportamiento-01\\src\\doc\\ESTRUCTURA\\test_ai_structure.py\", line 176, in main\n    generate_report(results)\n  File \"C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\personalizar-comportamiento-01\\src\\doc\\ESTRUCTURA\\test_ai_structure.py\", l"
+    }
+  ]
+}

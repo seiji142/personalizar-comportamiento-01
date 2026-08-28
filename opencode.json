@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "groq/llama-3.3-70b-versatile",
+  "provider": {
+    "groq": {
+      "models": {
+        "llama-3.3-70b-versatile": {
+          "options": {
+            "temperature": 0.7,
+            "max_tokens": 4000
+          }
+        }
+      }
+    }
+  },
+  "instructions": [
+    ".ai/system.md",
+    ".ai/rules.md",
+    ".ai/context.md",
+    ".ai/agents.md"
+  ]
+}
