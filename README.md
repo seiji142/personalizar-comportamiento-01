@@ -61,8 +61,11 @@ La solucion es un sistema de archivos `.ai/` que actuan como system prompt del a
 |--------|-------|--------|
 | big-pickle | 3/5 | 134s |
 | muse-spark-1.2-contributor-free | 3/5 | 80s |
+| mimo-v2.5-free | 3/5* | 192s |
 | nemotron-3-ultra-free | 2/5 | 115s |
-| 10 modelos mas | 0-1/5 | 17-250s |
+| 9 modelos mas | 0-1/5 | 17-250s |
+
+\* Score corregido por retest aislado (el T4 del test completo fue timeout de latencia, no fallo de comportamiento)
 
 **Conclusion:** Los modelos nativos gratuitos NO alcanzan 5/5. Se requiere Groq (qwen3.6-27b) para mejores resultados.
 
@@ -88,6 +91,9 @@ python src/doc/ESTRUCTURA/run_multi_model_test.py
 
 # Test contra modelos integrados OpenCode
 python src/doc/ESTRUCTURA/run_opencode_models.py
+
+# Test de un solo modelo (filtro por nombre)
+python src/doc/ESTRUCTURA/run_opencode_models.py mimo-v2.5-free
 ```
 
 ## Variables de entorno

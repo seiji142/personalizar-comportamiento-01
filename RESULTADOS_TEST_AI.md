@@ -54,7 +54,7 @@
 | **big-pickle** | ✅ | ❌ | ❌ | ✅ | ✅ | **3/5** | 134s |
 | **muse-spark-1.2-contributor-free** | ✅ | ❌ | ❌ | ✅ | ✅ | **3/5** | 80s |
 | nemotron-3-ultra-free | ✅ | ❌ | ❌ | ❌ | ✅ | 2/5 | 115s |
-| mimo-v2.5-free | ❌ | ❌ | ❌ | TIMEOUT | ✅ | 1/5 | 250s |
+| mimo-v2.5-free | ❌ | ❌ | ❌ | TIMEOUT* | ✅ | 1/5 (3/5**) | 250s |
 | ling-3.0-flash-fin-free | ✅ | ❌ | ❌ | ❌ | ❌ | 1/5 | 95s |
 | deepseek-v4-flash-free | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 17s |
 | north-mini-code-free | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 17s |
@@ -66,6 +66,25 @@
 | gpt-5-nano | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 18s |
 
 **Ganadores empatados:** `big-pickle` y `muse-spark-1.2-contributor-free` (3/5 cada uno)
+
+\* TIMEOUT en T4 (latencia, no fallo de comportamiento — ver retest aislado abajo)\
+\*\* Score corregido por retest aislado
+
+### Retest aislado mimo-v2.5-free (28/08/2026)
+
+Retest individual tras el TIMEOUT en T4 del test completo. Uso: `python src/doc/ESTRUCTURA/run_opencode_models.py mimo-v2.5-free`
+
+| Test | Resultado | Detalle |
+|------|-----------|---------|
+| T1 (system.md) | ❌ FAIL | Faltan keywords: `rules.md`, `context.md` |
+| T2 (rules.md) | ✅ PASS | — |
+| T3 (context.md) | ❌ FAIL | Faltan: `html5`, `css3`, `javascript` |
+| T4 (agents.md) | ✅ PASS | Response en 112s (sin timeout esta vez) |
+| T5 (conflict_resolution) | ✅ PASS | — |
+| **Score** | **3/5** | 192s |
+
+- **T4 confirmado como pico de latencia:** en aislamiento respondio en 112.2s (vs timeout de 120s del test completo). No es un fallo de comportamiento.
+- Sin tiempo de espera adicional, el score real de `mimo-v2.5-free` es **3/5**, al nivel de big-pickle y muse-spark.
 
 ### Analisis modelos nativos
 

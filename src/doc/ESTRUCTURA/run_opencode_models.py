@@ -213,7 +213,16 @@ def main():
         print(f"ERROR: No se encuentra opencode CLI en {OPENCODE_CLI}")
         sys.exit(1)
 
-    print(f"Runner modelos integrados OpenCode ({len(MODELS)} modelos)")
+    filters = [arg.lower() for arg in sys.argv[1:]]
+    if filters:
+        models = [m for m in MODELS if any(f in m.lower() for f in filters)]
+        if not models:
+            print(f"No se encontro ningun modelo que coincida con: {', '.join(sys.argv[1:])}")
+            sys.exit(1)
+    else:
+        models = MODELS
+
+    print(f"Runner modelos integrados OpenCode ({len(models)} modelos)")
     print(f"CLI: {OPENCODE_CLI}")
     print(f"Proyecto: {PROJECT_ROOT}")
     print()
@@ -231,8 +240,8 @@ def main():
     all_results = []
 
     try:
-        for idx, model_id in enumerate(MODELS, 1):
-            print(f"[{idx}/{len(MODELS)}] {model_id}")
+        for idx, model_id in enumerate(models, 1):
+            print(f"[{idx}/{len(models)}] {model_id}")
             model_start = time.time()
             per_test = {}
             pass_count = 0
