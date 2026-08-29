@@ -47,6 +47,33 @@
 |--------|-------|
 | z-ai/glm-4.7 | No procesa system prompts en espanol correctamente |
 
+### Test modelos nativos OpenCode Zen (13 modelos gratuitos)
+
+| Modelo | T1 | T2 | T3 | T4 | T5 | Score | Tiempo |
+|--------|----|----|----|----|----|----|--------|
+| **big-pickle** | ✅ | ❌ | ❌ | ✅ | ✅ | **3/5** | 134s |
+| **muse-spark-1.2-contributor-free** | ✅ | ❌ | ❌ | ✅ | ✅ | **3/5** | 80s |
+| nemotron-3-ultra-free | ✅ | ❌ | ❌ | ❌ | ✅ | 2/5 | 115s |
+| mimo-v2.5-free | ❌ | ❌ | ❌ | TIMEOUT | ✅ | 1/5 | 250s |
+| ling-3.0-flash-fin-free | ✅ | ❌ | ❌ | ❌ | ❌ | 1/5 | 95s |
+| deepseek-v4-flash-free | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 17s |
+| north-mini-code-free | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 17s |
+| mimo-v2-pro-free | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 17s |
+| mimo-v2-omni-free | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 17s |
+| qwen3.6-plus-free | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 17s |
+| nemotron-3-super-free | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 17s |
+| minimax-m2.5-free | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 17s |
+| gpt-5-nano | ❌ | ❌ | ❌ | ❌ | ❌ | 0/5 | 18s |
+
+**Ganadores empatados:** `big-pickle` y `muse-spark-1.2-contributor-free` (3/5 cada uno)
+
+### Analisis modelos nativos
+
+- **Ningun modelo gratuito alcanza 5/5** — Todos fallan T2 (rules.md) y T3 (context.md)
+- Los modelos que pasan T1 (identidad) son: big-pickle, nemotron-3-ultra-free, ling-3.0-flash-fin-free, muse-spark-1.2-contributor-free
+- Los modelos que pasan T5 (hard constraint) son: big-pickle, nemotron-3-ultra-free, mimo-v2.5-free, muse-spark-1.2-contributor-free
+- **Conclucion:** Los modelos nativos gratuitos NO son suficientes para este proyecto. Se requiere un modelo de pago (Groq) para obtener 4/5+
+
 ## Herramientas de validacion
 
 | Script | Funcion |

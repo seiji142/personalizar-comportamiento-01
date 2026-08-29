@@ -47,15 +47,24 @@ La solucion es un sistema de archivos `.ai/` que actuan como system prompt del a
 
 ## Resultados de validacion
 
-**4/5 PASS** — groq/qwen3.6-27b (mejor modelo en test multi-modelo 28/08/2026)
+**4/5 PASS** — groq/qwen3.6-27b (mejor modelo en test multi-modelo API 28/08/2026)
 
 | Modelo | Score | Causa de fallo |
 |--------|-------|----------------|
 | **groq/qwen3.6-27b** | **4/5** | T4: keyword literal (QA vs testing) |
 | groq/qwen3.8-27b | 2/5 | Falta rules.md, reglas, context.md |
 | groq/gpt-oss-20b | 1/5 | Solo pasa T3 (context.md) |
-| groq/llama-3.3-70b | 0/5 | Error de conexion |
-| z-ai/glm-4.7 | 0/5 | No procesa system prompts en espanol |
+
+### Modelos nativos OpenCode Zen (gratuitos)
+
+| Modelo | Score | Tiempo |
+|--------|-------|--------|
+| big-pickle | 3/5 | 134s |
+| muse-spark-1.2-contributor-free | 3/5 | 80s |
+| nemotron-3-ultra-free | 2/5 | 115s |
+| 10 modelos mas | 0-1/5 | 17-250s |
+
+**Conclusion:** Los modelos nativos gratuitos NO alcanzan 5/5. Se requiere Groq (qwen3.6-27b) para mejores resultados.
 
 Ver `RESULTADOS_TEST_AI.md` para el analisis completo.
 

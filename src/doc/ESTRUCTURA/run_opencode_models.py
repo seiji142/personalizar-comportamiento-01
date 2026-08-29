@@ -18,15 +18,21 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 OPENCODE_CLI = os.path.join(os.environ.get("LOCALAPPDATA", ""), "opencode", "opencode-cli.exe")
 REPORT_FILE = "opencode_models_report.json"
 
-# Modelos integrados gratuitos de OpenCode (sin API key externa)
+# Modelos gratuitos actuales de OpenCode Zen (28/08/2026)
 MODELS = [
     "opencode/big-pickle",
-    "opencode/minimax-m2.7-free",
-    "opencode/gpt-5-nano",
-    "opencode/kimi-k2.5-free",
-    "opencode/glm-5-free",
+    "opencode/deepseek-v4-flash-free",
+    "opencode/mimo-v2.5-free",
+    "opencode/north-mini-code-free",
+    "opencode/nemotron-3-ultra-free",
+    "opencode/mimo-v2-pro-free",
+    "opencode/mimo-v2-omni-free",
+    "opencode/qwen3.6-plus-free",
+    "opencode/nemotron-3-super-free",
     "opencode/minimax-m2.5-free",
-    "opencode/ring-2.6-1t-free",
+    "opencode/gpt-5-nano",
+    "opencode/ling-3.0-flash-fin-free",
+    "opencode/muse-spark-1.2-contributor-free",
 ]
 
 # 5 tests: mismo schema que agent_questions.json
