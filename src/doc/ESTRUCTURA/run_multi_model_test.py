@@ -17,49 +17,31 @@ TEST_SCRIPT = os.path.join(PROJECT_ROOT, "src", "doc", "ESTRUCTURA", "test_ai_st
 REPORT_FILE = "ai_validation_report.json"
 MULTI_REPORT = "multi_model_validation_report.json"
 
-# Modelos a probar
+# Modelos verificados (fuente: Verificacion-modelos-ai/models_list.json)
 MODELS = [
     {
-        "alias": "groq/llama-3.3-70b",
+        "alias": "groq/qwen3.8-27b",
         "base_url": "https://api.groq.com/openai/v1",
         "api_key_env": "GROQ_API_KEY",
-        "model_id": "llama-3.3-70b-versatile"
+        "model_id": "qwen/qwen3.8-27b"
     },
     {
-        "alias": "groq/llama-3.1-8b",
+        "alias": "groq/qwen3.6-27b",
         "base_url": "https://api.groq.com/openai/v1",
         "api_key_env": "GROQ_API_KEY",
-        "model_id": "llama-3.1-8b-instant"
+        "model_id": "qwen/qwen3.6-27b"
     },
     {
-        "alias": "groq/llama-4-scout",
+        "alias": "groq/gpt-oss-20b",
         "base_url": "https://api.groq.com/openai/v1",
         "api_key_env": "GROQ_API_KEY",
-        "model_id": "meta-llama/llama-4-scout-17b-16e-instruct"
+        "model_id": "openai/gpt-oss-20b"
     },
     {
         "alias": "z-ai/glm-4.7",
         "base_url": "https://api.z.ai/api/paas/v4",
         "api_key_env": "ZAI_API_KEY",
         "model_id": "glm-4.7-flash"
-    },
-    {
-        "alias": "nvidia/minimax",
-        "base_url": "https://integrate.api.nvidia.com/v1",
-        "api_key_env": "NVIDIA_API_KEY",
-        "model_id": "minimaxai/minimax-m2.7"
-    },
-    {
-        "alias": "openrouter/free",
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_env": "OPENROUTER_API_KEY",
-        "model_id": "openrouter/free"
-    },
-    {
-        "alias": "openrouter/gemma-4",
-        "base_url": "https://openrouter.ai/api/v1",
-        "api_key_env": "OPENROUTER_API_KEY",
-        "model_id": "google/gemma-4-31b-it:free"
     }
 ]
 
