@@ -130,7 +130,7 @@ def generate_report(results):
     for r in results:
         status_icon = "PASS" if r["status"] == "PASS" else ("ERROR" if r["status"] == "ERROR" else "FAIL")
         print(f"  Test {r['id']} ({r['target']}) -> {status_icon} | {r['description']}")
-        if r["reasons"]:
+        if r.get("reasons"):
             for reason in r["reasons"]:
                 print(f"    - {reason}")
         if r["status"] == "ERROR":

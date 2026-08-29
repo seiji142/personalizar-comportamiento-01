@@ -47,15 +47,15 @@ La solucion es un sistema de archivos `.ai/` que actuan como system prompt del a
 
 ## Resultados de validacion
 
-**5/5 PASS** — DeepSeek V4 Flash (configuracion actual de OpenCode)
+**4/5 PASS** — groq/qwen3.6-27b (mejor modelo en test multi-modelo 28/08/2026)
 
 | Modelo | Score | Causa de fallo |
 |--------|-------|----------------|
-| DeepSeek V4 Flash | 5/5 | — |
-| groq/llama-3.3-70b-versatile | 4/5 | Keyword literal (QA vs testing) |
-| opencode/big-pickle | ~4/5 | Ignora parte del system prompt |
-| groq/llama-3.1-8b-instant | 2/5 | Safety training generico |
-| opencode/minimax-m2.5-free | 2/5 | Ignora system prompt + lento |
+| **groq/qwen3.6-27b** | **4/5** | T4: keyword literal (QA vs testing) |
+| groq/qwen3.8-27b | 2/5 | Falta rules.md, reglas, context.md |
+| groq/gpt-oss-20b | 1/5 | Solo pasa T3 (context.md) |
+| groq/llama-3.3-70b | 0/5 | Error de conexion |
+| z-ai/glm-4.7 | 0/5 | No procesa system prompts en espanol |
 
 Ver `RESULTADOS_TEST_AI.md` para el analisis completo.
 
@@ -88,7 +88,7 @@ Copiar `.env.template` a `.env` y completar:
 ```env
 LLM_API_KEY=tu_api_key_de_groq
 LLM_BASE_URL=https://api.groq.com/openai/v1
-LLM_MODEL=llama-3.3-70b-versatile
+LLM_MODEL=qwen/qwen3.6-27b
 ```
 
 ## Licencia
