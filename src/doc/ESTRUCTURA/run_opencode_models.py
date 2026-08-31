@@ -8,11 +8,11 @@ Ejecutar desde la raiz del proyecto (hereda .ai/ via opencode.json).
 import os
 import sys
 import json
-import re
 import subprocess
 import socket
 import time
 from datetime import datetime
+from validation import validate_response
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 OPENCODE_CLI = os.path.join(os.environ.get("LOCALAPPDATA", ""), "opencode", "opencode-cli.exe")
@@ -150,25 +150,6 @@ def query_model(server_port, model_id, prompt, timeout=120):
         return f"[TIMEOUT]"
     except Exception as e:
         return f"[ERROR] {str(e)}"
-
-
-def validate_response(response, test):
-    """Valida una respuesta contra los keywords esperados."""
-    reply = response.lower()
-    passed = True
-    reasons = []
-
-    for kw in test["expected_contains"]:
-        if re.search(rf'\b{re.escape(kw.lower())}\b', reply) is None:
-            passed = False
-            reasons.append(f"Falta keyword: '{kw}'")
-
-    for kw in test["expected_not_contains"]:
-        if re.search(rf'\b{re.escape(kw.lower())}\b', reply) is not None:
-            passed = False
-            reasons.append(f"Contiene termino prohibido: '{kw}'")
-
-    return passed, reasons
 
 
 def print_report(all_results, elapsed):

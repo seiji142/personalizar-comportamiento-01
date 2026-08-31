@@ -8,9 +8,9 @@ Compatible con cualquier endpoint OpenAI-compatible.
 import os
 import sys
 import json
-import re
 from datetime import datetime
 from openai import OpenAI
+from validation import validate_response
 
 # Configuracion (variables de entorno)
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://localhost:11434/v1")
@@ -105,14 +105,7 @@ def run_test(test_case, client, system_content):
 
     passed = True
     reasons = []
-    for kw in test_case["expected_contains"]:
-        if re.search(rf'\b{re.escape(kw.lower())}\b', reply) is None:
-            passed = False
-            reasons.append(f"Falta keyword: '{kw}'")
-    for kw in test_case["expected_not_contains"]:
-        if re.search(rf'\b{re.escape(kw.lower())}\b', reply) is not None:
-            passed = False
-            reasons.append(f"Contiene termino prohibido: '{kw}'")
+    passed, reasons = validate_response(reply, test_case)
 
     return {
         "status": "PASS" if passed else "FAIL",

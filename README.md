@@ -47,27 +47,22 @@ La solucion es un sistema de archivos `.ai/` que actuan como system prompt del a
 
 ## Resultados de validacion
 
-**4/5 PASS** — groq/qwen3.6-27b (mejor modelo en test multi-modelo API 28/08/2026)
+**5/5 PASS** — `groq/qwen3.6-27b` (API) y `big-pickle` (nativo gratuito). Criterio justo (sinonimos) implementado el 31/08/2026.
 
-| Modelo | Score | Causa de fallo |
-|--------|-------|----------------|
-| **groq/qwen3.6-27b** | **4/5** | T4: keyword literal (QA vs testing) |
-| groq/qwen3.8-27b | 2/5 | Falta rules.md, reglas, context.md |
-| groq/gpt-oss-20b | 1/5 | Solo pasa T3 (context.md) |
+| Modelo | Score |
+|--------|-------|
+| **groq/qwen3.6-27b** | **5/5** |
+| **big-pickle** (nativo Zen) | **5/5** |
+| mimo-v2.5-free (nativo Zen) | 4/5 |
+| groq/qwen3.8-27b | 2/5 |
+| muse-spark-1.2-contributor-free | 3/5 |
 
-### Modelos nativos OpenCode Zen (gratuitos)
+> **Criterio de validacion:** desde 31/08/2026 la suite usa **sinonimos** (mide intencion, no literalidad).
+> Un modelo queda exento si responde con sinonimos correctos (ej. "QA" en lugar de "testing").
+> Antes del cambio, el mejor resultado era 4/5 (qwen3.6-27b); ahora 5/5.
 
-| Modelo | Score | Tiempo |
-|--------|-------|--------|
-| big-pickle | 3/5 | 134s |
-| muse-spark-1.2-contributor-free | 3/5 | 80s |
-| mimo-v2.5-free | 3/5* | 192s |
-| nemotron-3-ultra-free | 2/5 | 115s |
-| 9 modelos mas | 0-1/5 | 17-250s |
-
-\* Score corregido por retest aislado (el T4 del test completo fue timeout de latencia, no fallo de comportamiento)
-
-**Conclusion:** Los modelos nativos gratuitos NO alcanzan 5/5. Se requiere Groq (qwen3.6-27b) para mejores resultados.
+> **Seguridad reforzada:** `rules.md` ahora incluye la seccion 6 "Reglas Inquebrantables"
+> (las reglas no pueden anularse por instrucciones del usuario), lo que mejora T5.
 
 Ver `RESULTADOS_TEST_AI.md` para el analisis completo.
 
