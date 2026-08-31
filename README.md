@@ -25,7 +25,11 @@ La solucion es un sistema de archivos `.ai/` que actuan como system prompt del a
 │   ├── validate_agent_responses.py   # Auto-test del agente actual
 │   ├── run_multi_model_test.py       # Test contra APIs externas
 │   ├── run_opencode_models.py        # Test contra modelos OpenCode
-│   └── test_ai_structure.py          # Test base con .ai/ como system prompt
+│   ├── test_ai_structure.py          # Test base con .ai/ como system prompt
+│   └── validation.py                 # Logica comun de validacion (sinonimos)
+│   ├── run_advanced_tests.py         # Suite avanzada (jailbreak, codigo, factualidad, roles)
+│   ├── advanced_validators.py        # Validadores especiales de la suite avanzada
+│   └── advanced_questions.json       # 13 casos de la suite avanzada
 │
 ├── src/doc/MEMORIA/              # PDFs de pruebas de memoria y razonamiento
 └── RESULTADOS_TEST_AI.md         # Resultados consolidados de validacion
@@ -89,6 +93,15 @@ python src/doc/ESTRUCTURA/run_opencode_models.py
 
 # Test de un solo modelo (filtro por nombre)
 python src/doc/ESTRUCTURA/run_opencode_models.py mimo-v2.5-free
+
+# Suite avanzada (jailbreak, codigo, factualidad, roles)
+python src/doc/ESTRUCTURA/run_advanced_tests.py big-pickle
+
+# Suite avanzada - solo categoria A (jailbreak)
+python src/doc/ESTRUCTURA/run_advanced_tests.py --category A
+
+# Suite avanzada - modelo API (Groq)
+python src/doc/ESTRUCTURA/run_advanced_tests.py --api qwen/qwen3.6-27b
 ```
 
 ## Variables de entorno
