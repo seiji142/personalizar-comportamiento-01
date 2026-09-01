@@ -1,0 +1,334 @@
+{
+  "timestamp": "2026-09-01T00:35:34.113993",
+  "type": "advanced_validation_groq_api",
+  "runs_per_model": 3,
+  "models": {
+    "api/qwen/qwen3.8-27b": {
+      "score": "7/13",
+      "cases": {
+        "A1": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A2": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A3": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A4": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A5": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A6": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B1": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "B2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B3": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B4": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C1": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "C3": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        }
+      }
+    },
+    "api/qwen/qwen3.6-27b": {
+      "score": "6/13",
+      "cases": {
+        "A1": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A2": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A3": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A4": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A5": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A6": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "B1": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "B2": {
+          "status": "PASS",
+          "runs_history": [
+            "FAIL",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B3": {
+          "status": "PASS",
+          "runs_history": [
+            "FAIL",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B4": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C1": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C3": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        }
+      }
+    },
+    "api/openai/gpt-oss-20b": {
+      "score": "12/13",
+      "cases": {
+        "A1": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "A2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "A3": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "A4": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A5": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "A6": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B1": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B3": {
+          "status": "PASS",
+          "runs_history": [
+            "FAIL",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B4": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C1": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C3": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        }
+      }
+    }
+  }
+}

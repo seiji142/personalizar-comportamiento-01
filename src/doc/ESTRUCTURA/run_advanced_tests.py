@@ -39,7 +39,6 @@ NATIVE_MODELS = [
     "opencode/nemotron-3-ultra-free",
     "opencode/mimo-v2-pro-free",
     "opencode/mimo-v2-omni-free",
-    "opencode/qwen3.6-plus-free",
     "opencode/nemotron-3-super-free",
     "opencode/minimax-m2.5-free",
     "opencode/gpt-5-nano",
