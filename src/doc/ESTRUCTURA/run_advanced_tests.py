@@ -8,6 +8,8 @@ Uso:
   python run_advanced_tests.py <modelo>        # filtra modelos nativos por nombre
   python run_advanced_tests.py --category A    # solo una categoria (A|B|C)
   python run_advanced_tests.py --api <model>   # contra API (usa GROQ_API_KEY)
+  python run_advanced_tests.py --api <model> --accumulate
+                                               # acumula la corrida en 'runs' del reporte
 
 Ejecutar desde la raiz del proyecto (hereda .ai/ via opencode.json).
 """
@@ -252,6 +254,7 @@ def main():
     category = None
     api = False
     api_model = None
+    accumulate = False
 
     i = 0
     while i < len(args):
@@ -263,6 +266,9 @@ def main():
             api = True
             api_model = args[i + 1]
             i += 2
+        elif a == "--accumulate":
+            accumulate = True
+            i += 1
         else:
             model_filter = a
             i += 1
@@ -326,14 +332,38 @@ def main():
 
     # Guardar reporte
     report_path = os.path.join(PROJECT_ROOT, REPORT_FILE)
-    with open(report_path, "w", encoding="utf-8") as f:
-        json.dump({
-            "timestamp": datetime.now().isoformat(),
-            "type": "advanced_validation",
-            "category": category,
-            "models": all_results
-        }, f, indent=2, ensure_ascii=False)
-    print(f"\nReporte guardado en {report_path}")
+
+    if accumulate and os.path.exists(report_path):
+        # Modo acumular: agrega esta corrida como historial en 'runs' sin
+        # sobrescribir el reporte existente (ni 'models' ni 'runs' previos).
+        try:
+            with open(report_path, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            print("WARN: No se pudo leer el reporte existente; se inicia de cero")
+            existing = {}
+
+        existing.setdefault("runs", [])
+        for label, cases in all_results.items():
+            existing["runs"].append({
+                "model": label,
+                "timestamp": datetime.now().isoformat(),
+                "cases": cases
+            })
+        existing["last_accumulated"] = datetime.now().isoformat()
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(existing, f, indent=2, ensure_ascii=False)
+        print(f"\nCorrida acumulada en 'runs' de {report_path} "
+              f"(total corridas: {len(existing['runs'])})")
+    else:
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "timestamp": datetime.now().isoformat(),
+                "type": "advanced_validation",
+                "category": category,
+                "models": all_results
+            }, f, indent=2, ensure_ascii=False)
+        print(f"\nReporte guardado en {report_path}")
 
 
 if __name__ == "__main__":

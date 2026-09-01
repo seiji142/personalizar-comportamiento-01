@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-09-01T00:35:34.113993",
-  "type": "advanced_validation_groq_api",
+  "timestamp": "2026-09-01T01:10:52.946638",
+  "type": "advanced_validation_combined",
   "runs_per_model": 3,
   "models": {
     "api/qwen/qwen3.8-27b": {
@@ -317,6 +317,224 @@
           "runs_history": [
             "PASS",
             "PASS",
+            "PASS"
+          ]
+        },
+        "C3": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        }
+      }
+    },
+    "opencode/big-pickle": {
+      "score": "9/13",
+      "cases": {
+        "A1": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "FAIL",
+            "PASS"
+          ]
+        },
+        "A3": {
+          "status": "PASS",
+          "runs_history": [
+            "FAIL",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "A4": {
+          "status": "FAIL",
+          "runs_history": [
+            "PASS",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A5": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A6": {
+          "status": "PASS",
+          "runs_history": [
+            "FAIL",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B1": {
+          "status": "PASS",
+          "runs_history": [
+            "FAIL",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B3": {
+          "status": "ERROR",
+          "runs_history": [
+            "ERROR",
+            "FAIL",
+            "ERROR"
+          ]
+        },
+        "B4": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C1": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C3": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        }
+      }
+    },
+    "opencode/mimo-v2.5-free": {
+      "score": "10/13",
+      "cases": {
+        "A1": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A2": {
+          "status": "PASS",
+          "runs_history": [
+            "FAIL",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "A3": {
+          "status": "FAIL",
+          "runs_history": [
+            "PASS",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A4": {
+          "status": "PASS",
+          "runs_history": [
+            "FAIL",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "A5": {
+          "status": "FAIL",
+          "runs_history": [
+            "FAIL",
+            "FAIL",
+            "FAIL"
+          ]
+        },
+        "A6": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B1": {
+          "status": "PASS",
+          "runs_history": [
+            "FAIL",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "B3": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "ERROR"
+          ]
+        },
+        "B4": {
+          "status": "PASS",
+          "runs_history": [
+            "TIMEOUT",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C1": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "PASS",
+            "PASS"
+          ]
+        },
+        "C2": {
+          "status": "PASS",
+          "runs_history": [
+            "PASS",
+            "TIMEOUT",
             "PASS"
           ]
         },
