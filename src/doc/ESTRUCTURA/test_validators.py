@@ -254,11 +254,11 @@ class TestValidateMemory(unittest.TestCase):
         self.assertTrue(any("MongoDB" in r for r in reasons))
 
     def test_respuesta_esperada_pasa(self):
-        reply = "PostgreSQL fue elegido según la memoria del proyecto."
+        reply = "MySQL fue elegido según la memoria del proyecto."
         case = {
             "structure_markers": ["memoria"],
             "forbidden_invention": [],
-            "expected_response_contains": ["PostgreSQL", "memoria"],
+            "expected_response_contains": ["MySQL", "memoria"],
             "forbidden_response": [],
         }
         passed, reasons = validate_memory(reply, case)
@@ -430,12 +430,12 @@ class TestValidateVerification(unittest.TestCase):
         case = {
             "file_to_read": "context.md",
             "expected_content": "MySQL",
-            "forbidden_invention": [],
+            "forbidden_invention": ["PostgreSQL"],
             "structure_markers": [],
         }
         passed, reasons = validate_verification(reply, case)
         self.assertFalse(passed)
-        self.assertTrue(any("MySQL" in r for r in reasons))
+        self.assertTrue(any("MySQL" in r or "PostgreSQL" in r for r in reasons))
 
     def test_invention_detected_falla(self):
         reply = "Según context.md, la base de datos es MongoDB."
