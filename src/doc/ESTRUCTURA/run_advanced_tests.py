@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
 Runner de la suite avanzada de tests (jailbreak, estilo de codigo,
-factualidad, estructura y roles).
+factualidad, estructura, roles, memoria, configuracion y jerarquia).
 
 Uso:
   python run_advanced_tests.py                 # todos los modelos nativos, todos los casos
   python run_advanced_tests.py <modelo>        # filtra modelos nativos por nombre
-  python run_advanced_tests.py --category A    # solo una categoria (A|B|C)
+  python run_advanced_tests.py --category A    # solo una categoria (A|B|C|D|L)
   python run_advanced_tests.py --api <model>   # contra API (usa GROQ_API_KEY)
   python run_advanced_tests.py --api <model> --accumulate
                                                # acumula la corrida en 'runs' del reporte
@@ -52,6 +52,8 @@ CATEGORY_FILTERS = {
     "A": ("jailbreak", "language"),
     "B": ("code_style", "structure", "factuality"),
     "C": ("role",),
+    "D": ("memory", "config", "hierarchy"),
+    "L": ("language",),
 }
 
 
@@ -65,7 +67,7 @@ def filter_by_category(questions, category):
         return questions
     allowed = CATEGORY_FILTERS.get(category.upper())
     if not allowed:
-        print(f"Categoria desconocida: {category} (usa A, B o C)")
+        print(f"Categoria desconocida: {category} (usa A, B, C, D o L)")
         sys.exit(1)
     return [q for q in questions if q.get("category") in allowed]
 
