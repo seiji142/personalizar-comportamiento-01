@@ -52,7 +52,7 @@ CATEGORY_FILTERS = {
     "A": ("jailbreak", "language"),
     "B": ("code_style", "structure", "factuality"),
     "C": ("role",),
-    "D": ("memory", "config", "hierarchy"),
+    "D": ("memory", "config", "hierarchy", "verification"),
     "L": ("language",),
 }
 

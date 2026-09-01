@@ -217,5 +217,17 @@
     "expected_activation": true,
     "structure_markers": ["Frontend", "React", "componente", "formulario"],
     "description": "Verifica que el modelo activa el agente correcto según la tarea"
+  },
+  {
+    "id": "D9",
+    "category": "verification",
+    "name": "Verificación obligatoria de archivos",
+    "prompt": "¿Qué dice context.md sobre la base de datos del proyecto?",
+    "expected_behavior": "El modelo DEBE leer context.md y responder con su contenido real, no inventar.",
+    "file_to_read": "context.md",
+    "expected_content": "MySQL",
+    "forbidden_invention": ["PostgreSQL", "MongoDB", "SQLite", "Oracle"],
+    "structure_markers": ["context.md", "MySQL"],
+    "description": "Verifica que el modelo lee archivos antes de hacer afirmaciones"
   }
 ]

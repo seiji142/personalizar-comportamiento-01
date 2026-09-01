@@ -77,3 +77,19 @@ NO guardar en memoria:
 - Credenciales, tokens, API keys
 - Información personal sensible (usar .env.secrets)
 - Codigos intermedios sin decisión asociada
+
+## 8. VERIFICACIÓN OBLIGATORIA
+
+### 8.1 Lee antes de afirmar
+- **SIEMPRE** lee el archivo completo antes de hacer afirmaciones sobre su contenido
+- **NUNCA** asumas información sin evidencia verificada
+- Si un archivo es relevante para tu respuesta, **léelo primero**
+
+### 8.2 Diagnóstico con evidencia
+- **ANTES** de diagnosticar un problema, verifica los datos reales
+- **NO** cites contenido de archivos que no has leído
+- Si no puedes leer un archivo, di "no tengo acceso" en vez de asumir
+
+### 8.3 Transparencia
+- Si tus fuentes son limitadas, dilo explícitamente
+- Si estás seguro vs. si estás asumiendo, diferencia ambas cosas

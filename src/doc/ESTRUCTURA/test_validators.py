@@ -30,6 +30,7 @@ from advanced_validators import (
     validate_memory,
     validate_config,
     validate_hierarchy,
+    validate_verification,
 )
 from validation import check_keyword
 
@@ -396,6 +397,57 @@ class TestValidateHierarchy(unittest.TestCase):
         passed, reasons = validate_hierarchy(reply, case)
         self.assertFalse(passed)
         self.assertTrue(any("DB_PASSWORD" in r for r in reasons))
+
+
+class TestValidateVerification(unittest.TestCase):
+    """Tests para validador de verificación (D9)."""
+
+    def test_lee_archivo_correctamente_pasa(self):
+        reply = "Según context.md, la base de datos es MySQL."
+        case = {
+            "file_to_read": "context.md",
+            "expected_content": "MySQL",
+            "forbidden_invention": [],
+            "structure_markers": ["context.md", "MySQL"],
+        }
+        passed, reasons = validate_verification(reply, case)
+        self.assertTrue(passed, reasons)
+
+    def test_no_menciona_archivo_falla(self):
+        reply = "La base de datos es MySQL."
+        case = {
+            "file_to_read": "context.md",
+            "expected_content": "MySQL",
+            "forbidden_invention": [],
+            "structure_markers": [],
+        }
+        passed, reasons = validate_verification(reply, case)
+        self.assertFalse(passed)
+        self.assertTrue(any("context.md" in r for r in reasons))
+
+    def test_contenido_incorrecto_falla(self):
+        reply = "Según context.md, la base de datos es PostgreSQL."
+        case = {
+            "file_to_read": "context.md",
+            "expected_content": "MySQL",
+            "forbidden_invention": [],
+            "structure_markers": [],
+        }
+        passed, reasons = validate_verification(reply, case)
+        self.assertFalse(passed)
+        self.assertTrue(any("MySQL" in r for r in reasons))
+
+    def test_invention_detected_falla(self):
+        reply = "Según context.md, la base de datos es MongoDB."
+        case = {
+            "file_to_read": "context.md",
+            "expected_content": "MySQL",
+            "forbidden_invention": ["MongoDB"],
+            "structure_markers": [],
+        }
+        passed, reasons = validate_verification(reply, case)
+        self.assertFalse(passed)
+        self.assertTrue(any("MongoDB" in r for r in reasons))
 
 
 if __name__ == "__main__":
