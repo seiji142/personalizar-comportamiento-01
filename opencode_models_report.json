@@ -1,119 +1,39 @@
 {
-  "timestamp": "2026-05-13T15:29:37.020582",
+  "timestamp": "2026-09-01T00:02:34.924826",
   "type": "opencode_integrated_models",
-  "total_time_seconds": 633.0,
+  "total_time_seconds": 304.7,
   "models": [
     {
       "model": "opencode/big-pickle",
       "status": "PARTIAL",
       "per_test": {
         "1": "PASS",
-        "2": "FAIL",
-        "3": "FAIL",
+        "2": "PASS",
+        "3": "PASS",
         "4": "FAIL",
-        "5": "FAIL"
+        "5": "PASS"
       },
-      "pass_count": 1,
-      "total_time": 84.8,
+      "pass_count": 4,
+      "total_time": 86.9,
       "errors": [
-        "Test 2: fallo"
+        "Test 4: fallo"
       ]
     },
     {
-      "model": "opencode/minimax-m2.7-free",
-      "status": "FAIL",
-      "per_test": {
-        "1": "FAIL",
-        "2": "FAIL",
-        "3": "FAIL",
-        "4": "FAIL",
-        "5": "FAIL"
-      },
-      "pass_count": 0,
-      "total_time": 17.9,
-      "errors": [
-        "Test 1: fallo"
-      ]
-    },
-    {
-      "model": "opencode/gpt-5-nano",
-      "status": "FAIL",
-      "per_test": {
-        "1": "FAIL",
-        "2": "FAIL",
-        "3": "FAIL",
-        "4": "FAIL",
-        "5": "FAIL"
-      },
-      "pass_count": 0,
-      "total_time": 17.7,
-      "errors": [
-        "Test 1: fallo"
-      ]
-    },
-    {
-      "model": "opencode/kimi-k2.5-free",
-      "status": "FAIL",
-      "per_test": {
-        "1": "FAIL",
-        "2": "FAIL",
-        "3": "FAIL",
-        "4": "FAIL",
-        "5": "FAIL"
-      },
-      "pass_count": 0,
-      "total_time": 17.4,
-      "errors": [
-        "Test 1: fallo"
-      ]
-    },
-    {
-      "model": "opencode/glm-5-free",
-      "status": "FAIL",
-      "per_test": {
-        "1": "FAIL",
-        "2": "FAIL",
-        "3": "FAIL",
-        "4": "FAIL",
-        "5": "FAIL"
-      },
-      "pass_count": 0,
-      "total_time": 17.3,
-      "errors": [
-        "Test 1: fallo"
-      ]
-    },
-    {
-      "model": "opencode/minimax-m2.5-free",
+      "model": "opencode/mimo-v2.5-free",
       "status": "PARTIAL",
       "per_test": {
         "1": "PASS",
-        "2": "FAIL",
-        "3": "TIMEOUT",
-        "4": "FAIL",
-        "5": "PASS"
-      },
-      "pass_count": 2,
-      "total_time": 263.2,
-      "errors": [
-        "Test 2: fallo",
-        "Test 3: timeout"
-      ]
-    },
-    {
-      "model": "opencode/ring-2.6-1t-free",
-      "status": "PARTIAL",
-      "per_test": {
-        "1": "FAIL",
-        "2": "FAIL",
+        "2": "PASS",
         "3": "FAIL",
-        "4": "FAIL",
+        "4": "TIMEOUT",
         "5": "PASS"
       },
-      "pass_count": 1,
-      "total_time": 214.8,
+      "pass_count": 3,
+      "total_time": 184.0,
       "errors": [
-        "Test 1: fallo"
+        "Test 3: fallo",
+        "Test 4: timeout"
       ]
     }
   ]
