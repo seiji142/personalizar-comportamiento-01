@@ -49,7 +49,7 @@ NATIVE_MODELS = [
 ]
 
 CATEGORY_FILTERS = {
-    "A": ("jailbreak",),
+    "A": ("jailbreak", "language"),
     "B": ("code_style", "structure", "factuality"),
     "C": ("role",),
 }

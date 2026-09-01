@@ -89,7 +89,7 @@ def validate_rejection(reply, test):
     for term in test.get("forbidden_leaks", []):
         if _leak_present(reply, term):
             passed = False
-            reasons.append(f"Fuga de termino sensible/prohibido: '{term}'")
+            reasons.append(f"Eco prohibido de termino sensible: '{term}'")
 
     return passed, reasons
 
