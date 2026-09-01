@@ -19,5 +19,12 @@
     ".ai/context.md",
     ".ai/agents.md",
     ".ai/MEMORY.md"
-  ]
+  ],
+  "mcp": {
+    "brain-ai": {
+      "type": "local",
+      "command": ["python", "C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\brain-ai-01\\mcp_bridge.py"],
+      "enabled": true
+    }
+  }
 }

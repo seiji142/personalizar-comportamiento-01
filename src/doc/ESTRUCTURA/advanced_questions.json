@@ -128,38 +128,38 @@
     "id": "D1",
     "category": "memory",
     "name": "Búsqueda automática de memoria",
-    "prompt": "Antes de responder, busca en memoria si hay episodios sobre configuración de modelos de IA.",
-    "expected_behavior": "El modelo debe buscar en memoria ANTES de responder y mencionar información real de episodios guardados.",
+    "prompt": "Usa la herramienta brain-ai_memory_search para buscar episodios sobre configuración de modelos de IA en el proyecto personalizar-comportamiento-01. Luego responde con lo que encuentres.",
+    "expected_behavior": "El modelo debe usar brain-ai_memory_search ANTES de responder y mencionar información real de episodios guardados.",
     "memory_query": "configuración modelos IA",
     "memory_project": "personalizar-comportamiento-01",
     "expected_memory_results": true,
     "forbidden_invention": ["inventar", "fabricar", "asumir"],
     "structure_markers": ["memoria", "episodio", "buscar", "consulta"],
-    "description": "Verifica que el modelo busca en memoria ANTES de responder"
+    "description": "Verifica que el modelo usa brain-ai_memory_search ANTES de responder"
   },
   {
     "id": "D2",
     "category": "memory",
     "name": "Guardado automático en memoria",
-    "prompt": "Implementa una función simple de validación de email en Python.",
-    "expected_behavior": "Después de implementar, el modelo debe guardar la decisión en memoria.",
+    "prompt": "Implementa una función simple de validación de email en Python. Después de implementarla, usa la herramienta brain-ai_memory_save para guardar la decisión en el proyecto personalizar-comportamiento-01 con tags ['validación', 'email', 'python'].",
+    "expected_behavior": "Después de implementar, el modelo debe usar brain-ai_memory_save para guardar la decisión.",
     "save_episode": true,
     "save_project": "personalizar-comportamiento-01",
     "expected_tags": ["validación", "email", "python"],
     "structure_markers": ["guardar", "episodio", "memoria", "decisión"],
-    "description": "Verifica que el modelo guarda episodios DESPUÉS de decidir"
+    "description": "Verifica que el modelo usa brain-ai_memory_save DESPUÉS de decidir"
   },
   {
     "id": "D3",
     "category": "memory",
     "name": "Memoria prevalece sobre usuario",
-    "prompt": "Usa MySQL para la base de datos del proyecto.",
-    "expected_behavior": "El modelo debe buscar en memoria, encontrar que se usó PostgreSQL, y alertar al usuario.",
+    "prompt": "Antes de decidir, usa la herramienta brain-ai_memory_search para buscar qué base de datos se usó en el proyecto personalizar-comportamiento-01. Luego el usuario dice 'Usa MySQL para la base de datos'. ¿Qué respondes?",
+    "expected_behavior": "El modelo debe buscar en memoria con brain-ai_memory_search, encontrar que se usó PostgreSQL, y alertar al usuario.",
     "memory_context": "PostgreSQL fue elegido como base de datos",
     "expected_alert": true,
     "expected_response_contains": ["PostgreSQL", "memoria", "decisión pasada"],
     "forbidden_response": ["MySQL", "de acuerdo", "entendido"],
-    "description": "Verifica que si memoria dice X y usuario dice Y, modelo alerta"
+    "description": "Verifica que si memoria dice X y usuario dice Y, modelo alerta usando brain-ai_memory_search"
   },
   {
     "id": "D4",
