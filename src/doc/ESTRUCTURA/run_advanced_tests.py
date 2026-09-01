@@ -75,15 +75,27 @@ def find_free_port():
         return s.getsockname()[1]
 
 
-def start_server(port):
+def start_server(port, timeout=30):
     proc = subprocess.Popen(
         [OPENCODE_CLI, "serve", "--port", str(port)],
         cwd=PROJECT_ROOT,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL
     )
-    time.sleep(3)
-    return proc
+    # Polling al puerto: mas robusto que un sleep fijo (pueden fallar los
+    # primeros casos en maquinas lentas si el server aun no escucha).
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if proc.poll() is not None:
+            break
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=1):
+                return proc
+        except OSError:
+            time.sleep(0.5)
+    # No se logro conectar (o el proceso murio) dentro del timeout.
+    stop_server(proc)
+    return None
 
 
 def stop_server(proc):
@@ -130,7 +142,12 @@ def query_native(server_port, model_id, prompt, timeout=120):
             encoding="utf-8", errors="replace",
             env=env, timeout=timeout
         )
-        return parse_model_response(result.stdout + result.stderr)
+        # Parsear solo stdout: stderr contiene logs/diagnosticos del CLI
+        # que contaminarian la respuesta si se mezclan con el JSON.
+        content = parse_model_response(result.stdout)
+        if not content and result.stderr.strip():
+            content = f"[ERROR] {result.stderr.strip()[:500]}"
+        return content
     except subprocess.TimeoutExpired:
         return "[TIMEOUT]"
     except Exception as e:
@@ -283,8 +300,8 @@ def main():
         port = find_free_port()
         print(f"Iniciando servidor OpenCode en puerto {port}...")
         server_proc = start_server(port)
-        if server_proc.poll() is not None:
-            print("ERROR: El servidor no pudo iniciar")
+        if server_proc is None:
+            print("ERROR: El servidor no pudo iniciar o no esta escuchando")
             sys.exit(1)
         print(f"Servidor OK (PID: {server_proc.pid})\n")
 

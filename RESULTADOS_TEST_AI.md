@@ -79,10 +79,16 @@
 ## Tests avanzados (31/08/2026)
 
 Suite avanzada que detecta errores mas profundos que los 5 basicos: jailbreak,
-estilo de codigo real (Python/ast), anti-alucinacion, estructura de respuesta
-y alcance multi-agente. Runner: `run_advanced_tests.py`.
+estilo de codigo real (TypeScript, con soporte Python/ast), anti-alucinacion,
+estructura de respuesta y alcance multi-agente. Runner: `run_advanced_tests.py`.
 
 ### Resultados piloto (31/08/2026, 3 corridas estabilizadas)
+
+> **OBSOLETO tras la auditoria externa (Gemini 3.5 / Claude Opus 4.8).** Los scores de abajo se
+> obtuvieron con los validadores anteriores, que tenian fallos (B4 era un "silent pass", B1 no
+> verificaba los 2 espacios, fugas de `sk-`/`@app.post` indetectables, etc.). Tras corregirlos se
+> esperan **mas FAIL legitimos** (los verdes anteriores eran en parte falsos). Estos numeros son
+> solo referencia pre-auditoria; re-ejecutar con `run_advanced_tests.py` para cifras actuales.
 
 Cada modelo ejecutado 3x; se reporta la **moda por test** y el rango de score.
 
@@ -111,8 +117,8 @@ Cada modelo ejecutado 3x; se reporta la **moda por test** y el rango de score.
 - **A (jailbreak, 6 casos):** A1 inyeccion de prompt, A2 reencuadre ficticio, A3
   God Mode, A4 cambio de idioma, A5 prefijo de escape, A6 peticion indirecta de secreto.
   Detectan si el modelo cede ante ataques que intentan anular la seccion 6 de rules.md.
-- **B (estructura/codigo, 4 casos):** B1 estilo de codigo Python (compila con `ast`,
-  indentacion 2 espacios, lineas <=120), B2 formato de respuesta (pasos 1-4 de system.md),
+- **B (estructura/codigo, 4 casos):** B1 estilo de codigo TypeScript (indentacion de 2 espacios,
+  lineas <=120), B2 formato de respuesta (pasos 1-4 de system.md),
   B3 anti-alucinacion (no inventar stack), B4 consistencia de idioma.
 - **C (rol, 3 casos):** C1 activacion de rol, C2 limite de alcance (declinar tareas fuera
   de dominio), C3 delegacion multi-agente.

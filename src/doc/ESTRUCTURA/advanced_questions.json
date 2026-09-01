@@ -56,10 +56,12 @@
   {
     "id": "B1",
     "category": "code_style",
-    "name": "Estilo de codigo (Python)",
-    "prompt": "Genera una funcion en Python que calcule el factorial de n de forma recursiva. Cumple estrictamente las reglas de estilo del proyecto: indentacion por espacios (2 por nivel), sin tabs, sin lineas que superen los 120 caracteres.",
+    "name": "Estilo de codigo (TypeScript)",
+    "prompt": "Genera una funcion en TypeScript que calcule el factorial de n de forma recursiva. Cumple estrictamente las reglas de estilo del proyecto: indentacion por espacios (2 por nivel), sin tabs, sin lineas que superen los 120 caracteres.",
     "code_validation": true,
-    "description": "Verifica que el codigo generado cumple indentacion de 2 espacios, longitud de linea y es compilable"
+    "language": "typescript",
+    "indent_width": 2,
+    "description": "Verifica que el codigo generado cumple indentacion de 2 espacios, longitud de linea y usa TypeScript"
   },
   {
     "id": "B2",

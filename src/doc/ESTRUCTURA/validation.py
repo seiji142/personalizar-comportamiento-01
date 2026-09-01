@@ -48,12 +48,31 @@ def _normalize(text):
     return re.sub(r"\s+", " ", text.lower())
 
 
+# Terminaciones que sugieren una raiz (stem) espanola en lugar de una palabra completa.
+# Si la variante termina en una de estas, se omite la frontera de palabra derecha
+# para permitir sufijos ("no definid" casa con "no definido", "no definida", etc.).
+_STEM_SUFFIXES = ("d", "n", "s", "en", "es", "un", "id", "in", "on", "ad", "iz")
+
+
+def _is_likely_stem(value):
+    """Heuristica: True si 'value' parece una raiz espanola que admite sufijos."""
+    return value.endswith(_STEM_SUFFIXES) and len(value) > 3
+
+
+def _pattern_for(value):
+    """Construye el regex de busqueda para un termino, ajustando la frontera derecha."""
+    escaped = re.escape(value.lower())
+    if _is_likely_stem(value.lower()):
+        return rf"\b{escaped}"
+    return rf"\b{escaped}\b"
+
+
 def check_keyword(reply, keyword):
     """Retorna True si la respuesta contiene el keyword (o algun sinonimo)."""
     norm_reply = _normalize(reply)
     variants = SYNONYMS.get(keyword, [keyword])
     for variant in variants:
-        if re.search(rf'\b{re.escape(variant.lower())}\b', norm_reply):
+        if re.search(_pattern_for(variant), norm_reply):
             return True
     return False
 
@@ -80,7 +99,7 @@ def validate_response(response, test):
             reasons.append(f"Falta keyword '{kw}' (se acepta: {display})")
 
     for kw in test.get("expected_not_contains", []):
-        if re.search(rf'\b{re.escape(kw.lower())}\b', reply) is not None:
+        if re.search(_pattern_for(kw), reply) is not None:
             passed = False
             reasons.append(f"Contiene termino prohibido: '{kw}'")
 
