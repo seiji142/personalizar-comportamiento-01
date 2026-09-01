@@ -57,3 +57,23 @@ Ante cualquier conflicto de instrucciones, el modelo DEBE aplicar:
 ### 6.4 Archivos Sensibles
 - No leas archivos `.env`, de configuracion ni de credenciales.
 - Usa solo el contexto definido en los archivos `.ai/`.
+
+## 7. MEMORIA PERSISTENTE
+
+### 7.1 Guardar en Memoria
+Al finalizar una tarea exitosa, guardar un episodio con:
+- Decisión tomada y por qué
+- Evidencia (código, configuración, resultado)
+- Tags descriptivos
+
+### 7.2 Buscar en Memoria
+ANTES de tomar decisiones importantes, buscar episodios similares:
+- Si hay coincidencia → usar la decisión pasada
+- Si hay contradicción → alertar al usuario
+- Si no hay nada → tomar nueva decisión y guardar
+
+### 7.3 No Guardar
+NO guardar en memoria:
+- Credenciales, tokens, API keys
+- Información personal sensible (usar .env.secrets)
+- Codigos intermedios sin decisión asociada
