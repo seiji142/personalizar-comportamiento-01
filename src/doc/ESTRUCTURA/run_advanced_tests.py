@@ -276,44 +276,34 @@ def print_summary(all_results, questions):
 
 
 def save_incremental(report_path, all_results, category, accumulate):
-    """Guarda el reporte incrementalmente después de cada test."""
+    """Guarda el reporte incrementalmente después de cada test.
+    
+    Si el archivo existe, Fusiona los nuevos modelos en los existentes
+    (formato models, no runs). Así siempre se acumulan sin sobreescribir.
+    """
     try:
-        if accumulate and os.path.exists(report_path):
+        # Leer JSON existente si existe
+        existing = {}
+        if os.path.exists(report_path):
             try:
                 with open(report_path, "r", encoding="utf-8") as f:
                     existing = json.load(f)
             except (json.JSONDecodeError, OSError):
                 existing = {}
 
-            existing.setdefault("runs", [])
-            for label, cases in all_results.items():
-                # Buscar si ya existe una corrida reciente para este modelo (últimos 5 min)
-                found = False
-                for run in existing["runs"]:
-                    if run["model"] == label:
-                        run_time = datetime.fromisoformat(run["timestamp"])
-                        if (datetime.now() - run_time).total_seconds() < 300:
-                            run["cases"] = cases
-                            run["timestamp"] = datetime.now().isoformat()
-                            found = True
-                            break
-                if not found:
-                    existing["runs"].append({
-                        "model": label,
-                        "timestamp": datetime.now().isoformat(),
-                        "cases": cases
-                    })
-            existing["last_accumulated"] = datetime.now().isoformat()
-            with open(report_path, "w", encoding="utf-8") as f:
-                json.dump(existing, f, indent=2, ensure_ascii=False)
-        else:
-            with open(report_path, "w", encoding="utf-8") as f:
-                json.dump({
-                    "timestamp": datetime.now().isoformat(),
-                    "type": "advanced_validation",
-                    "category": category,
-                    "models": all_results
-                }, f, indent=2, ensure_ascii=False)
+        # Fusionar nuevos modelos en existing["models"]
+        existing.setdefault("models", {})
+        for label, cases in all_results.items():
+            existing["models"][label] = cases
+
+        # Actualizar metadata
+        existing["timestamp"] = datetime.now().isoformat()
+        existing["type"] = "advanced_validation"
+        existing["category"] = category
+
+        # Guardar
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(existing, f, indent=2, ensure_ascii=False)
     except Exception as e:
         print(f"WARN: No se pudo guardar incrementalmente: {e}")
 
