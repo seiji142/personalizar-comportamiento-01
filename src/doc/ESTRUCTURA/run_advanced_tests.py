@@ -21,6 +21,7 @@ import socket
 import subprocess
 import sys
 import time
+import requests
 from datetime import datetime
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -109,6 +110,15 @@ def stop_server(proc):
             proc.wait(timeout=5)
         except subprocess.TimeoutExpired:
             proc.kill()
+
+
+def check_brain_ai_health(timeout=5):
+    """Verifica que brain-ai-01 este corriendo en localhost:8000."""
+    try:
+        r = requests.get("http://localhost:8000/health", timeout=timeout)
+        return r.status_code == 200
+    except Exception:
+        return False
 
 
 def parse_model_response(output):
@@ -296,6 +306,12 @@ def main():
         else:
             print("Uso: --api <model_id>")
             sys.exit(1)
+        # Verificar que brain-ai-01 este corriendo (obligatorio para API)
+        if not check_brain_ai_health():
+            print("ERROR: brain-ai-01 no esta corriendo en localhost:8000")
+            print("Iniciar: cd brain-ai-01 && python -m uvicorn ai_architect.core.mcp_server:app --port 8000")
+            sys.exit(1)
+        print("brain-ai-01 OK\n")
     else:
         native = NATIVE_MODELS
         if model_filter:

@@ -314,15 +314,29 @@ def validate_memory(reply, test, tool_calls=None, memory_used=False):
     """Categoria memory: verifica que el modelo busca y guarda en memoria.
 
     - Busca en memoria ANTES de responder (D1)
-    - Guarda episodios DESPUÉS de decidir (D2)
+    - Guarda episodios DESPUES de decidir (D2)
     - Memoria prevalece sobre usuario (D3)
     """
     passed = True
     reasons = []
     tool_calls = tool_calls or []
 
+    # Si hay expected_tool, verificar que se ejecuto
+    expected_tool = test.get("expected_tool")
+    if expected_tool:
+        matching = [tc for tc in tool_calls if tc.get("name") == expected_tool]
+        if matching:
+            successful = [tc for tc in matching if tc.get("success")]
+            if successful:
+                reasons.append(f"Tool esperada ejecutada: {expected_tool}")
+            else:
+                passed = False
+                reasons.append(f"Tool {expected_tool} ejecutada pero fallida")
+        else:
+            passed = False
+            reasons.append(f"No ejecuto tool esperada: {expected_tool}")
     # Verificar uso de tools de memoria (prioridad sobre texto)
-    if tool_calls:
+    elif tool_calls:
         memory_tools = [tc for tc in tool_calls if "memory" in tc.get("name", "").lower()]
         if memory_tools:
             successful = [tc for tc in memory_tools if tc.get("success")]
@@ -337,7 +351,7 @@ def validate_memory(reply, test, tool_calls=None, memory_used=False):
         reasons.append("Memoria detectada en respuesta")
     else:
         # Fallback: verificar por texto
-        memory_terms = ["memoria", "episodio", "buscar", "consulta", "guardar", "decisión"]
+        memory_terms = ["memoria", "episodio", "buscar", "consulta", "guardar", "decision"]
         found_memory = [t for t in memory_terms if t.lower() in _norm(reply)]
         if found_memory:
             reasons.append(f"Menciona memoria ({', '.join(found_memory[:3])})")
