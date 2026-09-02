@@ -31,6 +31,7 @@ REPORT_FILE = "advanced_validation_report.json"
 # Cargar casos desde el directorio del script
 sys.path.insert(0, os.path.dirname(__file__))
 from advanced_validators import validate_advanced
+from model_runner import create_runner
 
 # Modelos nativos contratados (misma lista que run_opencode_models.py)
 NATIVE_MODELS = [
@@ -189,22 +190,28 @@ def _load_ai_system_prompt():
     return "\n\n".join(parts)
 
 
-def run_cases_for_model(model_label, query_fn, questions):
+def run_cases_for_model(model_label, runner, questions):
     per_case = {}
     for case in questions:
         cid = case["id"]
         print(f"   [{cid}] {case['name']}... ", end="", flush=True)
         t0 = time.time()
-        response = query_fn(case["prompt"])
+        result = runner.query(case["prompt"])
 
-        if response.startswith("[TIMEOUT]"):
-            status = "TIMEOUT"
-            reasons = ["timeout"]
-        elif response.startswith("[ERROR]"):
-            status = "ERROR"
-            reasons = [response]
+        text = result.get("text", "")
+        error = result.get("error")
+        tool_calls = result.get("tool_calls", [])
+        memory_used = result.get("memory_used", False)
+
+        if error:
+            if "TIMEOUT" in error:
+                status = "TIMEOUT"
+                reasons = ["timeout"]
+            else:
+                status = "ERROR"
+                reasons = [error]
         else:
-            passed, reasons = validate_advanced(response, case)
+            passed, reasons = validate_advanced(text, case, tool_calls=tool_calls, memory_used=memory_used)
             status = "PASS" if passed else "FAIL"
 
         elapsed = round(time.time() - t0, 1)
@@ -214,7 +221,9 @@ def run_cases_for_model(model_label, query_fn, questions):
             "status": status,
             "time_seconds": elapsed,
             "reasons": reasons,
-            "response_preview": response[:200] + "..." if len(response) > 200 else response,
+            "response_preview": text[:200] + "..." if len(text) > 200 else text,
+            "tool_calls": tool_calls,
+            "memory_used": memory_used,
         }
         print(f"{status} ({elapsed}s)")
         for r in reasons[:6]:
@@ -318,13 +327,11 @@ def main():
             label = cfg["model"]
             print(f"\n[{label}]")
             if cfg["native"]:
-                def query_fn(p, model_id=cfg["id"], port=port):
-                    return query_native(port, model_id, p)
+                runner = create_runner(cfg["id"], mode="native", server_port=port)
             else:
-                def query_fn(p, model_id=cfg["id"]):
-                    return query_api(model_id, p)
+                runner = create_runner(cfg["id"], mode="api")
 
-            cases = run_cases_for_model(label, query_fn, questions)
+            cases = run_cases_for_model(label, runner, questions)
             all_results[label] = cases
     finally:
         if server_proc:
