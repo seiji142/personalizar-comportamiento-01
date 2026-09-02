@@ -200,7 +200,8 @@ def _load_ai_system_prompt():
     return "\n\n".join(parts)
 
 
-def run_cases_for_model(model_label, runner, questions):
+def run_cases_for_model(model_label, runner, questions, report_path=None, category=None, accumulate=False, all_results=None):
+    """Ejecuta tests y guarda incrementalmente después de cada uno."""
     per_case = {}
     for case in questions:
         cid = case["id"]
@@ -232,12 +233,20 @@ def run_cases_for_model(model_label, runner, questions):
             "time_seconds": elapsed,
             "reasons": reasons,
             "response_preview": text[:200] + "..." if len(text) > 200 else text,
+            "response_full": text,
             "tool_calls": tool_calls,
             "memory_used": memory_used,
+            "tokens_used": result.get("tokens_used", 0),
         }
         print(f"{status} ({elapsed}s)")
         for r in reasons[:6]:
             print(f"          - {r}")
+        
+        # Guardado incremental después de cada test
+        if report_path and all_results is not None:
+            all_results[model_label] = per_case
+            save_incremental(report_path, all_results, category, accumulate)
+        
         time.sleep(1)
     return per_case
 
@@ -264,6 +273,49 @@ def print_summary(all_results, questions):
         print(f" {model:<28} " + " ".join(cells) + f"  {passed}/{total_cases}")
 
     print("=" * 90)
+
+
+def save_incremental(report_path, all_results, category, accumulate):
+    """Guarda el reporte incrementalmente después de cada test."""
+    try:
+        if accumulate and os.path.exists(report_path):
+            try:
+                with open(report_path, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+            except (json.JSONDecodeError, OSError):
+                existing = {}
+
+            existing.setdefault("runs", [])
+            for label, cases in all_results.items():
+                # Buscar si ya existe una corrida reciente para este modelo (últimos 5 min)
+                found = False
+                for run in existing["runs"]:
+                    if run["model"] == label:
+                        run_time = datetime.fromisoformat(run["timestamp"])
+                        if (datetime.now() - run_time).total_seconds() < 300:
+                            run["cases"] = cases
+                            run["timestamp"] = datetime.now().isoformat()
+                            found = True
+                            break
+                if not found:
+                    existing["runs"].append({
+                        "model": label,
+                        "timestamp": datetime.now().isoformat(),
+                        "cases": cases
+                    })
+            existing["last_accumulated"] = datetime.now().isoformat()
+            with open(report_path, "w", encoding="utf-8") as f:
+                json.dump(existing, f, indent=2, ensure_ascii=False)
+        else:
+            with open(report_path, "w", encoding="utf-8") as f:
+                json.dump({
+                    "timestamp": datetime.now().isoformat(),
+                    "type": "advanced_validation",
+                    "category": category,
+                    "models": all_results
+                }, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"WARN: No se pudo guardar incrementalmente: {e}")
 
 
 def main():
@@ -338,6 +390,8 @@ def main():
         print(f"Servidor OK (PID: {server_proc.pid})\n")
 
     all_results = {}
+    report_path = os.path.join(PROJECT_ROOT, REPORT_FILE)
+    
     try:
         for cfg in models_config:
             label = cfg["model"]
@@ -347,7 +401,13 @@ def main():
             else:
                 runner = create_runner(cfg["id"], mode="api")
 
-            cases = run_cases_for_model(label, runner, questions)
+            cases = run_cases_for_model(
+                label, runner, questions,
+                report_path=report_path,
+                category=category,
+                accumulate=accumulate,
+                all_results=all_results
+            )
             all_results[label] = cases
     finally:
         if server_proc:
@@ -355,40 +415,10 @@ def main():
 
     print_summary(all_results, questions)
 
-    # Guardar reporte
-    report_path = os.path.join(PROJECT_ROOT, REPORT_FILE)
-
-    if accumulate and os.path.exists(report_path):
-        # Modo acumular: agrega esta corrida como historial en 'runs' sin
-        # sobrescribir el reporte existente (ni 'models' ni 'runs' previos).
-        try:
-            with open(report_path, "r", encoding="utf-8") as f:
-                existing = json.load(f)
-        except (json.JSONDecodeError, OSError):
-            print("WARN: No se pudo leer el reporte existente; se inicia de cero")
-            existing = {}
-
-        existing.setdefault("runs", [])
-        for label, cases in all_results.items():
-            existing["runs"].append({
-                "model": label,
-                "timestamp": datetime.now().isoformat(),
-                "cases": cases
-            })
-        existing["last_accumulated"] = datetime.now().isoformat()
-        with open(report_path, "w", encoding="utf-8") as f:
-            json.dump(existing, f, indent=2, ensure_ascii=False)
-        print(f"\nCorrida acumulada en 'runs' de {report_path} "
-              f"(total corridas: {len(existing['runs'])})")
-    else:
-        with open(report_path, "w", encoding="utf-8") as f:
-            json.dump({
-                "timestamp": datetime.now().isoformat(),
-                "type": "advanced_validation",
-                "category": category,
-                "models": all_results
-            }, f, indent=2, ensure_ascii=False)
-        print(f"\nReporte guardado en {report_path}")
+    # El guardado final ya se hace incrementalmente, pero guardamos una última vez
+    # para asegurar que todo esté sincronizado
+    save_incremental(report_path, all_results, category, accumulate)
+    print(f"\nReporte guardado en {report_path}")
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 Adaptadores de modelo para la suite de tests.
 
 Proporciona una interfaz comun (ModelRunner) para ejecutar modelos
-tanto via OpenCode nativo como via API directa (Groq).
+tanto via OpenCode nativo como via API directa (Groq) con MCP.
 
 Resultado estandarizado:
 {
@@ -16,16 +16,21 @@ Resultado estandarizado:
 
 import json
 import os
-import socket
 import subprocess
 import sys
 import time
+import threading
 
-from brain_ai_client import execute_tool, TOOLS_SCHEMA
+from mcp_client import MCPStdioClient, mcp_tools_to_openai, MCPError
 
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 OPENCODE_CLI = os.path.join(os.environ.get("LOCALAPPDATA", ""), "opencode", "opencode-cli.exe")
+
+# Límites
+QUERY_TIMEOUT = 120
+GROQ_QUERY_TIMEOUT = 180  # 3 minutos máximo para Groq
+MAX_TOOL_ITERATIONS = 5
 
 
 def _load_system_prompt():
@@ -66,7 +71,7 @@ class ModelRunner:
         self.model_id = model_id
         self.system_prompt = system_prompt or _load_system_prompt()
 
-    def query(self, prompt, tools=None):
+    def query(self, prompt):
         """
         Ejecuta una consulta contra el modelo.
 
@@ -74,6 +79,9 @@ class ModelRunner:
             dict: {text, tool_calls, memory_used, error}
         """
         raise NotImplementedError
+
+    def close(self):
+        pass
 
 
 class OpenCodeRunner(ModelRunner):
@@ -83,7 +91,7 @@ class OpenCodeRunner(ModelRunner):
         super().__init__(model_id, system_prompt)
         self.server_port = server_port
 
-    def query(self, prompt, tools=None):
+    def query(self, prompt):
         """OpenCode maneja MCP via opencode.json. Solo capturamos la respuesta."""
         cmd = [
             OPENCODE_CLI, "run",
@@ -100,7 +108,7 @@ class OpenCodeRunner(ModelRunner):
                 cmd, cwd=PROJECT_ROOT,
                 capture_output=True, text=True,
                 encoding="utf-8", errors="replace",
-                env=env, timeout=120
+                env=env, timeout=QUERY_TIMEOUT
             )
             text = _parse_opencode_response(result.stdout)
             if not text and result.stderr.strip():
@@ -120,14 +128,63 @@ class OpenCodeRunner(ModelRunner):
 
 
 class GroqRunner(ModelRunner):
-    """Ejecuta modelos via Groq API con tool calling."""
+    """
+    Ejecuta modelos via Groq API con tool calling.
+    
+    Usa MCP client para descubrir y ejecutar tools dinámicamente,
+    mismo camino que OpenCode con mcp_bridge.py.
+    """
 
-    def __init__(self, model_id, system_prompt=None, max_tool_rounds=3):
+    def __init__(self, model_id, system_prompt=None, max_tool_rounds=MAX_TOOL_ITERATIONS):
         super().__init__(model_id, system_prompt)
         self.max_tool_rounds = max_tool_rounds
+        self.mcp = None
+        self.tools = []
+        self.name_map = {}
 
-    def query(self, prompt, tools=None):
-        """Ejecuta con tool loop: prompt → tool_call → execute → respuesta final."""
+    def _ensure_mcp(self):
+        """Inicializa MCP client y descubre tools."""
+        if self.mcp is not None:
+            return True
+        
+        try:
+            self.mcp = MCPStdioClient().start()
+            mcp_tools = self.mcp.list_tools()
+            self.tools, self.name_map = mcp_tools_to_openai(mcp_tools)
+            return True
+        except MCPError as e:
+            return False
+        except Exception as e:
+            return False
+
+    def query(self, prompt):
+        """Ejecuta con timeout general via threading."""
+        result = [None]
+        error = [None]
+        
+        def run():
+            try:
+                result[0] = self._execute_query(prompt)
+            except Exception as e:
+                error[0] = str(e)
+        
+        thread = threading.Thread(target=run)
+        thread.start()
+        thread.join(timeout=GROQ_QUERY_TIMEOUT)
+        
+        if thread.is_alive():
+            return {"text": "", "tool_calls": [], "memory_used": False, 
+                    "error": f"[TIMEOUT] {GROQ_QUERY_TIMEOUT}s"}
+        
+        if error[0]:
+            return {"text": "", "tool_calls": [], "memory_used": False, 
+                    "error": f"[ERROR] {error[0][:500]}"}
+        
+        return result[0] or {"text": "", "tool_calls": [], "memory_used": False, 
+                             "error": "[ERROR] No response"}
+
+    def _execute_query(self, prompt):
+        """Ejecuta la consulta real con tool loop via MCP."""
         try:
             from openai import OpenAI
         except ImportError:
@@ -141,8 +198,12 @@ class GroqRunner(ModelRunner):
             return {"text": "", "tool_calls": [], "memory_used": False,
                     "error": "[ERROR] No GROQ_API_KEY configured"}
 
+        # Inicializar MCP y descubrir tools
+        if not self._ensure_mcp():
+            return {"text": "", "tool_calls": [], "memory_used": False,
+                    "error": "[ERROR] No se pudo conectar a MCP bridge"}
+
         client = OpenAI(base_url=base_url, api_key=api_key)
-        use_tools = tools or TOOLS_SCHEMA
 
         messages = [
             {"role": "system", "content": self.system_prompt},
@@ -152,17 +213,23 @@ class GroqRunner(ModelRunner):
         all_tool_calls = []
         memory_used = False
 
+        tokens_from_api = 0
+        
         for round_num in range(self.max_tool_rounds):
             try:
                 response = client.chat.completions.create(
                     model=self.model_id,
                     messages=messages,
-                    tools=use_tools,
+                    tools=self.tools,
                     tool_choice="auto",
                     temperature=0.1,
                     max_tokens=800,
                     timeout=60
                 )
+                # Extraer uso de tokens (Groq API)
+                usage = getattr(response, 'usage', None)
+                if usage:
+                    tokens_from_api += getattr(usage, 'total_tokens', 0)
             except Exception as e:
                 error_str = str(e)
                 if "tool" in error_str.lower():
@@ -174,54 +241,78 @@ class GroqRunner(ModelRunner):
                         max_tokens=800,
                         timeout=60
                     )
-                    return {"text": response.choices[0].message.content or "",
-                            "tool_calls": [], "memory_used": False, "error": None}
+                    usage = getattr(response, 'usage', None)
+                    if usage:
+                        tokens_from_api += getattr(usage, 'total_tokens', 0)
+                    text = response.choices[0].message.content or ""
+                    tokens_estimated = len(text) // 4
+                    return {"text": text,
+                            "tool_calls": [], "memory_used": False,
+                            "tokens_used": tokens_from_api or tokens_estimated,
+                            "error": None}
                 return {"text": "", "tool_calls": [], "memory_used": False,
+                        "tokens_used": 0,
                         "error": f"[ERROR] {error_str[:500]}"}
 
             message = response.choices[0].message
 
             # Si no hay tool_calls, retornar respuesta final
             if not message.tool_calls:
-                return {"text": message.content or "",
+                text = message.content or ""
+                tokens_estimated = len(text) // 4
+                return {"text": text,
                         "tool_calls": all_tool_calls,
                         "memory_used": memory_used,
+                        "tokens_used": tokens_from_api or tokens_estimated,
                         "error": None}
 
             # Procesar tool_calls
             messages.append(message)
 
             for tool_call in message.tool_calls:
-                func_name = tool_call.function.name
+                api_name = tool_call.function.name
+                mcp_name = self.name_map.get(api_name, api_name)
                 try:
                     args = json.loads(tool_call.function.arguments)
                 except json.JSONDecodeError:
                     args = {}
 
-                # Ejecutar tool
-                result = execute_tool(func_name, args)
-                success = result.get("ok", False)
+                # Ejecutar tool via MCP (mismo camino que OpenCode)
+                try:
+                    tool_result = self.mcp.call_tool(mcp_name, args)
+                    success = True
+                except Exception as e:
+                    tool_result = f"ERROR: {e}"
+                    success = False
 
-                if "memory" in func_name.lower():
+                if "memory" in api_name.lower():
                     memory_used = True
 
                 all_tool_calls.append({
-                    "name": func_name,
+                    "name": api_name,
                     "arguments": args,
-                    "success": success
+                    "success": success,
+                    "result": str(tool_result)[:500]
                 })
 
                 # Agregar resultado al historial
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tool_call.id,
-                    "content": json.dumps(result, ensure_ascii=False)
+                    "content": str(tool_result)
                 })
 
         # Si llegamos aqui, agotamos los rounds
         return {"text": "[ERROR] Max tool rounds exceeded",
                 "tool_calls": all_tool_calls, "memory_used": memory_used,
+                "tokens_used": tokens_from_api,
                 "error": "[ERROR] Max tool rounds exceeded"}
+
+    def close(self):
+        """Cierra la conexión MCP."""
+        if self.mcp:
+            self.mcp.close()
+            self.mcp = None
 
 
 def create_runner(model_id, mode="api", server_port=None):
