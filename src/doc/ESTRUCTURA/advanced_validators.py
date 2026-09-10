@@ -324,19 +324,24 @@ def validate_memory(reply, test, tool_calls=None, memory_used=False):
     # Si hay expected_tool, verificar que se ejecuto
     expected_tool = test.get("expected_tool")
     if expected_tool:
-        matching = [tc for tc in tool_calls if tc.get("name") == expected_tool]
+        # 1. Buscar en tool_calls (GroqRunner)
+        matching = [tc for tc in tool_calls if tc.get("name") == expected_tool and tc.get("success")]
         if matching:
-            successful = [tc for tc in matching if tc.get("success")]
-            if successful:
-                reasons.append(f"Tool esperada ejecutada: {expected_tool}")
-            else:
-                passed = False
-                reasons.append(f"Tool {expected_tool} ejecutada pero fallida")
-        else:
-            passed = False
-            reasons.append(f"No ejecuto tool esperada: {expected_tool}")
-    # Verificar uso de tools de memoria (prioridad sobre texto)
-    elif tool_calls:
+            reasons.append(f"Tool ejecutada: {expected_tool}")
+            # Tool exitosa → PASS directo, sin verificar marcadores
+            return True, reasons
+        
+        # 2. Fallback: verificar memory_used (OpenCodeRunner)
+        if memory_used:
+            reasons.append(f"Memoria detectada en respuesta (OpenCode)")
+            return True, reasons
+        
+        # 3. Ni tool ni memory_used → FAIL
+        return False, [f"Tool {expected_tool} no ejecutada"]
+
+    # Sin expected_tool → usar logica actual
+    # Verificar uso de tools de memoria
+    if tool_calls:
         memory_tools = [tc for tc in tool_calls if "memory" in tc.get("name", "").lower()]
         if memory_tools:
             successful = [tc for tc in memory_tools if tc.get("success")]

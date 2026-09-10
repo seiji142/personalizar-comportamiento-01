@@ -20,6 +20,12 @@
     ".ai/agents.md",
     ".ai/MEMORY.md"
   ],
+  "permission": {
+    "bash": "deny",
+    "webfetch": "deny",
+    "write": "ask",
+    "edit": "ask"
+  },
   "mcp": {
     "brain-ai": {
       "type": "local",

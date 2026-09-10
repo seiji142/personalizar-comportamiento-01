@@ -77,6 +77,21 @@ def check_keyword(reply, keyword):
     return False
 
 
+def validate_email(email):
+  """Valida si un email tiene un formato correcto.
+
+  Argumentos:
+      email: cadena de texto con el email a validar.
+
+  Retorna:
+      True si el formato es valido, False en caso contrario.
+  """
+  if not isinstance(email, str):
+    return False
+  pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+  return bool(re.match(pattern, email))
+
+
 def validate_response(response, test):
     """Valida una respuesta contra los keywords esperados usando sinonimos.
 
