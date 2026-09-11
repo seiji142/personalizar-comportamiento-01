@@ -70,7 +70,7 @@ def generate_report(results):
         "summary": {"pass": pass_count, "fail": fail_count}
     }
 
-    report_path = "agent_validation_report.json"
+    report_path = "docs/agent_validation_report.json"
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
     print(f"\nReporte guardado en {report_path}")

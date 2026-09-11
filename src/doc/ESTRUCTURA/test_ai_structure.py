@@ -138,7 +138,7 @@ def generate_report(results):
     print("=" * 60)
     print(f"Resultado: {pass_count} PASS | {fail_count} FAIL | {error_count} ERROR")
 
-    report_path = "ai_validation_report.json"
+    report_path = "docs/ai_validation_report.json"
     with open(report_path, "w", encoding="utf-8") as f:
         json.dump({"timestamp": datetime.now().isoformat(), "results": results}, f, indent=2, ensure_ascii=False)
     print(f"Reporte completo guardado en {report_path}")

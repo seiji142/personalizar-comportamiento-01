@@ -14,8 +14,8 @@ from datetime import datetime
 # Ruta absoluta al proyecto
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 TEST_SCRIPT = os.path.join(PROJECT_ROOT, "src", "doc", "ESTRUCTURA", "test_ai_structure.py")
-REPORT_FILE = "ai_validation_report.json"
-MULTI_REPORT = "multi_model_validation_report.json"
+REPORT_FILE = "docs/ai_validation_report.json"
+MULTI_REPORT = "docs/multi_model_validation_report.json"
 
 # Modelos vía API (originales + verificados)
 MODELS = [
