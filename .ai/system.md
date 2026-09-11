@@ -170,3 +170,16 @@ Ejecuta una acción con efectos. Los campos referenciales requieren
 Parámetros:
 - `action` (requerido): nombre de la acción
 - `params` (requerido): parámetros de la acción
+
+## Git
+
+Usa las herramientas MCP de git en vez de bash para operaciones git:
+
+| Herramienta | Uso |
+|-------------|-----|
+| `git_ver_estado` | Ver estado del repositorio |
+| `git_ver_diferencias` | Ver cambios pendientes |
+| `git_ver_historial` | Ver últimos commits |
+| `git_subir_cambios` | Subir cambios a git (add + commit + push) |
+
+Estas herramientas están disponibles en todos los proyectos vía configuración global de opencode.

@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-09-01T00:02:34.924826",
+  "type": "opencode_integrated_models",
+  "total_time_seconds": 304.7,
+  "models": [
+    {
+      "model": "opencode/big-pickle",
+      "status": "PARTIAL",
+      "per_test": {
+        "1": "PASS",
+        "2": "PASS",
+        "3": "PASS",
+        "4": "FAIL",
+        "5": "PASS"
+      },
+      "pass_count": 4,
+      "total_time": 86.9,
+      "errors": [
+        "Test 4: fallo"
+      ]
+    },
+    {
+      "model": "opencode/mimo-v2.5-free",
+      "status": "PARTIAL",
+      "per_test": {
+        "1": "PASS",
+        "2": "PASS",
+        "3": "FAIL",
+        "4": "TIMEOUT",
+        "5": "PASS"
+      },
+      "pass_count": 3,
+      "total_time": 184.0,
+      "errors": [
+        "Test 3: fallo",
+        "Test 4: timeout"
+      ]
+    }
+  ]
+}
