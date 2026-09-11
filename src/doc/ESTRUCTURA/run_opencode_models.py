@@ -16,7 +16,7 @@ from validation import validate_response
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 OPENCODE_CLI = os.path.join(os.environ.get("LOCALAPPDATA", ""), "opencode", "opencode-cli.exe")
-REPORT_FILE = "opencode_models_report.json"
+REPORT_FILE = "docs/opencode_models_report.json"
 
 # Modelos gratuitos actuales de OpenCode Zen (28/08/2026)
 MODELS = [

@@ -18,7 +18,7 @@ from datetime import datetime
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 QUESTIONS_FILE = os.path.join(PROJECT_ROOT, "src", "doc", "ESTRUCTURA", "advanced_questions.json")
-REPORT_FILE = os.path.join(PROJECT_ROOT, "advanced_validation_report.json")
+REPORT_FILE = os.path.join(PROJECT_ROOT, "docs", "advanced_validation_report.json")
 OUTPUT_DIR = os.path.join(PROJECT_ROOT, "src", "doc", "LECCIONES")
 
 

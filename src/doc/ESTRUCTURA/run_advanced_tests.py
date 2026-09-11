@@ -27,7 +27,7 @@ from datetime import datetime
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 OPENCODE_CLI = os.path.join(os.environ.get("LOCALAPPDATA", ""), "opencode", "opencode-cli.exe")
 QUESTIONS_FILE = os.path.join(os.path.dirname(__file__), "advanced_questions.json")
-REPORT_FILE = "advanced_validation_report.json"
+REPORT_FILE = "docs/advanced_validation_report.json"
 
 # Cargar casos desde el directorio del script
 sys.path.insert(0, os.path.dirname(__file__))

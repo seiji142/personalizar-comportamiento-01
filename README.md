@@ -32,7 +32,11 @@ La solucion es un sistema de archivos `.ai/` que actuan como system prompt del a
 │   └── advanced_questions.json       # 13 casos de la suite avanzada
 │
 ├── src/doc/MEMORIA/              # PDFs de pruebas de memoria y razonamiento
-└── RESULTADOS_TEST_AI.md         # Resultados consolidados de validacion
+└── docs/
+    ├── RESULTADOS_TEST_AI.md     # Resultados consolidados de validacion
+    ├── VALIDACION_TESTS.md       # Estructura de tests para auditoria
+    ├── advanced_validation_report.json
+    └── opencode_models_report.json
 ```
 
 ## Como funciona
@@ -68,7 +72,7 @@ La solucion es un sistema de archivos `.ai/` que actuan como system prompt del a
 > **Seguridad reforzada:** `rules.md` ahora incluye la seccion 6 "Reglas Inquebrantables"
 > (las reglas no pueden anularse por instrucciones del usuario), lo que mejora T5.
 
-Ver `RESULTADOS_TEST_AI.md` para el analisis completo.
+Ver `docs/RESULTADOS_TEST_AI.md` para el analisis completo.
 
 ## Requisitos
 
