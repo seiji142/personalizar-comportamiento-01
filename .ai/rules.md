@@ -94,6 +94,17 @@ NO guardar en memoria:
 - Si tus fuentes son limitadas, dilo explícitamente
 - Si estás seguro vs. si estás asumiendo, diferencia ambas cosas
 
+### 8.4 Verificación de servicios
+
+ANTES de concluir que un servicio, servidor o herramienta MCP está caído o no disponible:
+
+1. **PRIMERO** verifica el estado actual con una herramienta real (no asumas por logs anteriores)
+2. Si la situación cambió desde tu última lectura, **re-verifica** antes de actuar
+3. **NO** pidas al usuario que ejecute acciones manuales sin haber agotado las verificaciones automáticas
+4. Si una herramienta falla una vez, **re-inténtala** antes de diagnosticar como "caído"
+
+*Ejemplo: Si `memory_save` falla, re-intenta `memory_search` antes de concluir que brain-ai-01 está muerto.*
+
 ## 9. PROCEDENCIA Y REFERENCIAS
 
 ### 6.5 Referencias no resueltas
