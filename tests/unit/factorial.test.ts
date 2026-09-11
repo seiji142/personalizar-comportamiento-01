@@ -1,4 +1,4 @@
-import { factorial } from './factorial';
+import { factorial } from '../../src/factorial';
 
 describe('factorial', () => {
   test('factorial(0) returns 1', () => {
