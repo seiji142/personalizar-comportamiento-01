@@ -6,10 +6,13 @@ Tests unitarios para la funcion de validacion de email simple.
 import sys
 import os
 import unittest
+import importlib.util
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-from email_validator import validate_email_simple
+_src_path = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', 'src', 'email_validator.py'))
+_spec = importlib.util.spec_from_file_location('email_validator_local', _src_path)
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+validate_email_simple = _mod.validate_email_simple
 
 
 class TestValidateEmailSimple(unittest.TestCase):
