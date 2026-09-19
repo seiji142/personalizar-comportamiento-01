@@ -6,8 +6,8 @@ Ultima actualizacion: 19/09/2026
 ## CRITICO
 
 ### 1. Fix validador T4 — sinonimo "regresion"
-- [ ] Agregar `"regresion": ["regresion", "regresión"]` a SYNONYMS en `tests/lib/validation.py`
-- [ ] Verificar que T4 pasa para los 3 modelos (big-pickle, mimo, qwen)
+- [x] Agregar `"regresion": ["regresion", "regresión"]` a SYNONYMS en `tests/lib/validation.py`
+- [x] Verificar que check_keyword matchea "regresión" con y sin tilde
 - [ ] Re-ejecutar suite completa y confirmar fix
 
 ### 2. C2 — Modelos no declinan tarea fuera de alcance

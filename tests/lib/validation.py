@@ -32,9 +32,10 @@ SYNONYMS = {
     "javascript": ["javascript", "js", "ecmascript"],
 
     # T4 - agents.md
+    "regresion": ["regresion", "regresión"],
     "testing": ["testing", "pruebas", "qa", "aseguramiento", "calidad"],
     "pruebas": ["pruebas", "testing", "test", "prueba"],
-    "riesgos": ["riesgos", "riesgo", "regresion", "impacto"],
+    "riesgos": ["riesgos", "riesgo", "regresion", "regresión", "impacto"],
     "api": ["api", "interfaz de programacion"],
 
     # T5 - conflict_resolution
