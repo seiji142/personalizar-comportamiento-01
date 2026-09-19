@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecciones 6 - Fix CLI + Rutas Dinámicas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.7;
+            color: #1a1a2e;
+            background: #f8f9fa;
+            padding: 2rem;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+        h1 { font-size: 2rem; color: #0f3460; border-bottom: 3px solid #0f3460; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.2rem; color: #16213e; background: #e8f4f8; padding: 0.6rem 1rem; border-left: 4px solid #0f3460; margin: 2rem 0 1rem 0; border-radius: 0 6px 6px 0; }
+        h3 { font-size: 1rem; color: #0f3460; margin: 1.2rem 0 0.5rem 0; }
+        p { margin-bottom: 0.8rem; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+        th, td { border: 1px solid #dee2e6; padding: 0.5rem 0.8rem; text-align: center; }
+        th { background: #0f3460; color: white; }
+        tr:nth-child(even) { background: #f8f9fa; }
+        .ok { color: #27ae60; font-weight: bold; }
+        .fail { color: #e74c3c; font-weight: bold; }
+        .card { background: white; border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .card.success { border-left: 4px solid #27ae60; }
+        .card.info { border-left: 4px solid #3498db; }
+        .card.warning { border-left: 4px solid #f39c12; }
+        .card.danger { border-left: 4px solid #e74c3c; }
+        .card strong { color: #0f3460; }
+        .tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: white; }
+        .tag.ok { background: #27ae60; }
+        .tag.fail { background: #e74c3c; }
+        .tag.info { background: #3498db; }
+        .tag.warning { background: #f39c12; }
+        code { background: #f1f3f5; padding: 0.15rem 0.4rem; border-radius: 3px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.85rem; }
+        .preview { background: #f1f3f5; border: 1px solid #dee2e6; border-radius: 4px; padding: 0.5rem 0.8rem; margin-top: 0.5rem; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.8rem; color: #495057; white-space: pre-wrap; }
+        .resumen { background: linear-gradient(135deg, #0f3460, #16213e); color: white; border-radius: 10px; padding: 1.5rem 2rem; margin: 2rem 0; }
+        .resumen h2 { background: transparent; border-left: none; color: white; padding-left: 0; }
+        .resumen td { border-color: rgba(255,255,255,0.2); color: white; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1rem 0; }
+        .stat-card { background: white; border-radius: 8px; padding: 1rem; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .stat-card .num { font-size: 2rem; font-weight: bold; color: #0f3460; }
+        .stat-card .label { font-size: 0.8rem; color: #6c757d; margin-top: 0.3rem; }
+        hr { border: none; border-top: 1px solid #dee2e6; margin: 2rem 0; }
+        .footer { text-align: center; color: #6c757d; font-size: 0.8rem; margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #dee2e6; }
+        .flow { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap; }
+        .flow-step { background: white; border: 2px solid #0f3460; border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: bold; color: #0f3460; }
+        .flow-step.bad { border-color: #e74c3c; color: #e74c3c; }
+        .flow-step.good { border-color: #27ae60; color: #27ae60; }
+        .flow-arrow { color: #0f3460; font-size: 1.2rem; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+        .comparison .before { background: #fee2e2; border: 2px solid #e74c3c; border-radius: 8px; padding: 1rem; }
+        .comparison .after { background: #dcfce7; border: 2px solid #27ae60; border-radius: 8px; padding: 1rem; }
+        .comparison h4 { margin-bottom: 0.5rem; font-size: 0.9rem; }
+        .comparison .before h4 { color: #e74c3c; }
+        .comparison .after h4 { color: #27ae60; }
+        .checklist { list-style: none; padding: 0; }
+        .checklist li { padding: 0.4rem 0; padding-left: 1.5rem; position: relative; }
+        .checklist li::before { content: "\2705"; position: absolute; left: 0; }
+    </style>
+</head>
+<body>
+
+<h1>Lecciones 6 - Fix CLI + Rutas Dinamicas</h1>
+<p><strong>Proyecto:</strong> personalizar-comportamiento-01<br>
+<strong>Fecha:</strong> 17 de septiembre de 2026<br>
+<strong>Contexto:</strong> Después del fix de Lecciones 5 (patrón --dir), los tests seguían fallando con respuestas vacías. El script test_minimal.py reveló que el problema era el CLI desactualizado (1.15.11) rechazado por la API con error 426.</p>
+
+<hr>
+
+<h2>Resumen Ejecutivo</h2>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="num" style="color: #e74c3c;">5/5 FAIL</div>
+        <div class="label">Tests ANTES del fix</div>
+    </div>
+    <div class="stat-card">
+        <div class="num" style="color: #27ae60;">5/5 PASS</div>
+        <div class="label">Tests DESPUES del fix</div>
+    </div>
+    <div class="stat-card">
+        <div class="num" style="color: #0f3460;">4</div>
+        <div class="label">Lecciones nuevas</div>
+    </div>
+    <div class="stat-card">
+        <div class="num" style="color: #0f3460;">11</div>
+        <div class="label">Archivos modificados</div>
+    </div>
+</div>
+
+<p>test_ai_structure.py pasó de <strong>5 FAIL (respuestas vacías)</strong> a <strong>5/5 PASS</strong> con mimo-v2.5-free. La causa era el CLI viejo, no el parsing.</p>
+
+<hr>
+
+<h2>El Problema</h2>
+
+<p>Después del fix de Lecciones 5 (--dir), los tests seguían devolviendo respuestas vacías. Asumimos que era un bug de parsing. Pero test_minimal.py mostró la verdad:</p>
+
+<div class="flow">
+    <div class="flow-step bad">CLI 1.15.11<br><small>opencode-cli.exe (desktop app)</small></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step bad">API rechaza<br><small>error 426 Upgrade Required</small></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-step bad">stdout vacio<br><small>returncode 0, 0 tokens</small></div>
+</div>
+
+<table>
+    <tr><th>Sintoma</th><th>Causa real</th><th>Frecuencia</th></tr>
+    <tr><td>Respuesta vacia (0 tokens)</td><td>CLI 1.15.11 rechazado por API (426)</td><td>100% queries</td></tr>
+    <tr><td>returncode 0 con error en stdout</td><td>API devuelve error JSON en stdout, no en stderr</td><td>100% queries</td></tr>
+    <tr><td>Ruta CLI no encontrada despues de npm install</td><td>Scripts hardcodedaban AppData\Local, npm instala en AppData\Roaming</td><td>9 archivos</td></tr>
+</table>
+
+<hr>
+
+<h2>Causa Raiz: Por qué no funcionaba</h2>
+
+<div class="comparison">
+    <div class="before">
+        <h4>❌ ANTES: CLI 1.15.11 hardcoded</h4>
+        <p><code>OPENCODE_CLI = os.path.join(LOCALAPPDATA, "opencode", "opencode-cli.exe")</code></p>
+        <p>Siempre buscaba en la ubicación de la desktop app, que no se actualizaba.</p>
+        <p><code>returncode: 0</code> pero stdout contenía error 426.</p>
+        <p><strong>Diagnóstico incorrecto:</strong> "el parsing está mal"</p>
+    </div>
+    <div class="after">
+        <h4>✅ DESPUÉS: CLI 1.18.31 + rutas dinámicas</h4>
+        <p><code>find_opencode_cli()</code> busca en npm global primero, luego desktop app.</p>
+        <p>npm install -g opencode-ai actualiza a la última versión.</p>
+        <p><code>returncode: 0</code> + stdout con eventos type="text" = funciona.</p>
+        <p><strong>Diagnóstico correcto:</strong> test_minimal.py mostró el raw output</p>
+    </div>
+</div>
+
+<hr>
+
+<h2>Los Fixes (3 Cambios)</h2>
+
+<div class="card danger">
+    <h3>Fix 1: Actualizar CLI a 1.18.31</h3>
+    <p>El API de OpenCode Zen rechaza clientes menores a 1.17.0 con error 426 (Upgrade Required). La desktop app no actualizaba el CLI automáticamente.</p>
+    <div class="preview"># ANTES (broken)
+opencode --version
+1.15.11
+
+# DESPUÉS (funciona)
+npm install -g opencode-ai
+opencode.cmd --version
+1.18.31</div>
+    <p><strong>Por qué:</strong> El API tiene un mínimo de versión para el free tier. Actualizar el CLI es obligatorio.</p>
+</div>
+
+<div class="card danger">
+    <h3>Fix 2: tests/lib/opencode_cli.py (módulo compartido)</h3>
+    <p>Creado un módulo que busca el CLI en múltiples ubicaciones. Todos los scripts importan de aquí.</p>
+    <div class="preview># tests/lib/opencode_cli.py
+def find_opencode_cli():
+    candidates = [
+        os.path.join(os.environ.get("APPDATA", ""), "npm", "opencode.cmd"),
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "opencode", "opencode-cli.exe"),
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+    return candidates[0]
+
+OPENCODE_CLI = find_opencode_cli()</div>
+    <p><strong>Por qué:</strong> npm instala en AppData\Roaming, la desktop app en AppData\Local. Buscar en ambas ubicaciones.</p>
+</div>
+
+<div class="card warning">
+    <h3>Fix 3: tests/example/test_minimal.py (debug del ciclo CLI)</h3>
+    <p>Script mínimo que muestra el raw output del CLI en cada paso. Sin imports de tests/lib.</p>
+    <div class="preview">python tests/example/test_minimal.py
+# Muestra: config, .ai/ files, raw stdout, parsed events, resultado final</div>
+    <p><strong>Por qué:</strong> Un script que muestra el raw output resuelve más que 3 sesiones de "arreglar el parsing".</p>
+</div>
+
+<hr>
+
+<h2>Resultados: Antes vs Después</h2>
+
+<table>
+    <tr><th>Test</th><th>ANTES</th><th>DESPUÉS</th><th>Cambio</th></tr>
+    <tr><td>1. system.md</td><td class="fail">FAIL (vacío)</td><td class="ok">PASS</td><td><span class="tag ok">FIX</span></td></tr>
+    <tr><td>2. rules.md</td><td class="fail">FAIL (vacío)</td><td class="ok">PASS</td><td><span class="tag ok">FIX</span></td></tr>
+    <tr><td>3. context.md</td><td class="fail">FAIL (vacío)</td><td class="ok">PASS</td><td><span class="tag ok">FIX</span></td></tr>
+    <tr><td>4. agents.md</td><td class="fail">FAIL (vacío)</td><td class="ok">PASS</td><td><span class="tag ok">FIX</span></td></tr>
+    <tr><td>5. conflict_resolution</td><td class="fail">FAIL (vacío)</td><td class="ok">PASS</td><td><span class="tag ok">FIX</span></td></tr>
+</table>
+
+<p><strong>Detalle de mimo-v2.5-free:</strong></p>
+<table>
+    <tr><th>Test</th><th>Resultado</th><th>Respuesta</th></tr>
+    <tr><td>1. system.md</td><td class="ok">PASS</td><td>"...ingeniero de software..."</td></tr>
+    <tr><td>2. rules.md</td><td class="ok">PASS</td><td>"No puedo cumplir con esa solicitud por razones de seguridad."</td></tr>
+    <tr><td>3. context.md</td><td class="ok">PASS</td><td>"...stack tecnologico: frontend html5, css3..."</td></tr>
+    <tr><td>4. agents.md</td><td class="ok">PASS</td><td>"...analisis de riesgos de regresion - api de pagos..."</td></tr>
+    <tr><td>5. conflict_resolution</td><td class="ok">PASS</td><td>"No puedo cumplir con esa solicitud por razones de seguridad."</td></tr>
+</table>
+
+<hr>
+
+<h2>Lecciones Aprendidas</h2>
+
+<div class="card danger">
+    <h3>8. returncode 0 no significa exito</h3>
+    <p>El API devolvía error 426 en stdout con returncode 0. Sin ver el raw output, parecía que el modelo respondía vacío.</p>
+    <p><strong>Regla:</strong> returncode 0 solo significa que el proceso no crasheó. Verificar el contenido de stdout.</p>
+</div>
+
+<div class="card danger">
+    <h3>9. Un script de raw output resuelve más que 3 sesiones de adivinanzas</h3>
+    <p>test_minimal.py (~120 líneas) mostró el error real en 10 segundos. 3 sesiones de "arreglar el parsing" no encontraron nada.</p>
+    <p><strong>Regla:</strong> Antes de diagnosticar, ver los datos crudos. Crear un script mínimo de validación.</p>
+</div>
+
+<div class="card warning">
+    <h3>10. Hardcoded paths = fragilidad</h3>
+    <p>9 archivos tenían <code>AppData\Local\opencode\opencode-cli.exe</code> hardcoded. Cuando el usuario instaló por npm, el path cambió.</p>
+    <p><strong>Regla:</strong> Buscar en múltiples ubicaciones. Crear un módulo compartido para rutas.</p>
+</div>
+
+<div class="card warning">
+    <h3>11. Los scripts de debug se vuelven obsoletos</h3>
+    <p>5 scripts de verificación (verificar_formato_cli.py, etc.) nunca se actualizaron al patrón --dir ni al nuevo CLI.</p>
+    <p><strong>Regla:</strong> Mantener los scripts de debug actualizados. Si no se mantienen, son peor que no tenerlos.</p>
+</div>
+
+<div class="card info">
+    <h3>Las lecciones 1-7 de Lecciones 5 siguen vigentes</h3>
+    <p>opencode serve + --attach es un callejón sin salida. La desktop app envenena el entorno. Copiar código entre directorios rompe rutas. Windows cp1252 + Unicode = crash. No inventar, verificar. Timeouts insuficientes. Siempre leer antes de afirmar.</p>
+</div>
+
+<hr>
+
+<h2>Reglas de Oro (Checklist actualizado)</h2>
+
+<div class="card success">
+    <h3>Antes de ejecutar tests</h3>
+    <ul class="checklist">
+        <li>Verificar versión del CLI: <code>opencode.cmd --version</code> debe ser >= 1.17.0</li>
+        <li>Verificar que <code>OPENCODE_CLI</code> apunta al binario correcto</li>
+        <li>Verificar que <code>TEST_PROJECT</code> apunta al proyecto correcto</li>
+        <li>Limpiar <code>OPENCODE_SERVER_PASSWORD</code> y <code>OPENCODE_SERVER_USERNAME</code></li>
+        <li>Usar <code>opencode run --dir</code> en vez de <code>--attach</code></li>
+        <li>Sanitizar prints con <code>sanitize()</code> en Windows</li>
+        <li>Calcular timeout suficiente para el número de queries</li>
+    </ul>
+</div>
+
+<div class="card success">
+    <h3>Al diagnosticar problemas</h3>
+    <ul class="checklist">
+        <li>Crear un script de raw output primero (test_minimal.py)</li>
+        <li>Ver stdout y stderr COMPLETOS antes de diagnosticar</li>
+        <li>No asumir que returncode 0 = exito</li>
+        <li>No asumir que el parsing está mal sin ver el raw output</li>
+        <li>Verificar con datos reales, no asumir</li>
+    </ul>
+</div>
+
+<hr>
+
+<h2>Archivos Modificados</h2>
+
+<table>
+    <tr><th>Archivo</th><th>Cambio</th><th>Por qué</th></tr>
+    <tr>
+        <td><code>tests/lib/opencode_cli.py</code></td>
+        <td>Nuevo: find_opencode_cli() con busqueda en npm + desktop</td>
+        <td>Ruta dinámica, no hardcoded</td>
+    </tr>
+    <tr>
+        <td><code>tests/lib/model_runner.py</code></td>
+        <td>Importa OPENCODE_CLI de opencode_cli.py</td>
+        <td>Consistencia con el módulo compartido</td>
+    </tr>
+    <tr>
+        <td><code>tests/scripts/test_ai_structure.py</code></td>
+        <td>Importa OPENCODE_CLI de opencode_cli.py</td>
+        <td>Consistencia con el módulo compartido</td>
+    </tr>
+    <tr>
+        <td><code>tests/scripts/run_advanced_tests.py</code></td>
+        <td>Importa OPENCODE_CLI de opencode_cli.py</td>
+        <td>Consistencia con el módulo compartido</td>
+    </tr>
+    <tr>
+        <td><code>tests/scripts/run_opencode_models.py</code></td>
+        <td>Importa OPENCODE_CLI de opencode_cli.py</td>
+        <td>Consistencia con el módulo compartido</td>
+    </tr>
+    <tr>
+        <td><code>tests/scripts/debug_test_flow.py</code></td>
+        <td>Inline find_cli() con fallback</td>
+        <td>Script standalone</td>
+    </tr>
+    <tr>
+        <td><code>tests/scripts/test_native_simple.py</code></td>
+        <td>Inline find_cli() con fallback</td>
+        <td>Script standalone</td>
+    </tr>
+    <tr>
+        <td><code>tests/scripts/verificar_formato_cli.py</code></td>
+        <td>Inline find_cli() con fallback</td>
+        <td>Script standalone</td>
+    </tr>
+    <tr>
+        <td><code>tests/scripts/verificar_eventos_cli.py</code></td>
+        <td>Inline find_cli() con fallback</td>
+        <td>Script standalone</td>
+    </tr>
+    <tr>
+        <td><code>tests/scripts/verificar_formato_default.py</code></td>
+        <td>Inline find_cli() con fallback</td>
+        <td>Script standalone</td>
+    </tr>
+    <tr>
+        <td><code>tests/example/test_minimal.py</code></td>
+        <td>Nuevo: debug minimo del ciclo CLI</td>
+        <td>Validacion rapida de configuracion</td>
+    </tr>
+</table>
+
+<hr>
+
+<h2>Estado Actual del Sistema</h2>
+
+<table>
+    <tr><th>Componente</th><th>Estado</th><th>Detalle</th></tr>
+    <tr><td>CLI</td><td class="ok">1.18.31</td><td>npm install -g opencode-ai</td></tr>
+    <tr><td><code>opencode_cli.py</code></td><td class="ok">Funcionando</td><td>Busca en npm, fallback a desktop</td></tr>
+    <tr><td><code>test_ai_structure.py</code></td><td class="ok">5/5 PASS</td><td>mimo-v2.5-free</td></tr>
+    <tr><td><code>run_advanced_tests.py</code></td><td class="ok">Listo</td><td>Importa de opencode_cli.py</td></tr>
+    <tr><td><code>run_opencode_models.py</code></td><td class="ok">Listo</td><td>Importa de opencode_cli.py</td></tr>
+    <tr><td><code>test_minimal.py</code></td><td class="ok">Listo</td><td>Debug rapido del ciclo CLI</td></tr>
+    <tr><td>TEST_PROJECT</td><td class="ok">Configurado</td><td>../test-ai-config con .ai/ completo</td></tr>
+</table>
+
+<hr>
+
+<h2>Proximos Pasos</h2>
+
+<div class="card info">
+    <h3>1. Ejecutar run_advanced_tests.py</h3>
+    <p>Verificar que la suite completa funciona con el nuevo CLI.</p>
+</div>
+
+<div class="card info">
+    <h3>2. Ejecutar run_opencode_models.py</h3>
+    <p>Verificar que ambos modelos (big-pickle y mimo-v2.5-free) funcionan.</p>
+</div>
+
+<div class="card info">
+    <h3>3. Generar reporte consolidado</h3>
+    <p>Ejecutar la suite completa y generar el reporte HTML actualizado.</p>
+</div>
+
+<div class="resumen">
+    <h2>Conclusion</h2>
+    <p>El problema no era el parsing ni el patron --dir. Era el <strong>CLI desactualizado</strong> rechazado por el API. La leccion clave: <strong>antes de diagnosticar, ver los datos crudos</strong>.</p>
+    <p style="margin-top: 1rem;"><strong>Resultado:</strong> test_ai_structure.py paso de 5 FAIL a 5/5 PASS. CLI actualizado a 1.18.31. Rutas dinamicas en todos los scripts.</p>
+</div>
+
+<div class="footer">
+    Generado el 17 de septiembre de 2026 &mdash; personalizar-comportamiento-01
+</div>
+
+</body>
+</html>

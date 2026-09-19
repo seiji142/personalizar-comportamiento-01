@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-09-11T21:44:33.142635",
+  "results": {
+    "pytest (test_email_validator)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 2.3
+    },
+    "test_validators.py (35 tests)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 0.2
+    },
+    "generate_html_report.py": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 0.2
+    },
+    "test_ai_structure.py (qwen/qwen3.8-27b)": {
+      "status": "TIMEOUT",
+      "elapsed": 120
+    },
+    "validate_agent_responses.py (auto-test)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 0.1
+    },
+    "run_advanced_tests.py --api qwen/qwen3.8-27b": {
+      "status": "TIMEOUT",
+      "elapsed": 600
+    }
+  }
+}

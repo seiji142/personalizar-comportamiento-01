@@ -24,5 +24,22 @@
 - DB_PASSWORD=[contraseña de MySQL]
 - DB_NAME=[nombre de la base de datos]
 
+## Convenciones de Archivos
+
+**Regla: TODO va a `docs/` (reportes) o `tests/` (codigo y datos de test).**
+
+| Tipo | Destino | Ejemplo |
+|------|---------|---------|
+| JSON (answers/reports de tests) | `tests/answers/` | `advanced_validation_report.json` |
+| JSON (preguntas de tests) | `tests/questions/` | `advanced_questions.json` |
+| Scripts de tests | `tests/scripts/` | `test_ai_structure.py` |
+| Librerias de tests | `tests/lib/` | `validation.py`, `advanced_validators.py` |
+| Scripts de reportes | `scripts/` | `generate_html_report.py` |
+| HTML (reportes visuales de tests) | `docs/tests/` | `reporte_consolidado.html` |
+| PDF (documentacion de tests) | `docs/tests/` | `TEST DE ESTRUCTURA.pdf` |
+| PDF (documentacion general) | `docs/` | `Estructura proyecto AI.pdf` |
+| Markdown (analisis de tests) | `docs/tests/` | `RESULTADOS_TEST_AI.md` |
+| Backup | `docs/backup_YYYYMMDD_HHMMSS/` | Archivos previos al re-run |
+
 ## Notas de Desarrollo
 [Cualquier informacion adicional relevante para desarrolladores]

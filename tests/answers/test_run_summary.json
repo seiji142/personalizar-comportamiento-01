@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-09-19T08:23:41.766727",
+  "results": {
+    "pytest (test_email_validator)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 2.4
+    },
+    "test_validators.py (35 tests)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 0.2
+    },
+    "test_ai_structure.py (qwen/qwen3.8-27b)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 55.1
+    },
+    "run_advanced_tests.py --api qwen/qwen3.8-27b": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 757.6
+    },
+    "test_ai_structure.py --native opencode/big-pickle": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 145.5
+    },
+    "run_advanced_tests.py opencode/big-pickle": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 521.9
+    },
+    "test_ai_structure.py --native opencode/mimo-v2.5-free": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 163.6
+    },
+    "run_advanced_tests.py opencode/mimo-v2.5-free": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 802.4
+    },
+    "generate_html_report.py": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 0.2
+    }
+  }
+}
