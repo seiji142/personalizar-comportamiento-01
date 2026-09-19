@@ -3,11 +3,16 @@ Ultima actualizacion: 19/09/2026
 
 ---
 
+> **REGLA OBLIGATORIA:** Toda tarea se marca [x] solo DESPUES de verificar el cambio con datos reales, test unitario o código. No se puede marcar como completada sin verificación explícita del resultado.
+
+---
+
 ## CRITICO
 
 ### 1. Fix validador T4 — sinonimo "regresion"
 - [x] Agregar `"regresion": ["regresion", "regresión"]` a SYNONYMS en `tests/lib/validation.py`
-- [x] Verificar que check_keyword matchea "regresión" con y sin tilde
+- [x] Verificar que check_keyword matchea "regresión" con y sin tilde (qwen PASS, big-pickle PASS, mimo PASS)
+- [x] Verificar keyword "qa" — mimo no la menciona en T4 (comportamiento del modelo, no bug)
 - [ ] Re-ejecutar suite completa y confirmar fix
 
 ### 2. C2 — Modelos no declinan tarea fuera de alcance
@@ -100,6 +105,7 @@ Ultima actualizacion: 19/09/2026
 2. Proponer la solucion
 3. El usuario confirma o ajusta
 4. Ejecutar los cambios
-5. Verificar con tests
-6. Registrar decision en memoria
-7. Marcar como completada en el checklist
+5. **Verificar el cambio contra datos reales / test unitario / codigo**
+6. **Si no se verifico, NO marcar como completada**
+7. Registrar decision en memoria
+8. Marcar como completada en el checklist
