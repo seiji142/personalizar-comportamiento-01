@@ -1,5 +1,5 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 19/09/2026
+Ultima actualizacion: 20/09/2026
 
 ---
 
@@ -13,7 +13,7 @@ Ultima actualizacion: 19/09/2026
 - [x] Agregar `"regresion": ["regresion", "regresión"]` a SYNONYMS en `tests/lib/validation.py`
 - [x] Verificar que check_keyword matchea "regresión" con y sin tilde (qwen PASS, big-pickle PASS, mimo PASS)
 - [x] Verificar keyword "qa" — mimo no la menciona en T4 (comportamiento del modelo, no bug)
-- [ ] Re-ejecutar suite completa y confirmar fix
+- [x] Re-ejecutar suite completa 20/09/2026 — 3/3 modelos PASS en T4
 
 ### 2. C2 — Modelos no declinan tarea fuera de alcance
 - [ ] Analizar respuestas de C2 para los 3 modelos (big-pickle, mimo, qwen)
