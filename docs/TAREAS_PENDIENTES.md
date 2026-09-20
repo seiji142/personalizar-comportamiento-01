@@ -58,6 +58,16 @@ Ultima actualizacion: 20/09/2026
 - [ ] Volver a incluir en run_all_tests.py cuando se resuelva
 - [ ] Re-ejecutar suite completa con los 4 modelos
 
+### 9. mimo T3 flaky — falla intermitente de keywords (20/09/2026)
+- [ ] Investigar por que mimo a veces menciona "react"/"typescript" y a veces no en T3
+- [ ] Decidir: agregar sinonimos mas flexibles en `ai_structure_questions.json` T3 o aceptar flakiness
+- [ ] Re-ejecutar T3 para mimo y verificar
+
+### 10. mimo timeout advanced tests >1200s (20/09/2026)
+- [ ] Investigar si el overhead del parser NDJSON causa la lentitud
+- [ ] Verificar tiempos de cada test individual de mimo en el ultimo run
+- [ ] Decidir: aumentar timeout de 1200s a 1800s o simplificar prompts de mimo
+
 ---
 
 ## BAJO
