@@ -30,7 +30,8 @@ Ultima actualizacion: 19/09/2026
 - [x] Crear `tests/test_opencode_events.py` — 9 tests unitarios del parser, todos PASS
 - [x] Modificar `OpenCodeRunner` en `model_runner.py` para usar `parse_ndjson()`
 - [x] Verificar con modelo real: 4 tool calls capturados, 15555 tokens, memory_used correcto
-- [ ] Actualizar validadores D1-D3 para usar tool calls reales en vez de heuristic
+- [x] Actualizar validadores D1-D3: validate_memory() ahora acepta files_read y verifica paths de memoria reales
+- [x] Verificar: 44/44 tests unitarios pasan (test_opencode_events + test_validators)
 
 ---
 

@@ -137,6 +137,7 @@ class OpenCodeRunner(ModelRunner):
                 "tool_calls": tool_calls,
                 "memory_used": parsed.memory_used,
                 "tokens_used": parsed.tokens.total,
+                "files_read": parsed.files_read,
                 "error": None,
             }
 

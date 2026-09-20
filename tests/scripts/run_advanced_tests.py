@@ -94,6 +94,7 @@ def run_cases_for_model(model_label, runner, questions, report_path=None, accumu
         error = result.get("error")
         tool_calls = result.get("tool_calls", [])
         memory_used = result.get("memory_used", False)
+        files_read = result.get("files_read", [])
 
         if error:
             if "TIMEOUT" in error:
@@ -103,7 +104,7 @@ def run_cases_for_model(model_label, runner, questions, report_path=None, accumu
                 status = "ERROR"
                 reasons = [error]
         else:
-            passed, reasons = validate_advanced(text, case, tool_calls=tool_calls, memory_used=memory_used)
+            passed, reasons = validate_advanced(text, case, tool_calls=tool_calls, memory_used=memory_used, files_read=files_read)
             status = "PASS" if passed else "FAIL"
 
         elapsed = round(time.time() - t0, 1)
