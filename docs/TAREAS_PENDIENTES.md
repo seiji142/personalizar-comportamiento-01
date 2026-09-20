@@ -24,6 +24,14 @@ Ultima actualizacion: 19/09/2026
 - [ ] Decidir: excluir D1-D3 de modelos API o cambiar validacion para aceptar "sin acceso"
 - [ ] Documentar que D1-D3 solo aplican a modelos nativos con MCP
 
+### 4. OpenCodeRunner no captura tool calls ni tokens (Solucion B: parsear NDJSON)
+- [x] Capturar fixture NDJSON real (`opencode run --format json "..." > tests/fixtures/opencode_sample.ndjson`)
+- [x] Crear `tests/lib/opencode_events.py` — parser tolerante de NDJSON (ToolCall, TokenUsage, ParsedRun)
+- [x] Crear `tests/test_opencode_events.py` — 9 tests unitarios del parser, todos PASS
+- [x] Modificar `OpenCodeRunner` en `model_runner.py` para usar `parse_ndjson()`
+- [x] Verificar con modelo real: 4 tool calls capturados, 15555 tokens, memory_used correcto
+- [ ] Actualizar validadores D1-D3 para usar tool calls reales en vez de heuristic
+
 ---
 
 ## MEDIO

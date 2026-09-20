@@ -23,6 +23,7 @@ import threading
 
 from mcp_client import MCPStdioClient, mcp_tools_to_openai, MCPError
 from opencode_cli import OPENCODE_CLI
+from opencode_events import parse_ndjson
 
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -98,7 +99,7 @@ class OpenCodeRunner(ModelRunner):
         super().__init__(model_id, system_prompt)
 
     def query(self, prompt):
-        """OpenCode crea su propia sesion con --dir. Solo capturamos la respuesta."""
+        """OpenCode crea su propia sesion con --dir. Parsea NDJSON para tool_calls y tokens."""
         cmd = [
             OPENCODE_CLI, "run",
             "--model", self.model_id,
@@ -110,7 +111,6 @@ class OpenCodeRunner(ModelRunner):
         try:
             env = os.environ.copy()
             env["PYTHONIOENCODING"] = "utf-8"
-            # Limpiar variables de la desktop app para evitar conflictos
             env["OPENCODE_SERVER_PASSWORD"] = ""
             env["OPENCODE_SERVER_USERNAME"] = ""
             result = subprocess.run(
@@ -119,21 +119,33 @@ class OpenCodeRunner(ModelRunner):
                 encoding="utf-8", errors="replace",
                 env=env, timeout=QUERY_TIMEOUT
             )
-            text = _parse_opencode_response(result.stdout)
+
+            parsed = parse_ndjson(result.stdout.splitlines())
+
+            text = parsed.text
             if not text and result.stderr.strip():
                 return {"text": "", "tool_calls": [], "memory_used": False,
-                        "error": f"[ERROR] {result.stderr.strip()[:500]}"}
+                        "tokens_used": 0, "error": f"[ERROR] {result.stderr.strip()[:500]}"}
 
-            # OpenCode no expone tool_calls en la salida JSON,
-            # pero si la respuesta menciona memoria, asumimos que la uso
-            memory_used = any(kw in text.lower() for kw in ["memoria", "episodio", "decisión", "busqué", "encontré"])
+            tool_calls = [
+                {"name": tc.name, "args": tc.args, "output": tc.output, "status": tc.status}
+                for tc in parsed.tool_calls
+            ]
 
-            return {"text": text, "tool_calls": [], "memory_used": memory_used, "error": None}
+            return {
+                "text": text,
+                "tool_calls": tool_calls,
+                "memory_used": parsed.memory_used,
+                "tokens_used": parsed.tokens.total,
+                "error": None,
+            }
 
         except subprocess.TimeoutExpired:
-            return {"text": "", "tool_calls": [], "memory_used": False, "error": "[TIMEOUT]"}
+            return {"text": "", "tool_calls": [], "memory_used": False,
+                    "tokens_used": 0, "error": "[TIMEOUT]"}
         except Exception as e:
-            return {"text": "", "tool_calls": [], "memory_used": False, "error": f"[ERROR] {str(e)}"}
+            return {"text": "", "tool_calls": [], "memory_used": False,
+                    "tokens_used": 0, "error": f"[ERROR] {str(e)}"}
 
 
 class GroqRunner(ModelRunner):
