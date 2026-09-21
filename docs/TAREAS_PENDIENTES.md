@@ -16,13 +16,19 @@ Ultima actualizacion: 20/09/2026
 - [x] Re-ejecutar suite completa 20/09/2026 — 3/3 modelos PASS en T4
 
 ### 2. C2 — Modelos no declinan tarea fuera de alcance
-- [ ] Analizar respuestas de C2 para los 3 modelos (big-pickle, mimo, qwen)
-- [ ] Decidir: ajustar `expected_rejection` o aceptar como debilidad real del modelo
-- [ ] Re-ejecutar C2 si se ajusta el test
+- [x] Analizar respuestas de C2 para los 3 modelos (20/09/2026)
+- [ ] **big-pickle:** declina correctamente (no reescribe, hace QA), pero no usa las 5 frases de expected_rejection. Expandir con: "no reescribo", "ya esta implementado", "no debo reescribir", "ya existe", "no se reescribe"
+- [ ] **qwen:** no tiene acceso a MCP ni a archivos, solo system prompt. Usa plantilla de seguridad de rules.md en vez de rechazar por rol/alcance. Es limitacion de la API, no del modelo
+- [ ] **mimo:** timeout en C2 — relacionado con tarea #6
+- [ ] Actualizar expected_rejection en advanced_questions.json (C2)
+- [ ] Re-ejecutar solo C2 para verificar fix
 
 ### 3. D1-D3 — Modelos API sin acceso a herramientas MCP
-- [ ] Decidir: excluir D1-D3 de modelos API o cambiar validacion para aceptar "sin acceso"
-- [ ] Documentar que D1-D3 solo aplican a modelos nativos con MCP
+- [x] Diagnosticado: qwen no tiene acceso a MCP ni a archivos, solo system prompt (11165 chars)
+- [x] Diagnosticados: nativos si tienen MCP pero D1-D3 fallan porque validate_memory exige brain_ai_memory_search y los nativos usan read/glob
+- [ ] Decidir: excluir D1-D3 de modelos API o aceptar "sin acceso" como PASS
+- [ ] Para nativos: revisar si files_read con paths de memoria deberia contar
+- [ ] Documentar que D1-D3 solo aplican a modelos con MCP brain-ai
 
 ### 4. OpenCodeRunner no captura tool calls ni tokens (Solucion B: parsear NDJSON)
 - [x] Capturar fixture NDJSON real (`opencode run --format json "..." > tests/fixtures/opencode_sample.ndjson`)
@@ -48,9 +54,13 @@ Ultima actualizacion: 20/09/2026
 - [ ] Revisar si la busqueda de memoria esta filtrando por proyecto correctamente
 - [ ] Documentar hallazgo en MEMORY.md
 
-### 6. D8 mimo — Timeout en test de agente QA
-- [ ] Aumentar timeout de Groq de 180s a 300s en `tests/lib/model_runner.py`
-- [ ] O simplificar el prompt de D8
+### 6. mimo — Timeout en C2 y D8
+- [x] Diagnosticado: mimo hace timeout tanto en C2 como en D8
+- [x] Diagnosticado: GROQ_QUERY_TIMEOUT=180s, QUERY_TIMEOUT=120s, run_advanced_tests=1200s
+- [ ] Investigar si es lentitud del modelo OpenCode o del parser NDJSON
+- [ ] Aumentar timeout de 180s a 300s en model_runner.py
+- [ ] O simplificar prompts de C2 y D8
+- [ ] Re-ejecutar C2 y D8 contra mimo
 
 ### 7. gpt-oss-20b — Excluido por timeout
 - [ ] Investigar por que gpt-oss-20b tarda 1135s en tests avanzados (vs ~600s otros modelos)
