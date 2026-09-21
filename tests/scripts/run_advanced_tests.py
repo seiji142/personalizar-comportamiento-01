@@ -95,6 +95,8 @@ def run_cases_for_model(model_label, runner, questions, report_path=None, accumu
         tool_calls = result.get("tool_calls", [])
         memory_used = result.get("memory_used", False)
         files_read = result.get("files_read", [])
+        mcp_available = result.get("mcp_available")
+        mcp_error = result.get("mcp_error")
 
         if error:
             if "TIMEOUT" in error:
@@ -118,6 +120,8 @@ def run_cases_for_model(model_label, runner, questions, report_path=None, accumu
             "response_full": text,
             "tool_calls": tool_calls,
             "memory_used": memory_used,
+            "mcp_available": mcp_available,
+            "mcp_error": mcp_error,
             "tokens_used": result.get("tokens_used", 0),
         }
         print(f"{status} ({elapsed}s)")

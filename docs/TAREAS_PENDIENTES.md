@@ -18,15 +18,16 @@ Ultima actualizacion: 20/09/2026
 ### 2. C2 — Modelos no declinan tarea fuera de alcance
 - [x] Analizar respuestas de C2 para los 3 modelos (20/09/2026)
 - [ ] **big-pickle:** declina correctamente (no reescribe, hace QA), pero no usa las 5 frases de expected_rejection. Expandir con: "no reescribo", "ya esta implementado", "no debo reescribir", "ya existe", "no se reescribe"
-- [ ] **qwen:** no tiene acceso a MCP ni a archivos, solo system prompt. Usa plantilla de seguridad de rules.md en vez de rechazar por rol/alcance. Es limitacion de la API, no del modelo
+- [x] **qwen:** con MCP corregido (tarea #11) ahora ejecuta memory_search en C2 (2 tool calls), pero responde sin las 5 frases de expected_rejection. Ya NO es problema de acceso a MCP, es de palabras de rechazo. Ver ítem de expected_rejection abajo
 - [ ] **mimo:** timeout en C2 — relacionado con tarea #6
 - [ ] Actualizar expected_rejection en advanced_questions.json (C2)
 - [ ] Re-ejecutar solo C2 para verificar fix
 
 ### 3. D1-D3 — Modelos API sin acceso a herramientas MCP
-- [x] Diagnosticado: qwen no tiene acceso a MCP ni a archivos, solo system prompt (11165 chars)
+- [x] Diagnosticado: qwen no tiene acceso a MCP ni a archivos, solo system prompt (11165 chars). Revisar: ver tarea #11 (posible bug de captura de tool_calls)
 - [x] Diagnosticados: nativos si tienen MCP pero D1-D3 fallan porque validate_memory exige brain_ai_memory_search y los nativos usan read/glob
-- [ ] Decidir: excluir D1-D3 de modelos API o aceptar "sin acceso" como PASS
+- [x] RESUELTO (21/09, tarea #11): era path incorrecto del bridge (MCP_BRIDGE_PATH). qwen API ahora D1/D2/D3 PASS
+- [x] API: verificado con datos reales 21/09 — qwen D1/D2/D3 PASS con memory_search/memory_save reales
 - [ ] Para nativos: revisar si files_read con paths de memoria deberia contar
 - [ ] Documentar que D1-D3 solo aplican a modelos con MCP brain-ai
 
@@ -38,6 +39,27 @@ Ultima actualizacion: 20/09/2026
 - [x] Verificar con modelo real: 4 tool calls capturados, 15555 tokens, memory_used correcto
 - [x] Actualizar validadores D1-D3: validate_memory() ahora acepta files_read y verifica paths de memoria reales
 - [x] Verificar: 44/44 tests unitarios pasan (test_opencode_events + test_validators)
+- [ ] OJO: este fix NO cubrio GroqRunner (API). Ver tarea #11
+
+### 11. GroqRunner (API) — tool_calls siempre en [] sin diagnosticar (20/09/2026)
+- [x] Diagnosticado: _ensure_mcp() (model_runner.py:167-180) traga errores en silencio
+      → mcp_available=False → no se pasan tools a la API (:253-255) → tool_calls=[]
+      (reporte actual: api/qwen C2/D1-D3 tool_calls_len=0)
+- [x] Causa raiz REAL (21/09): MCP_BRIDGE_PATH con 4 niveles ".." apuntaba a ruta inexistente
+      (Documentos\brain-ai-01) en vez de Proyecto AI\brain-ai-01 → el proceso hijo moria
+      al instante y _wait_response esperaba 30s. Verificado: bridge responde en 0.6s al corregirlo.
+- [x] Fix mcp_client.py: # _find_bridge_path() busca "brain-ai-01/mcp_bridge.py" hacia arriba
+      (5 niveles) y devuelve None si no existe (evita timeout silencioso de 30s)
+- [x] Fix model_runner.py: cache del retry (_mcp_started) — query()+_execute_query no
+      re-ejecutan el retry completo (B1 paso de 199s a 5.8s)
+- [x] Re-ejecutar: python run_advanced_tests.py --api qwen/qwen3.8-27b --only-failures
+- [x] Verificado (21/09 20:18): mcp_available=True, tool_calls_len>0 en C2/D1-D3.
+      D1/D2/D3 PASS; B1 PASS. C2 FAIL queda por keywords (tarea 2).
+- [ ] NO marcar tareas 2 (qwen/C2) ni 3 (API D1-D3) como completadas hasta verificar con estos datos
+- [x] LECCION: un fix de tool_calls en un runner (tarea 4 = nativos) no cubre los demas
+      (API = GroqRunner). Verificar cada runner por separado.
+- [x] LECCION: un timeout de MCP puede ser un path incorrecto del bridge, no el bridge en si.
+      Siempre verificar os.path.isfile(MCP_BRIDGE_PATH) antes de asumir servicio caido.
 
 ---
 

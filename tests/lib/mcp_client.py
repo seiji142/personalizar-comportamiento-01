@@ -16,10 +16,23 @@ import os
 
 
 # Ruta al MCP bridge (misma que opencode.json)
-MCP_BRIDGE_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "..", "..", "..",
-    "brain-ai-01", "mcp_bridge.py"
-)
+# Busqueda robusta hacia arriba: el bridge puede vivir a distinta profundidad
+# segun la estructura del workspace (tests/lib/../../Proyecto AI/brain-ai-01).
+def _find_bridge_path():
+    start = os.path.abspath(os.path.dirname(__file__))
+    for _ in range(5):
+        candidate = os.path.join(start, "..", "..", "brain-ai-01", "mcp_bridge.py")
+        candidate = os.path.abspath(candidate)
+        if os.path.isfile(candidate):
+            return candidate
+        parent = os.path.dirname(start)
+        if parent == start:
+            break
+        start = parent
+    return None
+
+
+MCP_BRIDGE_PATH = _find_bridge_path()
 MCP_BRIDGE_COMMAND = ["python", MCP_BRIDGE_PATH]
 MCP_INIT_TIMEOUT = 30
 

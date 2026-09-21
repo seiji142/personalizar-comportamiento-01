@@ -34,6 +34,10 @@ QUERY_TIMEOUT = 120
 GROQ_QUERY_TIMEOUT = 180  # 3 minutos máximo para Groq
 MAX_TOOL_ITERATIONS = 5
 
+# Retry de MCP (tarea #11): si bridge tarda en arrancar/falla, reintentar
+MAX_MCP_RETRIES = 3
+MCP_RETRY_WAIT = 2  # segundos base, backoff lineal (2s, 4s)
+
 # Retry con backoff para rate limits (429)
 MAX_RETRIES = 3
 BASE_WAIT_SECONDS = 5
@@ -163,24 +167,58 @@ class GroqRunner(ModelRunner):
         self.mcp = None
         self.tools = []
         self.name_map = {}
+        self.mcp_available = False
+        self.mcp_error = None
+        self._mcp_started = False
 
     def _ensure_mcp(self):
-        """Inicializa MCP client y descubre tools."""
-        if self.mcp is not None:
-            return True
-        
-        try:
-            self.mcp = MCPStdioClient().start()
-            mcp_tools = self.mcp.list_tools()
-            self.tools, self.name_map = mcp_tools_to_openai(mcp_tools)
-            return True
-        except MCPError as e:
-            return False
-        except Exception as e:
-            return False
+        """Inicializa MCP client y descubre tools con reintentos.
+
+        Si el bridge tarda en arrancar (MCP_INIT_TIMEOUT) o falla, reintenta
+        antes de rendirse. Expone mcp_available y mcp_error en vez de tragar
+        el error en silencio (tarea #11). Solo intenta UNA vez por runner:
+        el resultado queda cacheado (_mcp_started) para no repetir el retry
+        completo en cada query.
+        """
+        if self._mcp_started:
+            return self.mcp_available
+
+        self._mcp_started = True
+
+        last_error = None
+        for attempt in range(1, MAX_MCP_RETRIES + 1):
+            try:
+                self.mcp = MCPStdioClient().start()
+                mcp_tools = self.mcp.list_tools()
+                self.tools, self.name_map = mcp_tools_to_openai(mcp_tools)
+                self.mcp_available = True
+                self.mcp_error = None
+                return True
+            except MCPError as e:
+                last_error = e
+                if self.mcp:
+                    self.mcp.close()
+                    self.mcp = None
+            except Exception as e:
+                last_error = e
+                if self.mcp:
+                    self.mcp.close()
+                    self.mcp = None
+
+            if attempt < MAX_MCP_RETRIES:
+                wait = MCP_RETRY_WAIT * attempt
+                print(f"[MCP] Intento {attempt}/{MAX_MCP_RETRIES} fallo: {last_error}. Esperando {wait}s... ", end="", flush=True)
+                time.sleep(wait)
+
+        self.mcp_available = False
+        self.mcp_error = str(last_error) if last_error else "unknown error"
+        return False
 
     def query(self, prompt):
         """Ejecuta con timeout general via threading."""
+        # Inicializar MCP aqui para que mcp_available/error consten incluso en timeout/error
+        self._ensure_mcp()
+
         result = [None]
         error = [None]
         
@@ -195,15 +233,22 @@ class GroqRunner(ModelRunner):
         thread.join(timeout=GROQ_QUERY_TIMEOUT)
         
         if thread.is_alive():
-            return {"text": "", "tool_calls": [], "memory_used": False, 
+            return {"text": "", "tool_calls": [], "memory_used": False,
+                    "mcp_available": self.mcp_available, "mcp_error": self.mcp_error,
+                    "tokens_used": 0,
                     "error": f"[TIMEOUT] {GROQ_QUERY_TIMEOUT}s"}
         
         if error[0]:
-            return {"text": "", "tool_calls": [], "memory_used": False, 
+            return {"text": "", "tool_calls": [], "memory_used": False,
+                    "mcp_available": self.mcp_available, "mcp_error": self.mcp_error,
+                    "tokens_used": 0,
                     "error": f"[ERROR] {error[0][:500]}"}
         
-        return result[0] or {"text": "", "tool_calls": [], "memory_used": False, 
-                             "error": "[ERROR] No response"}
+        res = result[0] or {"text": "", "tool_calls": [], "memory_used": False,
+                            "error": "[ERROR] No response"}
+        res.setdefault("mcp_available", self.mcp_available)
+        res.setdefault("mcp_error", self.mcp_error)
+        return res
 
     def _execute_query(self, prompt):
         """Ejecuta la consulta real con tool loop via MCP y retry para 429."""
