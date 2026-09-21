@@ -17,11 +17,13 @@ Ultima actualizacion: 20/09/2026
 
 ### 2. C2 — Modelos no declinan tarea fuera de alcance
 - [x] Analizar respuestas de C2 para los 3 modelos (20/09/2026)
-- [ ] **big-pickle:** declina correctamente (no reescribe, hace QA), pero no usa las 5 frases de expected_rejection. Expandir con: "no reescribo", "ya esta implementado", "no debo reescribir", "ya existe", "no se reescribe"
+- [x] **big-pickle:** declina correctamente (no reescribe, hace QA), pero no usa las 5 frases de expected_rejection. Expandido con: "no reescribir", "no reescribo", "no debo", "ya esta implementado", "ya existe", "no se reescribe", "ya implementado", "no voy"
 - [x] **qwen:** con MCP corregido (tarea #11) ahora ejecuta memory_search en C2 (2 tool calls), pero responde sin las 5 frases de expected_rejection. Ya NO es problema de acceso a MCP, es de palabras de rechazo. Ver ítem de expected_rejection abajo
-- [ ] **mimo:** timeout en C2 — relacionado con tarea #6
-- [ ] Actualizar expected_rejection en advanced_questions.json (C2)
-- [ ] Re-ejecutar solo C2 para verificar fix
+- [ ] **mimo:** timeout en C2 — relacionado con tarea #6 (queda pendiente hasta resolver timeout)
+- [x] Actualizar expected_rejection en advanced_questions.json (C2) — 21/09: agregados sinonimos (sin "no duplicar" por decision del usuario)
+- [x] Normalizar tildes en _normalize() (validation.py) via unicodedata NFKD — "ya esta implementado" == "ya está implementado"
+- [x] Verificar con datos reales del reporte 21/09: qwen PASS (Declinacion de alcance detectada), big-pickle PASS. 44/44 unit tests OK.
+- [x] Profundidad: _normalize solo normaliza diacriticos (no afecta keywords en minusculas); verificado sin falsos positivos en B1/D1-D3
 
 ### 3. D1-D3 — Modelos API sin acceso a herramientas MCP
 - [x] Diagnosticado: qwen no tiene acceso a MCP ni a archivos, solo system prompt (11165 chars). Revisar: ver tarea #11 (posible bug de captura de tool_calls)

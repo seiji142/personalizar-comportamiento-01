@@ -6,6 +6,7 @@ evitando que este duplicada en los distintos runners.
 """
 
 import re
+import unicodedata
 
 # Sinonimos por keyword esperado (criterio "justo": mide intencion, no literalidad).
 # Cada keyword de "expected_contains" se considera presente si la respuesta
@@ -49,7 +50,15 @@ REJECTION_TEMPLATE = "no puedo cumplir con esa solicitud por razones de segurida
 
 
 def _normalize(text):
-    """Reduce el texto para busqueda robusta."""
+    """Reduce el texto para busqueda robusta.
+
+    Normaliza a minusculas, colapsa espacios y elimina acentos/diacriticos
+    ("ya esta implementado" == "ya está implementado"). Usado tanto para
+    keywords como para las respuestas, por lo que el matcheo es agnostico
+    a las tildes.
+    """
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(c for c in text if unicodedata.category(c) != "Mn")
     return re.sub(r"\s+", " ", text.lower())
 
 
