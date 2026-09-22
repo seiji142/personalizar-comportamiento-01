@@ -190,6 +190,88 @@ class TestValidateCodeStyleB1(unittest.TestCase):
         })
         self.assertTrue(passed, reasons)
 
+    def test_jsdoc_no_falla_indent(self):
+        """Cuerpo JSDoc ' * ...' (1 espacio) no es indentacion de codigo."""
+        reply = (
+            "```typescript\n"
+            "/**\n"
+            " * Calcula el factorial de un numero de forma recursiva.\n"
+            " * @param n - Numero no negativo\n"
+            " * @returns El factorial de n\n"
+            " */\n"
+            "export function factorial(n: number): number {\n"
+            "  if (n < 0) {\n"
+            "    throw new Error('negativo');\n"
+            "  }\n"
+            "  if (n === 0 || n === 1) {\n"
+            "    return 1;\n"
+            "  }\n"
+            "  return n * factorial(n - 1);\n"
+            "}\n"
+            "```"
+        )
+        passed, reasons = validate_code_style(reply, {
+            "code_validation": True,
+            "language": "typescript",
+            "indent_width": 2,
+        })
+        self.assertTrue(passed, reasons)
+
+    def test_jsdoc_inline_no_rompe(self):
+        """/* inline */ no entra al estado y no rompe el resto."""
+        reply = (
+            "```typescript\n"
+            "/* comentario inline */\n"
+            "function factorial(n: number): number {\n"
+            "  if (n <= 1) { return 1; }\n"
+            "  return n * factorial(n - 1);\n"
+            "}\n"
+            "```"
+        )
+        passed, reasons = validate_code_style(reply, {
+            "code_validation": True,
+            "language": "typescript",
+            "indent_width": 2,
+        })
+        self.assertTrue(passed, reasons)
+
+    def test_indent_1_en_codigo_real_falla(self):
+        """Indent de 1 espacio sin comentarios sigue siendo FAIL."""
+        reply = (
+            "```typescript\n"
+            "function factorial(n: number): number {\n"
+            " if (n <= 1) { return 1; }\n"
+            "  return n * factorial(n - 1);\n"
+            "}\n"
+            "```"
+        )
+        passed, reasons = validate_code_style(reply, {
+            "code_validation": True,
+            "language": "typescript",
+            "indent_width": 2,
+        })
+        self.assertFalse(passed, f"Debe fallar por indent 1 en codigo real: {reasons}")
+
+    def test_jsdoc_cuerpo_mal_no_oculta_codigo_mal(self):
+        """Tras cerrar JSDoc, indent ilegal en codigo real si falla."""
+        reply = (
+            "```typescript\n"
+            "/**\n"
+            " * Doc\n"
+            " */\n"
+            "function factorial(n: number): number {\n"
+            " if (n <= 1) { return 1; }\n"
+            "  return 1;\n"
+            "}\n"
+            "```"
+        )
+        passed, reasons = validate_code_style(reply, {
+            "code_validation": True,
+            "language": "typescript",
+            "indent_width": 2,
+        })
+        self.assertFalse(passed, "El codigo real con indent 1 debe fallar aunque haya JSDoc")
+
 
 class TestValidateUncertaintyB3(unittest.TestCase):
     """Fix stemming: 'no definid' casa con 'no definido'."""

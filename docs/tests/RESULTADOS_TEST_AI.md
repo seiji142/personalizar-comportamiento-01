@@ -31,6 +31,19 @@ Score re-run: **5/5** (verificado en vivo 21/09 21:24 — C2 PASS con "Declinaci
 - Scores tras re-run: qwen **23/23**, big-pickle **21/23** (B1 FAIL indentacion, C2 TIMEOUT), mimo **19/21** (B1 FAIL, C2 FAIL; sin D8/D9 — pre-existente en HEAD).
 - 58 unit tests PASS (8 nuevos para la rama `expected_tool`).
 
+### Re-run 21/09 22:32 — fix B1 JSDoc — SUITE 100%
+
+| Modelo | B1 | C2 | Score final |
+|--------|----|----|-------------|
+| api/qwen/qwen3.8-27b | PASS | PASS | **23/23** |
+| opencode/big-pickle | FAIL→**PASS** | TIMEOUT→**PASS** | **23/23** |
+| opencode/mimo-v2.5-free | FAIL→**PASS** | FAIL→**PASS** | **21/21** (sin D8/D9, pre-existente) |
+
+- Causa B1: `validate_code_style` media indent en cuerpo JSDoc (` * ` = 1 espacio).
+  Fix: state machine `in_block_comment` — no mide indent en `/* ... */`.
+- C2: ambos nativos "Declinacion de alcance detectada" en este run.
+- **62 unit tests PASS** (+4 JSDoc). Sin no-PASS en ningún modelo.
+
 ---
 
 ## Resultados anteriores (15/09/2026)

@@ -103,6 +103,8 @@ def validate_code_style(reply, test):
     - Ninguna linea supera 120 caracteres.
     - La indentacion usa espacios (no tabs).
     - La indentacion es multiplo del ancho esperado (indent_width, default 2).
+      Comentarios de bloque (/* ... */, JSDoc) NO miden indent: el cuerpo
+      " * ..." lleva 1 espacio por estilo, no es indentacion de codigo.
 
     No usa archivos temporales: solo se parsea el string en memoria.
     """
@@ -130,6 +132,7 @@ def validate_code_style(reply, test):
                 reasons.append(f"El codigo no compila (SyntaxError): {e}")
                 continue
 
+        in_block_comment = False
         for idx, line in enumerate(block.splitlines(), 1):
             if len(line) > 120:
                 passed = False
@@ -139,6 +142,20 @@ def validate_code_style(reply, test):
                 passed = False
                 reasons.append(f"Linea {idx} usa tabulacion (se requieren espacios)")
                 continue  # si hay tab no medimos ancho
+
+            stripped = line.lstrip(" ")
+
+            # State machine de comentario de bloque: no medir indent dentro
+            if in_block_comment:
+                if "*/" in line:
+                    in_block_comment = False
+                continue
+            if stripped.startswith("/*"):
+                # Apertura sin cierre en esta linea -> entrar al bloque
+                if "*/" not in stripped:
+                    in_block_comment = True
+                # /* inline */ o apertura: no medir indent de la linea comentario
+                continue
 
             leading = len(line) - len(line.lstrip(" "))
             if leading > 0 and leading % indent_width != 0:
