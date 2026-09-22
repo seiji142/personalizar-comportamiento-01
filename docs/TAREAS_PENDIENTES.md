@@ -1,5 +1,5 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 21/09/2026 (fix B1 JSDoc — 3/3 modelos 100%)
+Ultima actualizacion: 21/09/2026 (tarea 4 QUERY_TIMEOUT 180s)
 
 ---
 
@@ -121,7 +121,10 @@ Ultima actualizacion: 21/09/2026 (fix B1 JSDoc — 3/3 modelos 100%)
 - [x] Revisar por que C2 (limite de alcance) y D1 (memoria) hacen timeout
 - [x] Verificar si es problema del modelo o del test
 - [x] Re-ejecutar C2 y D1 contra mimo-v2.5-free — ambos PASS (17/09/2026)
-- [ ] Aumentar timeout de 120s a 180s en model_runner.py (QUERY_TIMEOUT)
+- [x] Aumentar timeout de 120s a 180s en model_runner.py (QUERY_TIMEOUT) —
+      verificado 21/09: constante == 180, 62 unit tests PASS. Evidencia:
+      C2 big-pickle llego a 138.2s (>120, <180). Alcance minimo: solo
+      model_runner.py (scripts con timeout=120 hardcodeado no usan el runner).
 
 ### 5. Alucinacion PostgreSQL
 - [ ] Investigar por que big-pickle mezcla memoria de proyecto "eleccion-db"

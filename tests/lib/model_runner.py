@@ -30,7 +30,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 TEST_PROJECT = os.path.normpath(os.getenv("TEST_PROJECT", os.path.join(PROJECT_ROOT, "..", "test-ai-config")))
 
 # Límites
-QUERY_TIMEOUT = 120
+QUERY_TIMEOUT = 180  # antes 120; C2 big-pickle llego a 138s (tarea 4)
 GROQ_QUERY_TIMEOUT = 180  # 3 minutos máximo para Groq
 MAX_TOOL_ITERATIONS = 5
 
