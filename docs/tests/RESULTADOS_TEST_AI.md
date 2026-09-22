@@ -1,6 +1,32 @@
 # Resultados Validacion .ai/ — Modelos probados
 
-## Resultados actuales (15/09/2026)
+## Resultados actuales (21/09/2026)
+
+**Cambio clave:** fix de la tarea 11 — el `tool_calls=[]` en modelos API era un bug de
+path del MCP bridge (`MCP_BRIDGE_PATH` apuntaba a ruta inexistente), no una limitacion del
+modelo. Con MCP corregido, los modelos API ahora ejecutan herramientas de memoria reales.
+Ver `tests/answers/advanced_validation_report.json` y `docs/tests/sesion_20260921.md`.
+
+### Re-run 21/09 — qwen API (api/qwen/qwen3.8-27b) — only-failures
+
+| Test | 20/09 (antes) | 21/09 (despues) | Motivo |
+|------|--------------|-----------------|--------|
+| B1 Estilo code | PASS (199.2s) | **PASS (5.8s)** | cache retry MCP |
+| C2 Limite de alcance | FAIL | **PASS** (con tarea 2) | expected_rejection expandido |
+| D1 Recuperar episodios | FAIL | **PASS** | MCP corre (tarea 11) |
+| D2 Guardar memoria | FAIL | **PASS** | MCP corre (tarea 11) |
+| D3 Recall decision | FAIL | **PASS** | MCP corre (tarea 11) |
+
+Score re-run: **4/5**. C2 verificado con datos previos del reporte (21/09, tarea 2).
+
+> **PENDIENTE — re-run completo:** opencode/big-pickle y opencode/mimo-v2.5-free no se
+> re-ejecutaron completos el 21/09 (solo se verifico C2 de big-pickle con datos del reporte).
+> No actualizar sus lineas en la tabla de suite avanzada hasta re-correr la suite completa.
+> Ver tarea 12 en TAREAS_PENDIENTES.md.
+
+---
+
+## Resultados anteriores (15/09/2026)
 
 **Suite completa:** 4 modelos × 3 tests (test_ai_structure, validate_agent_responses, run_advanced_tests)
 
@@ -115,33 +141,33 @@
 
 | Script | Funcion | Modos |
 |--------|---------|-------|
-| `test_ai_structure.py` | Suite basica 5 tests | `--native <model>` / API (default) |
-| `validate_agent_responses.py` | Validacion de respuestas | `--run-model <model>` / `--api <model>` / JSON (default) |
-| `run_advanced_tests.py` | Suite avanzada 23 tests | `--api <model>` / nativo (default) |
-| `run_all_tests.py` | Runner maestro (15 ejecuciones) | Ejecuta todo |
-| `validation.py` | Logica comun de validacion | — |
-| `advanced_validators.py` | Validadores especiales | — |
+| `tests/scripts/test_ai_structure.py` | Suite basica 5 tests | `--native <model>` / API (default) |
+| `tests/scripts/validate_agent_responses.py` | Validacion de respuestas | `--run-model <model>` / `--api <model>` / JSON (default) |
+| `tests/scripts/run_advanced_tests.py` | Suite avanzada 23 tests | `--api <model>` / nativo (default) |
+| `tests/scripts/run_all_tests.py` | Runner maestro (15 ejecuciones) | Ejecuta todo |
+| `tests/lib/validation.py` | Logica comun de validacion | — |
+| `tests/lib/advanced_validators.py` | Validadores especiales | — |
 
 ## Como ejecutar
 
 ```powershell
 # Suite completa (recomendado)
-python run_all_tests.py
+python tests/scripts/run_all_tests.py
 
-# Solo tests locales (sin API)
+# Solo tests locales
 python -m pytest tests/unit/test_email_validator.py -v
-python src/doc/ESTRUCTURA/test_validators.py
-python src/doc/LECCIONES/generate_html_report.py
+python tests/scripts/test_validators.py
+python tests/scripts/generate_html_report.py
 
 # Test basico contra API
-python src/doc/ESTRUCTURA/test_ai_structure.py  # usa GROQ_API_KEY
+python tests/scripts/test_ai_structure.py  # usa GROQ_API_KEY
 
 # Test basico contra modelo nativo
-python src/doc/ESTRUCTURA/test_ai_structure.py --native opencode/big-pickle
+python tests/scripts/test_ai_structure.py --native opencode/big-pickle
 
 # Suite avanzada contra API
-python src/doc/ESTRUCTURA/run_advanced_tests.py --api openai/gpt-oss-20b
+python tests/scripts/run_advanced_tests.py --api openai/gpt-oss-20b
 
 # Suite avanzada contra modelo nativo
-python src/doc/ESTRUCTURA/run_advanced_tests.py opencode/big-pickle
+python tests/scripts/run_advanced_tests.py opencode/big-pickle
 ```
