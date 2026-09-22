@@ -12,12 +12,12 @@ Ver `tests/answers/advanced_validation_report.json` y `docs/tests/sesion_2026092
 | Test | 20/09 (antes) | 21/09 (despues) | Motivo |
 |------|--------------|-----------------|--------|
 | B1 Estilo code | PASS (199.2s) | **PASS (5.8s)** | cache retry MCP |
-| C2 Limite de alcance | FAIL | **PASS** (con tarea 2) | expected_rejection expandido |
+| C2 Limite de alcance | FAIL | **PASS** | expected_rejection expandido (tarea 2) |
 | D1 Recuperar episodios | FAIL | **PASS** | MCP corre (tarea 11) |
 | D2 Guardar memoria | FAIL | **PASS** | MCP corre (tarea 11) |
 | D3 Recall decision | FAIL | **PASS** | MCP corre (tarea 11) |
 
-Score re-run: **4/5**. C2 verificado con datos previos del reporte (21/09, tarea 2).
+Score re-run: **5/5** (verificado en vivo 21/09 21:24 — C2 PASS con "Declinacion de alcance detectada", D1-D3 PASS con tool_calls MCP reales).
 
 > **PENDIENTE — re-run completo:** opencode/big-pickle y opencode/mimo-v2.5-free no se
 > re-ejecutaron completos el 21/09 (solo se verifico C2 de big-pickle con datos del reporte).
