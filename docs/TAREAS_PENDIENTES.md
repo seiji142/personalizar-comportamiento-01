@@ -1,5 +1,5 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 21/09/2026
+Ultima actualizacion: 21/09/2026 (tarea 3 completada)
 
 ---
 
@@ -30,8 +30,27 @@ Ultima actualizacion: 21/09/2026
 - [x] Diagnosticados: nativos si tienen MCP pero D1-D3 fallan porque validate_memory exige brain_ai_memory_search y los nativos usan read/glob
 - [x] RESUELTO (21/09, tarea #11): era path incorrecto del bridge (MCP_BRIDGE_PATH). qwen API ahora D1/D2/D3 PASS
 - [x] API: verificado con datos reales 21/09 — qwen D1/D2/D3 PASS con memory_search/memory_save reales
-- [ ] Para nativos: revisar si files_read con paths de memoria deberia contar
-- [ ] Documentar que D1-D3 solo aplican a modelos con MCP brain-ai
+- [x] Para nativos: files_read NO cuenta como evidencia (decision 21/09) — un read
+      de path con "memoria" no prueba ejecucion de expected_tool (y en D2/save un
+      read nunca prueba guardado). Rama eliminada de validate_memory; regresion
+      cubierta por test_files_read_no_cuenta_como_evidencia.
+- [x] Documentar alcance: D1-D3 exigen MCP brain-ai; la validacion matchea
+      expected_tool con nombres normalizados (_norm_tool_name: brain_ai_* /
+      brain-ai_* / memory_* equivalen) + exito unificado (success o
+      status=completed). Modelos sin MCP no pueden PASS por disenio.
+- [x] Fix de matcheo (21/09, causaba FAIL injusto en nativos pese a tool real):
+      1) nombre brain-ai_memory_* (guion) != expected brain_ai_memory_* (subrayado)
+      2) tool_calls nativos sin key success (solo status)
+      3) MEMORY_TOOL_NAMES sin brain-ai_* ni memory_save -> memory_used=false
+      Archivos: advanced_validators.py (_norm_tool_name, _tool_succeeded),
+      opencode_events.py (normaliza guion + memory_save), model_runner.py
+      (agrega success al dict nativo).
+- [x] Verificado re-run 21/09 ~21:58: big-pickle D1/D2/D3 FAIL->PASS y mimo
+      D1(TIMEOUT)/D2/D3->PASS, reasons "Tool ejecutada: brain_ai_memory_*".
+      58 unit tests PASS (8 nuevos: TestValidateMemoryExpectedTool + events guion).
+      qwen 23/23 intacto (merge por ID, tarea 12).
+- [ ] Side-effect known: --only-failures es global; re-ejecuto B1/C2 de nativos
+      (varianza del modelo: indentacion 1 espacio / declinacion) — ver tareas 4/6/9.
 
 ### 4. OpenCodeRunner no captura tool calls ni tokens (Solucion B: parsear NDJSON)
 - [x] Capturar fixture NDJSON real (`opencode run --format json "..." > tests/fixtures/opencode_sample.ndjson`)
@@ -57,7 +76,8 @@ Ultima actualizacion: 21/09/2026
 - [x] Re-ejecutar: python run_advanced_tests.py --api qwen/qwen3.8-27b --only-failures
 - [x] Verificado (21/09 20:18): mcp_available=True, tool_calls_len>0 en C2/D1-D3.
       D1/D2/D3 PASS; B1 PASS. C2 FAIL queda por keywords (tarea 2).
-- [ ] NO marcar tareas 2 (qwen/C2) ni 3 (API D1-D3) como completadas hasta verificar con estos datos
+- [x] Verificado con estos datos (21/09): tarea 2 (qwen C2 PASS) y tarea 3
+      (API D1-D3 PASS + nativos D1-D3 PASS post-fix matcheo) completadas.
 - [x] LECCION: un fix de tool_calls en un runner (tarea 4 = nativos) no cubre los demas
       (API = GroqRunner). Verificar cada runner por separado.
 - [x] LECCION: un timeout de MCP puede ser un path incorrecto del bridge, no el bridge en si.

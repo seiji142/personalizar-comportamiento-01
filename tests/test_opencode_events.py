@@ -63,6 +63,19 @@ def test_memory_used_por_tool_name():
     assert parsed.memory_used is True
 
 
+def test_memory_used_por_tool_name_con_guion():
+    # OpenCode nativo emite brain-ai_* (guion), no brain_ai_* (tarea 3)
+    lines = ['{"type":"tool_use","part":{"type":"tool","tool":"brain-ai_memory_search","callID":"c3","state":{"status":"completed","input":{"query":"test"},"output":"..."}}}']
+    parsed = parse_ndjson(lines)
+    assert parsed.memory_used is True
+
+
+def test_memory_used_por_save_con_guion():
+    lines = ['{"type":"tool_use","part":{"type":"tool","tool":"brain-ai_memory_save","callID":"c4","state":{"status":"completed","input":{"project":"test-ai-config"},"output":"ep_1"}}}']
+    parsed = parse_ndjson(lines)
+    assert parsed.memory_used is True
+
+
 def test_files_read():
     parsed = parse_ndjson(_read_fixture().splitlines())
     files = parsed.files_read

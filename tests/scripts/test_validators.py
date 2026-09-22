@@ -277,6 +277,67 @@ class TestValidateMemory(unittest.TestCase):
         self.assertTrue(any("MySQL" in r or "de acuerdo" in r for r in reasons))
 
 
+class TestValidateMemoryExpectedTool(unittest.TestCase):
+    """Rama expected_tool (D1-D3): matcheo de nombres y evidencia real.
+
+    Cubre el fix de la tarea 3 (21/09): normalizacion brain-ai_/brain_ai_/
+    memory_*, exito unificado success/status, y decision de que files_read
+    NO cuenta como evidencia de ejecucion de la tool esperada.
+    """
+
+    def test_tool_nativa_completada_pasa(self):
+        # OpenCode nativo: nombre con guion, sin key success (solo status)
+        reply = "Encontre 5 episodios en memoria."
+        case = {"expected_tool": "brain_ai_memory_search"}
+        tool_calls = [{"name": "brain-ai_memory_search",
+                       "args": {"query": "episodios"}, "status": "completed"}]
+        passed, reasons = validate_memory(reply, case, tool_calls=tool_calls)
+        self.assertTrue(passed, reasons)
+
+    def test_tool_api_success_pasa(self):
+        # GroqRunner API: nombre sin prefijo, key success
+        reply = "Guarde el episodio en memoria."
+        case = {"expected_tool": "brain_ai_memory_save"}
+        tool_calls = [{"name": "memory_save",
+                       "arguments": {"project": "test-ai-config"}, "success": True}]
+        passed, reasons = validate_memory(reply, case, tool_calls=tool_calls)
+        self.assertTrue(passed, reasons)
+
+    def test_files_read_no_cuenta_como_evidencia(self):
+        # Decision 21/09: leer paths de memoria NO prueba ejecucion de la tool
+        reply = "Lei los archivos de memoria del proyecto."
+        case = {"expected_tool": "brain_ai_memory_search"}
+        files_read = ["C:/proj/.ai/MEMORY.md", "/proj/memory/ep3.md"]
+        passed, reasons = validate_memory(reply, case, tool_calls=[],
+                                          files_read=files_read)
+        self.assertFalse(passed)
+        self.assertTrue(any("no ejecutada" in r for r in reasons))
+
+    def test_tool_fallida_no_pasa(self):
+        reply = "No pude usar la tool."
+        case = {"expected_tool": "brain_ai_memory_search"}
+        tool_calls = [{"name": "brain-ai_memory_search",
+                       "args": {}, "status": "failed"}]
+        passed, reasons = validate_memory(reply, case, tool_calls=tool_calls)
+        self.assertFalse(passed)
+
+    def test_search_no_cubre_expected_save(self):
+        # D2 espera save; un search exitoso no es evidencia de guardado
+        reply = "Busque en memoria pero no guarde."
+        case = {"expected_tool": "brain_ai_memory_save"}
+        tool_calls = [{"name": "brain-ai_memory_search",
+                       "args": {}, "status": "completed"}]
+        passed, reasons = validate_memory(reply, case, tool_calls=tool_calls)
+        self.assertFalse(passed)
+
+    def test_memory_used_fallback_pasa(self):
+        reply = "Segun la memoria del proyecto..."
+        case = {"expected_tool": "brain_ai_memory_search"}
+        passed, reasons = validate_memory(reply, case, tool_calls=[],
+                                          memory_used=True)
+        self.assertTrue(passed, reasons)
+
+
 class TestValidateConfig(unittest.TestCase):
     """Tests para validador de configuración (D4, D6, D7)."""
 

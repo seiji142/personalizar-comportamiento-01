@@ -132,7 +132,8 @@ class OpenCodeRunner(ModelRunner):
                         "tokens_used": 0, "error": f"[ERROR] {result.stderr.strip()[:500]}"}
 
             tool_calls = [
-                {"name": tc.name, "args": tc.args, "output": tc.output, "status": tc.status}
+                {"name": tc.name, "args": tc.args, "output": tc.output,
+                 "status": tc.status, "success": tc.status == "completed"}
                 for tc in parsed.tool_calls
             ]
 

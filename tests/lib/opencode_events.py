@@ -12,7 +12,10 @@ from typing import Any, Iterable
 
 log = logging.getLogger(__name__)
 
-MEMORY_TOOL_NAMES = {"memory", "memory_search", "memory_read", "recall", "brain_ai_memory_search"}
+MEMORY_TOOL_NAMES = {
+    "memory", "memory_search", "memory_save", "memory_read", "recall",
+    "brain_ai_memory_search", "brain_ai_memory_save",
+}
 MEMORY_PATH_MARKERS = ("/memory/", "/episodes/", "memoria/", "episodios/")
 
 
@@ -49,9 +52,14 @@ class ParsedRun:
 
     @property
     def memory_used(self) -> bool:
-        """True solo si hubo una tool call REAL contra memoria."""
+        """True solo si hubo una tool call REAL contra memoria.
+
+        Normaliza guiones a guiones bajos: OpenCode emite
+        brain-ai_memory_search/save (guion), el set usa brain_ai_*.
+        """
         for tc in self.tool_calls:
-            if tc.name in MEMORY_TOOL_NAMES:
+            norm_name = tc.name.lower().replace("-", "_")
+            if norm_name in MEMORY_TOOL_NAMES:
                 return True
             blob = json.dumps(tc.args, ensure_ascii=False)
             if any(m in blob for m in MEMORY_PATH_MARKERS):

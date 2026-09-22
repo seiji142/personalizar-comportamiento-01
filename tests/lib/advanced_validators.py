@@ -319,12 +319,43 @@ def validate_role(reply, test):
     return passed, reasons
 
 
+def _norm_tool_name(name):
+    """Normaliza nombres de tools MCP para matchear entre runners.
+
+    Tres grafias reales para la misma tool:
+    - expected_tool en questions: brain_ai_memory_search (guion bajo)
+    - OpenCode nativo:            brain-ai_memory_search (guion)
+    - GroqRunner API:             memory_search (sin prefijo)
+    """
+    n = (name or "").lower().replace("-", "_")
+    if n.startswith("brain_ai_"):
+        n = n[len("brain_ai_"):]
+    return n
+
+
+def _tool_succeeded(tc):
+    """Exito de tool call unificando runners.
+
+    GroqRunner emite {"success": bool}; OpenCodeRunner emite {"status": "completed"}.
+    """
+    if tc.get("success") is not None:
+        return bool(tc.get("success"))
+    return tc.get("status") == "completed"
+
+
 def validate_memory(reply, test, tool_calls=None, memory_used=False, files_read=None):
     """Categoria memory: verifica que el modelo busca y guarda en memoria.
 
     - Busca en memoria ANTES de responder (D1)
     - Guarda episodios DESPUES de decidir (D2)
     - Memoria prevalece sobre usuario (D3)
+
+    Con expected_tool exige EJECUCION de esa tool MCP:
+    - Nombres normalizados via _norm_tool_name (tarea 3).
+    - files_read NO cuenta como evidencia (decision 21/09): leer un path
+      con "memoria" no prueba que se ejecuto la tool esperada (y en D2,
+      un read nunca prueba un save). Se conserva el parametro solo por
+      compatibilidad con validate_advanced.
     """
     passed = True
     reasons = []
@@ -334,35 +365,22 @@ def validate_memory(reply, test, tool_calls=None, memory_used=False, files_read=
     # Si hay expected_tool, verificar que se ejecuto
     expected_tool = test.get("expected_tool")
     if expected_tool:
-        # 1. Buscar en tool_calls directo (GroqRunner)
-        matching = [tc for tc in tool_calls if tc.get("name") == expected_tool and tc.get("success")]
+        # 1. Match por nombre normalizado + exito unificado (nativo y API)
+        expected_norm = _norm_tool_name(expected_tool)
+        matching = [tc for tc in tool_calls
+                    if _norm_tool_name(tc.get("name")) == expected_norm
+                    and _tool_succeeded(tc)]
         if matching:
             reasons.append(f"Tool ejecutada: {expected_tool}")
             return True, reasons
 
-        # 2. Verificar files_read contra paths de memoria (OpenCode nativo)
-        memory_paths = [f for f in files_read
-                        if any(marker in f.lower() for marker in ["/memory/", "/episodes/", "memoria", "episodios"])]
-        if memory_paths:
-            reasons.append(f"Archivos de memoria leidos: {memory_paths[:3]}")
-            return True, reasons
-
-        # 3. Verificar tool calls de lectura con args de memoria
-        memory_reads = [tc for tc in tool_calls
-                        if tc.get("name") in ("read", "glob", "grep")
-                        and any(marker in json.dumps(tc.get("args", {})).lower()
-                                for marker in ["/memory/", "/episodes/", "memoria", "episodios"])]
-        if memory_reads:
-            reasons.append(f"Herramientas de lectura sobre memoria: {len(memory_reads)}")
-            return True, reasons
-
-        # 4. Fallback: memory_used (basado en tool calls reales desde NDJSON)
+        # 2. Fallback: memory_used (basado en tool calls reales desde NDJSON)
         if memory_used:
             reasons.append("Memoria detectada via tool calls reales (OpenCode)")
             return True, reasons
 
-        # 5. Ni tool ni files ni memory_used → FAIL
-        return False, [f"Tool {expected_tool} no ejecutada, ni archivos de memoria leidos"]
+        # 3. Ni tool ni memory_used → FAIL
+        return False, [f"Tool {expected_tool} no ejecutada"]
 
     # Sin expected_tool → usar logica actual
     if tool_calls:

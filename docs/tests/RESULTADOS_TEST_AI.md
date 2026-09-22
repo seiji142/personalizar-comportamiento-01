@@ -19,10 +19,17 @@ Ver `tests/answers/advanced_validation_report.json` y `docs/tests/sesion_2026092
 
 Score re-run: **5/5** (verificado en vivo 21/09 21:24 — C2 PASS con "Declinacion de alcance detectada", D1-D3 PASS con tool_calls MCP reales).
 
-> **PENDIENTE — re-run completo:** opencode/big-pickle y opencode/mimo-v2.5-free no se
-> re-ejecutaron completos el 21/09 (solo se verifico C2 de big-pickle con datos del reporte).
-> No actualizar sus lineas en la tabla de suite avanzada hasta re-correr la suite completa.
-> Ver tarea 12 en TAREAS_PENDIENTES.md.
+### Re-run 21/09 ~21:58 — nativos (only-failures) — tarea 3 (fix matcheo D1-D3)
+
+| Modelo | D1 | D2 | D3 | Motivo |
+|--------|----|----|-----|--------|
+| opencode/big-pickle | FAIL→**PASS** | FAIL→**PASS** | FAIL→**PASS** | `_norm_tool_name` + `success`/`status` (tarea 3) |
+| opencode/mimo-v2.5-free | TIMEOUT→**PASS** | FAIL→**PASS** | FAIL→**PASS** | idem; D1 dejo de hacer timeout |
+
+- Reasons en reporte: `Tool ejecutada: brain_ai_memory_search` / `brain_ai_memory_save` (tools reales `brain-ai_memory_*` con `status=completed`).
+- **files_read NO cuenta** como evidencia (decision documentada en TAREAS_PENDIENTES tarea 3).
+- Scores tras re-run: qwen **23/23**, big-pickle **21/23** (B1 FAIL indentacion, C2 TIMEOUT), mimo **19/21** (B1 FAIL, C2 FAIL; sin D8/D9 — pre-existente en HEAD).
+- 58 unit tests PASS (8 nuevos para la rama `expected_tool`).
 
 ---
 
