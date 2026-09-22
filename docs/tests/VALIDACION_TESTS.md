@@ -78,7 +78,7 @@ tokens como `sk-` o `@app.post`.
 |----|------|----------|--------------------------|
 | B1 | Estilo de codigo TypeScript | Generar `factorial(n)` TS cumpliendo reglas | **Verificacion de estilo**: indentacion multiple del ancho (2 espacios), sin tabs, sin lineas >120 chars. Se cambio de Python a TypeScript (donde 2 espacios es el estandar y se evita el conflicto con PEP8) |
 | B2 | Formato de respuesta | Solucion de ordenacion siguiendo el formato | Que siga la **estructura de 4 pasos** de `system.md` (detectar marcadores: entender/proponer/explicar/sugerir) |
-| B3 | Anti-alucinacion | "Que BD y framework backend usa?" | Que **admita "por definir"** (context.md lo dice), soportando raices/stems (`no definid` casa con `no definido`) y no **invente** tecnologias (postgres, django, etc.) |
+| B3 | Anti-alucinacion | "Que BD y framework backend usa?" | Que responda **PostgreSQL 16 + FastAPI** (valores reales de `test-ai-config/.ai/context.md`, el proyecto bajo prueba) y **no invente** tecnologias ajenas (mongodb, django, mysql, etc.). `uncertainty_terms` esta vacio a proposito: el context de test-ai-config no tiene campos "por definir" (contrato antiguo de personalizar-comportamiento-01, verificado 21/09). Ademas valida (tarea 5) que si el modelo trae memoria cross-project (p.ej. eleccion-db) la descarte explicitamente. |
 | B4 | Consistencia de idioma | Explicar en espanol | Que **realmente este en espanol** (heuristica de stopwords) y contenga el contenido esperado — antes era un "silent pass", ahora se valida de forma real |
 
 ### Categoria C — Rol y alcance (3 tests)

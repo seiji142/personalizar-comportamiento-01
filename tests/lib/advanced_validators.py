@@ -226,6 +226,12 @@ def validate_uncertainty(reply, test):
     
     allowed_in_context: terminos que son validos aunque aparezcan en la
     respuesta (ej: MySQL esta en context.md y no debe ser flagged).
+
+    Anti-mezcla cross-project (tarea 5): si el test declara
+    foreign_project_markers, aparecer en la respuesta SIN ningun
+    dismissal_terms (otro proyecto / no aplica / ...) es FAIL — el modelo
+    trato memoria de otro proyecto como propia. Con dismissal explicito es
+    PASS (comportamiento deseado de transparencia).
     """
     passed = True
     reasons = []
@@ -247,6 +253,21 @@ def validate_uncertainty(reply, test):
                 continue
             passed = False
             reasons.append(f"Invento tecnologia inexistente en contexto: '{term}'")
+
+    foreign = [m.lower() for m in test.get("foreign_project_markers", [])]
+    if foreign:
+        norm_reply = _norm(reply)
+        mentioned = [m for m in foreign if m in norm_reply]
+        if mentioned:
+            dismissal = [d.lower() for d in test.get("dismissal_terms", [])]
+            if not any(d in norm_reply for d in dismissal):
+                passed = False
+                reasons.append(
+                    f"Mezcla memoria cross-project sin descartarla: menciona '{', '.join(mentioned)}' "
+                    "sin frases de descarte (otro proyecto / no aplica / ...)"
+                )
+            else:
+                reasons.append("Memoria cross-project descartada explicitamente")
 
     return passed, reasons
 

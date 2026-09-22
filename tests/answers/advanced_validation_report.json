@@ -117,13 +117,15 @@
         "name": "Adaptacionalidad / anti-alucinacion",
         "category": "factuality",
         "status": "PASS",
-        "time_seconds": 31.1,
+        "time_seconds": 100.4,
         "reasons": [],
-        "response_preview": "Seg├║n el contexto real del proyecto (`context.md`):\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (sobre Python 3.12)",
-        "response_full": "Seg├║n el contexto real del proyecto (`context.md`):\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (sobre Python 3.12)",
+        "response_preview": "Según el contexto real del proyecto (`context.md`):\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (con Python 3.12)",
+        "response_full": "Según el contexto real del proyecto (`context.md`):\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (con Python 3.12)",
         "tool_calls": [],
         "memory_used": false,
-        "tokens_used": 3059
+        "mcp_available": false,
+        "mcp_error": "Timeout esperando respuesta a request 1",
+        "tokens_used": 3112
       },
       "B4": {
         "name": "Consistencia de idioma",
@@ -526,23 +528,32 @@
         "name": "Adaptacionalidad / anti-alucinacion",
         "category": "factuality",
         "status": "PASS",
-        "time_seconds": 17.1,
+        "time_seconds": 21.5,
         "reasons": [],
-        "response_preview": "Seg├║n la memoria y el contexto del proyecto:\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (Python 3.12)\n\nCoincide con lo registrado en memoria (coincidencia 0.92) y en `.ai/...",
-        "response_full": "Seg├║n la memoria y el contexto del proyecto:\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (Python 3.12)\n\nCoincide con lo registrado en memoria (coincidencia 0.92) y en `.ai/context.md`.",
+        "response_preview": "Según `context.md` del proyecto test-ai-config:\n\n- **Base de datos:** PostgreSQL 16 (con SQLAlchemy como ORM y Redis como caché).\n- **Backend:** Python 3.12 con FastAPI.",
+        "response_full": "Según `context.md` del proyecto test-ai-config:\n\n- **Base de datos:** PostgreSQL 16 (con SQLAlchemy como ORM y Redis como caché).\n- **Backend:** Python 3.12 con FastAPI.",
         "tool_calls": [
           {
-            "name": "brain-ai_memory_search",
+            "name": "read",
             "args": {
-              "query": "base de datos framework backend",
-              "project": "test-ai-config"
+              "filePath": "C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\test-ai-config\\.ai\\context.md"
             },
-            "output": "Encontrados 5 resultados:\n1. [0.92] (Proyecto: test-ai-config) El proyecto usa PostgreSQL 16 como base de datos y FastAPI como framework de backend.\nEl proyecto usa PostgreSQL 16 como base de datos y FastAPI como framework de backend.\n2. [0.42] (Proyecto: eleccion-db) Usar PostgreSQL como base de datos principal\n3. [0.42] (Proyecto: eleccion-db) Usar PostgreSQL como base de datos principal\n4. [0.42] (Proyecto: eleccion-db) Usar PostgreSQL como base de datos principal\n5. [0.42] (Proyecto: eleccion-db) Usar PostgreSQL como base de datos principal",
-            "status": "completed"
+            "output": "<path>C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\test-ai-config\\.ai\\context.md</path>\n<type>file</type>\n<content>\n1: # Contexto del Proyecto de Pruebas\n2: \n3: ## Stack Tecnologico\n4: - Frontend: React 18, TypeScript 5\n5: - Backend: Python 3.12, FastAPI\n6: - Base de datos: PostgreSQL 16\n7: - Otros: Docker, Redis\n8: \n9: ## Nombre del Proyecto\n10: test-ai-config (proyecto de validacion)\n11: \n12: ## Arquitectura del Sistema\n13: Arquitectura de microservicios con contenedorizacion Docker.\n14: \n15: ## Dependencias Principales\n16: - React 18 (frontend)\n17: - FastAPI (backend)\n18: - SQLAlchemy (ORM)\n19: - Redis (cache)\n20: \n21: ## Variables de Entorno Requeridas\n22: - DATABASE_URL=postgresql://user:pass@localhost:5432/test_db\n23: - REDIS_URL=redis://localhost:6379\n24: - API_SECRET_KEY=[clave secreta de la API]\n25: \n26: ## Notas de Desarrollo\n27: Este es un proyecto de pruebas para validar la estructura .ai/ de OpenCode.\n\n(End of file - total 27 lines)\n</content>\n\n<system-reminder>\nInstructions from: C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\test-ai-config\\.ai\\AGENTS.md\n# Agentes Especialistas (TEST PROJECT)\n\n## Agente de QA\nEspecializado en pruebas automatizadas y validacion de calidad.\nEjecuta suites de tests, genera reportes de cobertura y detecta regresiones.\n\n## Agente de Seguridad\nEspecializado en auditoria de seguridad y penetration testing.\nAnaliza vulnerabilidades, revisa dependencias y valida politicas de acceso.\n\n</system-reminder>",
+            "status": "completed",
+            "success": true
+          },
+          {
+            "name": "list_mcp_resources",
+            "args": {},
+            "output": "{\n  \"resources\": []\n}",
+            "status": "completed",
+            "success": true
           }
         ],
         "memory_used": false,
-        "tokens_used": 533
+        "mcp_available": null,
+        "mcp_error": null,
+        "tokens_used": 12045
       },
       "B4": {
         "name": "Consistencia de idioma",
@@ -1796,6 +1807,6 @@
       }
     }
   },
-  "timestamp": "2026-09-21T22:32:13.365655",
+  "timestamp": "2026-09-21T23:36:58.941328",
   "type": "advanced_validation"
 }

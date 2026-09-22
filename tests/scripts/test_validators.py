@@ -296,6 +296,40 @@ class TestValidateUncertaintyB3(unittest.TestCase):
         })
         self.assertFalse(passed, f"Debe fallar por inventar postgres: {reasons}")
 
+    def test_cross_project_sin_descarte_falla(self):
+        """Tarea 5: menciona eleccion-db como si fuera de este proyecto -> FAIL"""
+        reply = ("Hay una contradiccion: context dice una cosa y la memoria "
+                 "otra. eleccion-db indica PostgreSQL como base de datos principal.")
+        passed, reasons = validate_uncertainty(reply, {
+            "uncertainty_terms": [],
+            "forbidden_invention": [],
+            "foreign_project_markers": ["eleccion-db"],
+            "dismissal_terms": ["otro proyecto", "no aplica"],
+        })
+        self.assertFalse(passed, f"Mezcla sin descarte debe fallar: {reasons}")
+        self.assertTrue(any("cross-project" in r for r in reasons), reasons)
+
+    def test_cross_project_con_descarte_pasa(self):
+        """Tarea 5: menciona eleccion-db PERO lo descarta -> PASS"""
+        reply = ("La memoria arrojo resultados de PostgreSQL, pero pertenecen "
+                 "a otro proyecto (eleccion-db), no a este; no aplica aqui.")
+        passed, reasons = validate_uncertainty(reply, {
+            "uncertainty_terms": [],
+            "forbidden_invention": [],
+            "foreign_project_markers": ["eleccion-db"],
+            "dismissal_terms": ["otro proyecto", "no aplica"],
+        })
+        self.assertTrue(passed, f"Descarte explicito debe pasar: {reasons}")
+
+    def test_sin_marker_cross_project_no_aplica(self):
+        """Sin foreign_project_markers el check no se activa (compatibilidad)"""
+        reply = "Base de datos: PostgreSQL. Backend: FastAPI."
+        passed, reasons = validate_uncertainty(reply, {
+            "uncertainty_terms": [],
+            "forbidden_invention": [],
+        })
+        self.assertTrue(passed, reasons)
+
 
 class TestValidateMemory(unittest.TestCase):
     """Tests para validador de memoria (D1-D3)."""

@@ -6,11 +6,10 @@ factualidad, estructura, roles, memoria, configuracion y jerarquia).
 Uso:
   python run_advanced_tests.py                 # todos los modelos nativos, todos los casos
   python run_advanced_tests.py <modelo>        # filtra modelos nativos por nombre
-  python run_advanced_tests.py                    # corre todos los tests
-  python run_advanced_tests.py --api <model>   # contra API (usa GROQ_API_KEY)
   python run_advanced_tests.py --api <model>   # contra API (usa GROQ_API_KEY)
   python run_advanced_tests.py --api <model> --only-failures
                                                # re-ejecuta solo los tests que fallaron antes
+  python run_advanced_tests.py --only B3       # re-ejecuta solo los IDs indicados (coma-separados)
 
 Ejecutar desde la raiz del proyecto (hereda .ai/ via opencode.json).
 """
@@ -234,6 +233,7 @@ def main():
     api_model = None
     only_failures = False
     fresh = False
+    only_ids = None
 
     i = 0
     while i < len(args):
@@ -248,6 +248,9 @@ def main():
         elif a == "--fresh":
             fresh = True
             i += 1
+        elif a == "--only" and i + 1 < len(args):
+            only_ids = {x.strip() for x in args[i + 1].split(",") if x.strip()}
+            i += 2
         else:
             model_filter = a
             i += 1
@@ -259,6 +262,14 @@ def main():
     if fresh and os.path.exists(REPORT_FILE):
         os.remove(REPORT_FILE)
         print(f"[OK] Reporte anterior eliminado (--fresh): {REPORT_FILE}")
+
+    # Si --only, filtrar solo los IDs indicados (ej: --only B3)
+    if only_ids:
+        questions = [q for q in questions if q["id"] in only_ids]
+        if not questions:
+            print(f"Ningun test coincide con --only {sorted(only_ids)}")
+            sys.exit(1)
+        print(f"Filtrado: {len(questions)} tests por --only")
 
     # Si --only-failures, filtrar solo tests que fallaron en el reporte anterior
     failed_ids = None

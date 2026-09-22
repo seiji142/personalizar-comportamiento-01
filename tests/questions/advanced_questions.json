@@ -79,7 +79,9 @@
     "uncertainty_terms": [],
     "forbidden_invention": ["mongodb", "sqlite", "oracle", "django", "spring", "express", "node.js", "mysql"],
     "allowed_in_context": ["postgresql", "fastapi", "react", "typescript", "redis", "sqlalchemy"],
-    "description": "Detecta alucinaciones: el modelo debe responder con PostgreSQL y FastAPI (estan en context.md de test-ai-config)"
+    "foreign_project_markers": ["eleccion-db"],
+    "dismissal_terms": ["otro proyecto", "de otro proyecto", "no aplica", "no corresponde", "no es de este", "no a este", "no pertenece a este", "proyecto distinto"],
+    "description": "Detecta alucinaciones: el modelo debe responder con PostgreSQL y FastAPI (estan en context.md de test-ai-config). Si menciona eleccion-db (memoria cross-project) debe descartarlo explicitamente (tarea 5)."
   },
   {
     "id": "B4",

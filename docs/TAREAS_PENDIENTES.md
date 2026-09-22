@@ -127,9 +127,27 @@ Ultima actualizacion: 21/09/2026 (tarea 4 QUERY_TIMEOUT 180s)
       model_runner.py (scripts con timeout=120 hardcodeado no usan el runner).
 
 ### 5. Alucinacion PostgreSQL
-- [ ] Investigar por que big-pickle mezcla memoria de proyecto "eleccion-db"
-- [ ] Revisar si la busqueda de memoria esta filtrando por proyecto correctamente
-- [ ] Documentar hallazgo en MEMORY.md
+- [x] Investigar por que big-pickle mezcla memoria de proyecto "eleccion-db" —
+      RESUELTO (21/09 ~23:35). Causa raiz: fallback multi-proyecto en
+      brain-ai-01/ai_architect/core/retrieval.py:78-88 que, con project
+      pasado, queryaba SIN filtro (where=None, n_results=1000) y mergeaba
+      sin filtrar post-rank; hybrid_score sin componente de proyecto dejaba
+      ganar a eleccion-db (BM25 0.87). NO era bug de big-pickle: cualquier
+      modelo podia mezclar. Evidencia: tool_calls qwen3.8 con
+      project="test-ai-config" devolvia 5/5 eleccion-db.
+- [x] Revisar si la busqueda de memoria esta filtrando por proyecto
+      correctamente — NO filtaba. Fix: retrieve(include_other_projects=False)
+      por defecto (estricto); cascada mcp_server/mcp_bridge/clients/cli.
+      Verificado live 21/09 23:35: POST /retrieve project=test-ai-config
+      -> 10/10 solo test-ai-config, cero eleccion-db; opt-in cross sigue
+      funcionando. brain-ai-01: 4 tests nuevos PASS, 57/60 suite (3 FAIL
+      preexistentes redact/confidence), memoria real intacta 247/101.
+      B3 re-run: big-pickle PASS, qwen PASS, sin eleccion-db en respuesta.
+- [x] Documentar hallazgo en MEMORY.md — Seccion "Hallazgo: filtrado
+      estricto" agregada en .ai/MEMORY.md; CHANGELOG.md + README.md de
+      brain-ai-01; seccion TAREA 5 en docs/tests/sesion_20260921.md;
+      contrato B3 unificado en VALIDACION_TESTS.md; validador anti-mezcla
+      (foreign_project_markers) con 3 tests unitarios.
 
 ### 6. mimo — Timeout en C2 y D8
 - [x] Diagnosticado: mimo hace timeout tanto en C2 como en D8

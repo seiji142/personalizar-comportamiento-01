@@ -134,6 +134,26 @@ consolidar()
 - Usar `brain-ai_memory_search(query, project="personalizar-comportamiento-01")`
 - Combina búsqueda episódica + semántica
 - Score híbrido: BM25 + vectorial + recencia + evidencia + confianza
+- **Filtrado estricto por proyecto (21/09/2026):** si pasas `project`,
+  solo se devuelven items de ESE proyecto. El fallback cross-project
+  anterior (que devolvía `eleccion-db` u otros en búsquedas ajenas) ahora
+  es opt-in con `include_other_projects=true`. Sin `project` = global.
+  Ver CHANGELOG brain-ai-01 [2026-09-21] y tarea 5 de TAREAS_PENDIENTES.
+
+## Hallazgo: filtrado estricto de memoria (tarea 5, 21/09/2026)
+- **Síntoma:** B3 (anti-alucinación) — modelos (big-pickle, qwen) mezclaban
+  memoria del proyecto `eleccion-db` ("Usar PostgreSQL...") como si fuera
+  contradicción de `test-ai-config`/`personalizar-comportamiento-01`.
+- **Causa raíz:** `brain-ai-01/retrieval.py` — fallback multi-proyecto
+  corría SIEMPRE que había `project`, anulando el filtro `where` y
+  mergeando hasta 1000 docs sin filtrar tras el ranking.
+- **Fix:** `retrieve(include_other_projects=False)` por defecto (estricto);
+  opt-in cross con el flag. Cascada: mcp_server → mcp_bridge → memoria.py → CLI.
+- **Verificación:** live `/retrieve` 10/10 solo test-ai-config; B3 PASS
+  big-pickle + qwen sin `eleccion-db`; 4 tests nuevos + 3 de validador.
+- **Lección:** un filtro de proyecto que luego se anula con un fallback
+  sin post-filtrado no es un filtro — validar siempre el contrato con un
+  test que meta datos en 2 proyectos.
 
 ## Consolidación
 - Ejecutar `brain-ai_memory_consolidate()` periódicamente
