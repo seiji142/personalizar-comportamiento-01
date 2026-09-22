@@ -64,18 +64,22 @@ Ultima actualizacion: 21/09/2026
       Siempre verificar os.path.isfile(MCP_BRIDGE_PATH) antes de asumir servicio caido.
 
 ### 12. save_incremental pisa el reporte con --only-failures (21/09/2026)
-- [ ] Bug: run_advanced_tests.py:182-183 hace existing["models"][label]=cases → REEMPLAZA
+- [x] Bug: run_advanced_tests.py:182-183 hace existing["models"][label]=cases → REEMPLAZA
       el bloque del modelo en vez de fusionar. Con --only-failures se pierden los casos
       no re-ejecutados (ver diff f9c6e82: qwen perdio 18 de 23 tests)
-- [ ] Fix: merge por test ID — existing_model = existing["models"].get(label, {}); existing_model.update(cases)
-- [ ] Eliminar flag --accumulate (vestigial): parametro muerto en save_incremental y
-      run_cases_for_model, sin efecto en nativos ni API. Quitar firma, 2 llamadas,
+- [x] Fix: merge por test ID — merge_models_report() pura + save_incremental usa existing_model.update(cases)
+- [x] Eliminar flag --accumulate (vestigial): parametro muerto en save_incremental y
+      run_cases_for_model, sin efecto en nativos ni API. Quitada firma, 2 llamadas,
       parseo (lineas ~222, 233) y docstring (lineas 11-12)
-- [ ] Test unitario nuevo: tests/scripts/test_report_merge.py (conserva no reeje, reemplaza del, no toca otros modelos, JSON invalido no pisa)
-- [ ] Alinear docstring de run_advanced_tests.py (quitar referencia a --accumulate)
-- [ ] Verificar: re-correr --only-failures de qwen y confirmar en el JSON que mantiene los 23 casos
-- [ ] Nota historica en docs/tests/lecciones_1.html y lecciones_2.html re: flag eliminado
-- [ ] Documentar en RESULTADOS_TEST_AI.md y docs/tests/sesion_20260921.md
+- [x] Test unitario nuevo: tests/scripts/test_report_merge.py — 6 tests PASS (conserva no reeje,
+      reemplaza del, no toca otros modelos, modelo nuevo se agrega, reporte vacio, sin models)
+- [x] Alinear docstring de run_advanced_tests.py (quitar referencia a --accumulate)
+- [x] Verificar end-to-end 21/09 21:24: --only-failures qwen re-ejecuto 5/23 y el JSON
+      CONSERVO los 19 casos no re-ejecutados (A1, B2, C3 con datos previos) + C2 actualizado
+      a PASS. Total 23 casos intactos.
+- [x] Nota historica en docs/tests/lecciones_1.html y lecciones_2.html re: flag eliminado
+- [x] Documentar en RESULTADOS_TEST_AI.md y docs/tests/sesion_20260921.md
+- [x] Bonus: C2 qwen PASS en vivo 21/09 (Declinacion de alcance detectada) — confirma tarea 2
 
 ---
 

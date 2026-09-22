@@ -8,8 +8,7 @@ Uso:
   python run_advanced_tests.py <modelo>        # filtra modelos nativos por nombre
   python run_advanced_tests.py                    # corre todos los tests
   python run_advanced_tests.py --api <model>   # contra API (usa GROQ_API_KEY)
-  python run_advanced_tests.py --api <model> --accumulate
-                                               # acumula la corrida en 'runs' del reporte
+  python run_advanced_tests.py --api <model>   # contra API (usa GROQ_API_KEY)
   python run_advanced_tests.py --api <model> --only-failures
                                                # re-ejecuta solo los tests que fallaron antes
 
@@ -81,7 +80,7 @@ def load_verificacion_env():
     print(f"[OK] Keys cargadas desde {env_path}")
 
 
-def run_cases_for_model(model_label, runner, questions, report_path=None, accumulate=False, all_results=None):
+def run_cases_for_model(model_label, runner, questions, report_path=None, all_results=None):
     """Ejecuta tests y guarda incrementalmente después de cada uno."""
     per_case = {}
     for case in questions:
@@ -131,7 +130,7 @@ def run_cases_for_model(model_label, runner, questions, report_path=None, accumu
         # Guardado incremental después de cada test
         if report_path and all_results is not None:
             all_results[model_label] = per_case
-            save_incremental(report_path, all_results, accumulate)
+            save_incremental(report_path, all_results)
         
         time.sleep(1)
     return per_case
@@ -161,11 +160,27 @@ def print_summary(all_results, questions):
     print("=" * 90)
 
 
-def save_incremental(report_path, all_results, accumulate):
+def merge_models_report(existing, new_results):
+    """Fusiona resultados nuevos en un reporte existente (merge por test ID).
+
+    - Con `--only-failures` (o cualquier corrida parcial) conserva los tests
+      que NO se re-ejecutaron y solo reemplaza los que SI corrieron.
+    - No toca modelos que no aparecen en `new_results`.
+    """
+    existing.setdefault("models", {})
+    for label, cases in new_results.items():
+        existing_model = existing["models"].get(label, {})
+        existing_model.update(cases)
+        existing["models"][label] = existing_model
+    return existing
+
+
+def save_incremental(report_path, all_results):
     """Guarda el reporte incrementalmente después de cada test.
-    
+
     Si el archivo existe, Fusiona los nuevos modelos en los existentes
-    (formato models, no runs). Así siempre se acumulan sin sobreescribir.
+    (formato models, no runs). Merge por test ID: no pisa tests que no
+    se re-ejecutaron (tarea #12).
     """
     try:
         # Leer JSON existente si existe
@@ -177,10 +192,8 @@ def save_incremental(report_path, all_results, accumulate):
             except (json.JSONDecodeError, OSError):
                 existing = {}
 
-        # Fusionar nuevos modelos en existing["models"]
-        existing.setdefault("models", {})
-        for label, cases in all_results.items():
-            existing["models"][label] = cases
+        # Fusionar nuevos modelos en existing["models"] (merge por test ID)
+        existing = merge_models_report(existing, all_results)
 
         # Actualizar metadata
         existing["timestamp"] = datetime.now().isoformat()
@@ -219,7 +232,6 @@ def main():
     model_filter = None
     api = False
     api_model = None
-    accumulate = False
     only_failures = False
     fresh = False
 
@@ -230,9 +242,6 @@ def main():
             api = True
             api_model = args[i + 1]
             i += 2
-        elif a == "--accumulate":
-            accumulate = True
-            i += 1
         elif a == "--only-failures":
             only_failures = True
             i += 1
@@ -310,7 +319,6 @@ def main():
         cases = run_cases_for_model(
             label, runner, questions,
             report_path=report_path,
-            accumulate=accumulate,
             all_results=all_results
         )
         all_results[label] = cases
@@ -319,7 +327,7 @@ def main():
 
     # El guardado final ya se hace incrementalmente, pero guardamos una última vez
     # para asegurar que todo esté sincronizado
-    save_incremental(report_path, all_results, accumulate)
+    save_incremental(report_path, all_results)
     print(f"\nReporte guardado en {report_path}")
 
 
