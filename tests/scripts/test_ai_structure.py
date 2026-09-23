@@ -104,7 +104,9 @@ def parse_opencode_response(output):
     return "\n".join(text_parts)
 
 
-def query_native(model_id, prompt, timeout=120):
+def query_native(model_id, prompt, timeout=180):
+    # 180s (antes 120): T4 registro 178.4s en el run del 23/09; el modelo
+    # nativo tarda ~70s en promedio pero a veces supera 120s (tarea 14).
     cmd = [
         OPENCODE_CLI, "run",
         "--model", model_id,

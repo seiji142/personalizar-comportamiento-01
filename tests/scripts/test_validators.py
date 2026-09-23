@@ -280,6 +280,51 @@ class TestValidateUncertaintyB3(unittest.TestCase):
         self.assertTrue(check_keyword("el campo backend no definido", "no definid"))
         self.assertTrue(check_keyword("la base de datos no definida", "no definid"))
 
+
+class TestKeywordAcentos(unittest.TestCase):
+    """Tarea 14: la variante del sinonimo se normaliza (quita tildes).
+
+    Antes del fix, 'regresión' (con tilde) nunca casaba contra una
+    respuesta normalizada sin tildes => T4 imposible de pasar.
+    """
+
+    def test_variante_con_tilde_casa_reply_sin_tilde(self):
+        self.assertTrue(check_keyword("analizamos los riesgos de regresion", "regresión"))
+
+    def test_variante_con_tilde_casa_reply_con_tilde(self):
+        self.assertTrue(check_keyword("analizamos los riesgos de regresión", "regresión"))
+
+    def test_variante_sin_tilde_casa_reply_con_tilde(self):
+        self.assertTrue(check_keyword("riesgos de regresión en la API", "regresion"))
+
+    def test_t4_keywords_todas_presentes_pasa(self):
+        from validation import validate_response
+        test = {
+            "expected_contains": ["riesgos", "regresion", "regresión", "qa", "pruebas"],
+            "expected_not_contains": [],
+        }
+        reply = "Como agente QA, analizo los riesgos de regresion. Pruebas recomendadas: smoke y regresion."
+        passed, reasons = validate_response(reply, test)
+        self.assertTrue(passed, reasons)
+
+    def test_t4_falla_si_falta_keyword_real(self):
+        from validation import validate_response
+        test = {
+            "expected_contains": ["riesgos", "regresion", "regresión", "qa", "pruebas"],
+            "expected_not_contains": [],
+        }
+        reply = "Los riesgos de regresion afectan la QA del equipo."
+        passed, reasons = validate_response(reply, test)
+        self.assertFalse(passed, "Debe fallar si falta 'pruebas'")
+        self.assertTrue(any("pruebas" in r for r in reasons), reasons)
+
+    def test_pruebas_matchea_plural_tests_y_pytest(self):
+        """Tarea 14: el modelo escribe 'suites de tests' o 'pytest' (plural/
+        compound); \\btest\\b solo no casaba => flakiness T4."""
+        self.assertTrue(check_keyword("suites de tests antes del deploy", "pruebas"))
+        self.assertTrue(check_keyword("pytest tests/ baseline", "pruebas"))
+        self.assertTrue(check_keyword("plan de pruebas con pytest", "pruebas"))
+
     def test_reconoce_incertidumbre(self):
         reply = "El campo backend esta por definir y no se especifica en el contexto."
         passed, reasons = validate_uncertainty(reply, {

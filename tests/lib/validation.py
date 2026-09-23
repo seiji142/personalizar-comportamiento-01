@@ -35,7 +35,9 @@ SYNONYMS = {
     # T4 - agents.md
     "regresion": ["regresion", "regresión"],
     "testing": ["testing", "pruebas", "qa", "aseguramiento", "calidad"],
-    "pruebas": ["pruebas", "testing", "test", "prueba"],
+    # tests/pytest: el modelo suele escribir "suites de tests" o "pytest"
+    # en vez del singular "test" (tarea 14, flakiness T4 23/09)
+    "pruebas": ["pruebas", "testing", "test", "tests", "prueba", "pytest", "casos de prueba"],
     "riesgos": ["riesgos", "riesgo", "regresion", "regresión", "impacto"],
     "api": ["api", "interfaz de programacion"],
 
@@ -86,7 +88,11 @@ def check_keyword(reply, keyword):
     norm_reply = _normalize(reply)
     variants = SYNONYMS.get(keyword, [keyword])
     for variant in variants:
-        if re.search(_pattern_for(variant), norm_reply):
+        # Normalizar la variante: _normalize quita tildes del reply, por lo
+        # que "regresión" con tilde nunca casaria contra "regresion" sin tilde
+        # si no se normaliza tambien aqui (tarea 14, bug T4).
+        norm_variant = _normalize(variant)
+        if re.search(_pattern_for(norm_variant), norm_reply):
             return True
     return False
 

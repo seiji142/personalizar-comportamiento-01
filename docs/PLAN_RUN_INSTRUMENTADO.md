@@ -130,11 +130,13 @@ Candidatos: `model_runner.py:33-34` · `run_all_tests.py:187` ·
 (`mimo-v2.5-free` fuera del catálogo) + degradación del modelo viejo. Con el
 ID correcto no se justifica NINGÚN cambio de timeout ni de prompts.
 
-### Hallazgo nuevo (fuera del subplan)
+### Hallazgo nuevo → cerrado como tarea 14 (23/09)
 
-- **T4 estructura inestable con mimo-v2.6:** 2× FAIL (falta keyword
-  "regresión") + 1× ERROR timeout (178.4s > cap 120s de `query_native`).
-  Candidato a tarea nueva: estabilizar T4 o subir cap de estructura.
+- **T4 estructura inestable con mimo-v2.6:** diagnosticada y RESUELTA el
+  mismo día. 3 causas: (1) bug del validador (variante "regresión" con
+  tilde sin normalizar), (2) cap 120s ajustado (T4 llega a ~96s), (3)
+  sinónimos "pruebas" sin "tests"/"pytest". Ver TAREAS_PENDIENTES #14.
+  Post-fix: T4 PASS 3/3, estructura 5/5, suite unitaria 75/75.
 
 ### Fase 4 — Cierre
 

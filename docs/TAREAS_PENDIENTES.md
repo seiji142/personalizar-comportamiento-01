@@ -1,5 +1,5 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 23/09/2026 (tarea 13 completada + subplan run instrumentado ejecutado: tareas 6, 9 y 10 RESUELTAS)
+Ultima actualizacion: 23/09/2026 (tareas 6, 9, 10, 13 y 14 completadas)
 
 ---
 
@@ -194,6 +194,27 @@ Ultima actualizacion: 23/09/2026 (tarea 13 completada + subplan run instrumentad
       **NINGUNO de los dos.** Wall 678s « 1200s con holgura; el timeout
       histórico se debió al modelo obsoleto/degradado, no al cap de suite.
       Se conserva 1200s.
+
+### 14. T4 estructura inestable con mimo-v2.6 (23/09/2026) → RESUELTA (23/09/2026)
+> Hallazgo del subplan `docs/PLAN_RUN_INSTRUMENTADO.md`.
+- [x] Diagnosticar FAIL de keyword: **BUG del validador confirmado offline.**
+      `expected_contains` de T4 trae "regresion" Y "regresión" como keywords
+      separados; `_normalize` quitaba tildes de la respuesta pero
+      `check_keyword` NO normalizaba la variante → "regresión" nunca
+      matcheaba → T4 imposible de pasar. **Fix:** normalizar cada variante
+      con `_normalize()` antes de armar el regex (`validation.py:94`).
+- [x] Diagnosticar ERROR timeout 178.4s vs cap 120s: T4 tarda ~70-96s en
+      promedio pero a veces supera 120s (medido: 89.2s, 96.3s, 178.4s).
+      **Fix:** `query_native` cap 120→180 en `test_ai_structure.py:107`
+      (alineado con QUERY_TIMEOUT de la suite avanzada).
+- [x] Tercera fuente encontrada con datos: el modelo escribe "suites de
+      tests"/"pytest" (plural/compound) y `\btest\b` no casaba → FAIL
+      intermitente de "pruebas". **Fix:** sinónimos ampliados en
+      `SYNONYMS["pruebas"]`: + "tests", "pytest", "casos de prueba".
+- [x] Correr T4 ×3 → post-fix **T4 PASS 3/3** (31.9s en el run final;
+      0 ERROR de timeout). Estructura final **5/5 PASS**.
+- [x] Tests unitarios: clase `TestKeywordAcentos` (5 tests) +
+      `test_pruebas_matchea_plural_tests_y_pytest` → suite **75/75 PASS**.
 
 ### 13. MCP bridge timeout en tests API (qwen) — initialize handshake falla (21/09)
 - [x] 13.1 Matar bridges huérfanos (PIDs 25360, 17144, 15804 — desde
