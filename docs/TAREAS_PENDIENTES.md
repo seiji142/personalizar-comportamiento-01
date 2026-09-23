@@ -1,5 +1,7 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 23/09/2026 (tareas 6, 7, 9, 10, 13 y 14 completadas)
+Ultima actualizacion: 23/09/2026 — **TODAS LAS TAREAS COMPLETADAS** (1-14).
+Pendiente opcional posterior: generar HTML (generate_html_report.py) y
+sesion_20260923.md.
 
 ---
 
@@ -269,8 +271,14 @@ Ultima actualizacion: 23/09/2026 (tareas 6, 7, 9, 10, 13 y 14 completadas)
 
 ## BAJO
 
-### 8. Actualizar RESULTADOS_TEST_AI.md
-- [ ] Actualizar con nuevos resultados del 19/09/2026 (ultima actualizacion: 15/09/2026)
+### 8. Actualizar RESULTADOS_TEST_AI.md → RESUELTA (23/09/2026)
+- [x] Actualizar con resultados frescos del 23/09 (antes: 15/09/2026)
+      → Nueva seccion "Resultados actuales (23/09)" con tablas de
+      estructura y avanzada de los 4 modelos activos, retiro de
+      mimo-v2.5-free, conclusion actualizada y tabla de convenciones de
+      documentacion corregida contra context.md.
+- PENDIENTE POSTERIOR (fuera de alcance de T8): regenerar HTML con
+  `scripts/generate_html_report.py` y crear `sesion_20260923.md`.
 
 ---
 

@@ -1,6 +1,59 @@
 # Resultados Validacion .ai/ — Modelos probados
 
-## Resultados actuales (21/09/2026)
+## Resultados actuales (23/09/2026)
+
+**Cambios clave del 23/09 (tareas 6, 7, 9, 10, 13, 14):**
+
+1. **ID de modelo obsoleto:** `opencode/mimo-v2.5-free` ya no existe en el
+   catálogo OpenCode (CLI devolvía `UnknownError`). Reemplazado por
+   **`opencode/mimo-v2.6-flash-free`** en todos los runners.
+2. **Fix del validador T4:** `check_keyword` ahora normaliza cada variante
+   de sinónimo (antes "regresión" con tilde nunca casaba) + sinónimos
+   `pruebas` → `tests`/`pytest` + cap de estructura 120→180s.
+3. **gpt-oss-20b re-incluido** en `run_all_tests.py`: el "timeout" de
+   1135s NO era lentitud; eran retries por 429 TPD
+   (`Limit 200000, Used 196815`). Hoy: wall **880.2s < 1200s**, 21/23.
+4. **MCP bridge arreglado** (tarea 13): `NameError false` en
+   `mcp_bridge.py` — handshake y `memory_search` reales OK.
+5. Unit tests: **75/75 PASS** (69 → 75 con tests de tildes/sinónimos).
+
+### Suite avanzada (23 tests) — 23/09
+
+| Modelo | Score | Σ times | Wall | Fails |
+|--------|-------|---------|------|-------|
+| **api/qwen/qwen3.8-27b** | **23/23** | 978s | — | — |
+| **opencode/big-pickle** | **23/23** | 505s | — | — |
+| **opencode/mimo-v2.6-flash-free** | **23/23** | 654s | 678s | — |
+| api/openai/gpt-oss-20b | 21/23 | 855s | 880s | C2, D2 (comportamiento) |
+
+### Suite estructura (5 tests) — 23/09
+
+| Modelo | Score | Nota |
+|--------|-------|------|
+| **opencode/mimo-v2.6-flash-free** | **5/5** | ×3 corridas; T4 estable post-fix |
+| api/openai/gpt-oss-20b | 4/5 | T4 FAIL keyword 'qa' |
+| api/qwen/qwen3.8-27b | 5/5 | ts 20/09 |
+| opencode/big-pickle | 5/5 | ts 20/09 |
+| ~~opencode/mimo-v2.5-free~~ | 0/5 | **retirado**: ID obsoleto (23/09 13:17) |
+
+### Conclusion (23/09)
+
+- **Empate técnico a 23/23** entre qwen, big-pickle y mimo-v2.6 en suite
+  avanzada. mimo-v2.6 es la mejor opcion nativa (sin costo API).
+- **gpt-oss-20b 21/23**: los 2 FAIL son de **comportamiento** (C2 no
+  declina alcance, D2 no guarda memoria), NO de rate limit.
+- Overhead del runner: 3-4% en todos los modelos → el tiempo es del
+  modelo, no del parser.
+- **mimo-v2.5-free retirado** del catalogo; todos los runners apuntan a
+  mimo-v2.6-flash-free.
+
+Ver `tests/answers/advanced_validation_report.json`,
+`tests/answers/ai_validation_report.json` y
+`docs/tests/sesion_20260921.md` (secciones T7 y T14).
+
+---
+
+## Resultados anteriores (21/09/2026)
 
 **Cambio clave:** fix de la tarea 11 — el `tool_calls=[]` en modelos API era un bug de
 path del MCP bridge (`MCP_BRIDGE_PATH` apuntaba a ruta inexistente), no una limitacion del
@@ -54,9 +107,10 @@ Score re-run: **5/5** (verificado en vivo 21/09 21:24 — C2 PASS con "Declinaci
 > - `openai/gpt-oss-20b` (Groq Cuenta 1, GROQ_CUENTA_1)
 > - `qwen/qwen3.8-27b` (Groq Cuenta 2, GROQ_CUENTA_2)
 > - `opencode/big-pickle` (nativo OpenCode)
-> - `opencode/mimo-v2.5-free` (nativo OpenCode)
+> - `opencode/mimo-v2.6-flash-free` (nativo OpenCode) ← reemplaza a mimo-v2.5-free
 >
 > **Modelos retirados:**
+> - `opencode/mimo-v2.5-free` — fuera del catalogo OpenCode (23/09, UnknownError)
 > - `qwen/qwen3.6-27b` — eliminado de Groq (404 Not Found)
 > - `gsk_rOBP...` — key eliminada de Groq
 > - `gsk_Wv5o...` — key expirada (401)
@@ -142,20 +196,22 @@ Score re-run: **5/5** (verificado en vivo 21/09 21:24 — C2 PASS con "Declinaci
 - Cuenta 2 (GROQ_CUENTA_2): qwen3.8-27b — funciona pero agota TPD rapido (200K tokens)
 - qwen3.6-27b: ELIMINADO de Groq (404)
 
-## Criterio de Documentación
+## Criterio de Documentacion
 
-**Regla: TODO va a `docs/`.**
+**Regla: TODO va a `docs/` (reportes) o `tests/` (codigo de test).**
+(Verificado 23/09 contra `context.md` — las rutas `src/doc/` de versiones
+previas de este archivo estaban desactualizadas.)
 
 | Tipo | Destino | Ejemplo |
 |------|---------|---------|
-| JSON (datos crudos de tests) | `docs/` | `advanced_validation_report.json` |
-| HTML (reportes visuales) | `docs/` | `reporte_consolidado.html` |
-| Markdown (análisis) | `docs/` | `RESULTADOS_TEST_AI.md` |
+| JSON (answers/reports de tests) | `tests/answers/` | `advanced_validation_report.json` |
+| JSON (preguntas de tests) | `tests/questions/` | `advanced_questions.json` |
+| Scripts de tests | `tests/scripts/` | `test_ai_structure.py` |
+| Librerias de tests | `tests/lib/` | `validation.py` |
+| Scripts de reportes | `scripts/` | `generate_html_report.py`, `analyze_times.py` |
+| HTML (reportes visuales) | `docs/tests/` | `reporte_consolidado.html` |
+| Markdown (analisis) | `docs/tests/` | `RESULTADOS_TEST_AI.md` |
 | Backup | `docs/backup_YYYYMMDD_HHMMSS/` | Archivos previos al re-run |
-| Scripts de tests | `src/doc/ESTRUCTURA/` | `test_ai_structure.py` |
-| Scripts de reportes | `src/doc/LECCIONES/` | `generate_html_report.py` |
-
-`src/doc/LECCIONES/` es solo para código fuente (scripts), NO como destino de reportes generados.
 
 ## Herramientas de validacion
 
