@@ -81,11 +81,10 @@ def print_structure(report, top_n):
                 print(f"  T3 detalle: {r.get('status')} reasons={r.get('reasons')}")
 
 
-def print_overhead(wall_adv, wall_struct, adv_report, struct_report):
+def print_overhead(wall_adv, wall_struct, adv_report, struct_report, label):
     print("\n" + "=" * 70)
     print("OVERHEAD (wall - sum(time_seconds))")
     print("=" * 70)
-    label = "opencode/mimo-v2.6-flash-free"
     cases = adv_report.get("models", {}).get(label, {})
     s_adv = sum((c.get("time_seconds") or 0) for c in cases.values() if isinstance(c, dict))
     if wall_adv is not None:
@@ -112,6 +111,8 @@ def main():
                     help="Wall-clock de la suite avanzada en segundos")
     ap.add_argument("--wall-estructura", type=float, default=None,
                     help="Wall-clock de la suite de estructura en segundos")
+    ap.add_argument("--label", default="opencode/mimo-v2.6-flash-free",
+                    help="Label del modelo en el reporte para calcular overhead")
     args = ap.parse_args()
 
     adv = load(ADVANCED)
@@ -119,7 +120,7 @@ def main():
     print_advanced(adv, args.top)
     print_structure(struct, args.top)
     if args.wall_avanzada is not None or args.wall_estructura is not None:
-        print_overhead(args.wall_avanzada, args.wall_estructura, adv, struct)
+        print_overhead(args.wall_avanzada, args.wall_estructura, adv, struct, args.label)
 
 
 if __name__ == "__main__":

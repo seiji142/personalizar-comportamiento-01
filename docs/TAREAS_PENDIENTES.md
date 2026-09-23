@@ -1,5 +1,5 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 23/09/2026 (tareas 6, 9, 10, 13 y 14 completadas · T7 en ejecucion)
+Ultima actualizacion: 23/09/2026 (tareas 6, 7, 9, 10, 13 y 14 completadas)
 
 ---
 
@@ -164,12 +164,30 @@ Ultima actualizacion: 23/09/2026 (tareas 6, 9, 10, 13 y 14 completadas · T7 en 
 - [x] Re-ejecutar C2 y D8 contra mimo → C2 PASS 96.3s, D8 PASS 89.6s
       (23/23 avanzada, 678s wall).
 
-### 7. gpt-oss-20b — Excluido por timeout
-> Subplan opcional: `docs/PLAN_RUN_INSTRUMENTADO.md`
-- [ ] Investigar por que gpt-oss-20b tarda 1135s en tests avanzados (vs ~600s otros modelos)
-- [ ] Verificar si es rate limit o comportamiento del modelo
-- [ ] Volver a incluir en run_all_tests.py cuando se resuelva
-- [ ] Re-ejecutar suite completa con los 4 modelos
+### 7. gpt-oss-20b — Excluido por timeout → RESUELTA (23/09/2026)
+> Subplan propio (fases A-D), alcance (a): probe + suite gpt-oss.
+- [x] Investigar por que gpt-oss-20b tarda 1135s (vs ~600s)
+      → **Confirmado: rate limit con retries, NO lentitud pura.**
+      Evidencia historica: 429 `Limit 200000, Used 196815` (Cuenta 1) en
+      advanced_validation_report.json:702 y backup 16/09; D9 fallo en
+      0.4s por 429; el mensaje decia "try again in 9m19s" y el backoff
+      de model_runner.py esperaba dentro del run → inflaba el wall.
+- [x] Verificar si es rate limit o comportamiento del modelo → **Fase A:**
+      key GROQ_CUENTA_1 presente (56 chars, sin imprimir); smoke via
+      urllib devolvio 403/1010 (Cloudflare UA, no aplica); smoke real
+      `test_ai_structure.py --api openai/gpt-oss-20b` → **4/5 PASS,
+      0x429, wall 51.9s** → hay headroom hoy.
+- [x] **Fase B — Suite avanzada instrumentada:**
+      backup `docs/backup_20260923_145435/` · wall **880.2s** ·
+      21/23 PASS (C2 y D2 FAIL de comportamiento, no de rate limit) ·
+      1x `[RATE LIMIT]` en C2 resuelto con backoff 5s (intento 1/3) ·
+      analyze_times con --label gpt-oss: sum=854.8s, overhead=25.4s
+      (3%), D3=156.5s unico test >=150s (cap 180 holgado).
+- [x] **Fase C — Decision:** wall 880.2s < 1200s → **RE-INCLUIR** en
+      `run_all_tests.py` (models_to_test += openai/gpt-oss-20b).
+- [x] **Fase D — Cierre:** T7 marcada RESUELTA · seccion en sesion ·
+      memory_save · unit tests · commit/push.
+- NOTA: suite completa de 4 modelos queda fuera de este alcance (opcional futura).
 
 ### 9. mimo T3 flaky — falla intermitente de keywords (20/09/2026) → RESUELTA (23/09/2026)
 > Subplan de ejecución: `docs/PLAN_RUN_INSTRUMENTADO.md` (3 corridas de

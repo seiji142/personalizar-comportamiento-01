@@ -112,7 +112,9 @@ print("\n" + "#"*60)
 print("# TESTS CON API — AMBOS MODELOS")
 print("#"*60)
 
-models_to_test = ["qwen/qwen3.8-27b"]
+# 23/09/2026 (T7): gpt-oss re-incluido. Suite medida en 880.2s < 1200s;
+# el "timeout" historico de 1135s eran retries por 429 TPD, no lentitud.
+models_to_test = ["openai/gpt-oss-20b", "qwen/qwen3.8-27b"]
 
 fresh_done = False
 
