@@ -1,5 +1,5 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 23/09/2026 (tarea 13 completada + subplan run instrumentado documentado)
+Ultima actualizacion: 23/09/2026 (tarea 13 completada + subplan run instrumentado ejecutado: tareas 6, 9 y 10 RESUELTAS)
 
 ---
 
@@ -149,15 +149,20 @@ Ultima actualizacion: 23/09/2026 (tarea 13 completada + subplan run instrumentad
       contrato B3 unificado en VALIDACION_TESTS.md; validador anti-mezcla
       (foreign_project_markers) con 3 tests unitarios.
 
-### 6. mimo — Timeout en C2 y D8
+### 6. mimo — Timeout en C2 y D8 → RESUELTA (23/09/2026)
 > Subplan de ejecución: `docs/PLAN_RUN_INSTRUMENTADO.md` (run instrumentado
 > compartido con tareas 9 y 10, opcional 7)
 - [x] Diagnosticado: mimo hace timeout tanto en C2 como en D8
 - [x] Diagnosticado: GROQ_QUERY_TIMEOUT=180s, QUERY_TIMEOUT=120s, run_advanced_tests=1200s
-- [ ] Investigar si es lentitud del modelo OpenCode o del parser NDJSON
-- [ ] Aumentar timeout de 180s a 300s en model_runner.py
-- [ ] O simplificar prompts de C2 y D8
-- [ ] Re-ejecutar C2 y D8 contra mimo
+- [x] Investigar si es lentitud del modelo OpenCode o del parser NDJSON →
+      **FUE el modelo (ID obsoleto), no el parser.** `mimo-v2.5-free` ya no
+      existe en el catálogo; con `mimo-v2.6-flash-free` el overhead del
+      runner es solo 4% (24.6s de 678s wall).
+- [x] Aumentar timeout de 180s a 300s → **NO APLICA**: ningún test ≥150s
+      (máx C2=96.3s). Los datos no justifican subir el cap.
+- [x] Simplificar prompts de C2 y D8 → **NO APLICA**: ambos PASS sin cambios.
+- [x] Re-ejecutar C2 y D8 contra mimo → C2 PASS 96.3s, D8 PASS 89.6s
+      (23/23 avanzada, 678s wall).
 
 ### 7. gpt-oss-20b — Excluido por timeout
 > Subplan opcional: `docs/PLAN_RUN_INSTRUMENTADO.md`
@@ -166,19 +171,29 @@ Ultima actualizacion: 23/09/2026 (tarea 13 completada + subplan run instrumentad
 - [ ] Volver a incluir en run_all_tests.py cuando se resuelva
 - [ ] Re-ejecutar suite completa con los 4 modelos
 
-### 9. mimo T3 flaky — falla intermitente de keywords (20/09/2026)
+### 9. mimo T3 flaky — falla intermitente de keywords (20/09/2026) → RESUELTA (23/09/2026)
 > Subplan de ejecución: `docs/PLAN_RUN_INSTRUMENTADO.md` (3 corridas de
 > estructura para medir flakiness)
-- [ ] Investigar por que mimo a veces menciona "react"/"typescript" y a veces no en T3
-- [ ] Decidir: agregar sinonimos mas flexibles en `ai_structure_questions.json` T3 o aceptar flakiness
-- [ ] Re-ejecutar T3 para mimo y verificar
+- [x] Investigar por que mimo a veces menciona "react"/"typescript" y a veces
+      no en T3 → **No se reproduce con `mimo-v2.6-flash-free`:** 3/3 PASS
+      (siempre menciona react, typescript, fastapi, postgresql, stack).
+      El flakiness históricamente era con el ID obsoleto `mimo-v2.5-free`.
+- [x] Decidir: agregar sinonimos en T3 o aceptar flakiness → **ACEPTAR y
+      documentar.** 0/3 fallas no justifica aflojar el validador.
+- [x] Re-ejecutar T3 para mimo y verificar → 3 corridas: 159s / 178s / 245s
+      wall, T3 PASS en las 3.
 
-### 10. mimo timeout advanced tests >1200s (20/09/2026)
+### 10. mimo timeout advanced tests >1200s (20/09/2026) → RESUELTA (23/09/2026)
 > Subplan de ejecución: `docs/PLAN_RUN_INSTRUMENTADO.md` (medición
 > overhead = wall − Σ time_seconds para decidir 1800s vs optimizar runner)
-- [ ] Investigar si el overhead del parser NDJSON causa la lentitud
-- [ ] Verificar tiempos de cada test individual de mimo en el ultimo run
-- [ ] Decidir: aumentar timeout de 1200s a 1800s o simplificar prompts de mimo
+- [x] Investigar si el overhead del parser NDJSON causa la lentitud → **NO.**
+      Overhead = 4% (wall 678.1s − Σ 653.5s = 24.6s). El tiempo es del modelo.
+- [x] Verificar tiempos de cada test individual de mimo en el ultimo run →
+      23/23 PASS, Σ=653.5s, avg=28.4s, máx C2=96.3s; ninguno ≥150s.
+- [x] Decidir: aumentar timeout de 1200s a 1800s o simplificar prompts →
+      **NINGUNO de los dos.** Wall 678s « 1200s con holgura; el timeout
+      histórico se debió al modelo obsoleto/degradado, no al cap de suite.
+      Se conserva 1200s.
 
 ### 13. MCP bridge timeout en tests API (qwen) — initialize handshake falla (21/09)
 - [x] 13.1 Matar bridges huérfanos (PIDs 25360, 17144, 15804 — desde

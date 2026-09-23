@@ -42,7 +42,7 @@ def separator(title):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--test-id", type=int, default=1, help="ID del test a ejecutar (default: 1)")
-    parser.add_argument("--model", default="opencode/mimo-v2.5-free", help="Modelo a usar")
+    parser.add_argument("--model", default="opencode/mimo-v2.6-flash-free", help="Modelo a usar")
     args = parser.parse_args()
 
     # =========================================================

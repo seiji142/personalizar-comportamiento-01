@@ -22,10 +22,10 @@ TEST_PROJECT = os.getenv("TEST_PROJECT", os.path.join(PROJECT_ROOT, "..", "test-
 TESTS_DIR = os.path.join(PROJECT_ROOT, "tests")
 REPORT_FILE = os.path.join(TESTS_DIR, "answers", "opencode_models_report.json")
 
-# Modelos gratuitos actuales de OpenCode Zen (28/08/2026)
+# Modelos gratuitos actuales de OpenCode Zen (verificado 23/09/2026)
 MODELS = [
     "opencode/big-pickle",
-    "opencode/mimo-v2.5-free",
+    "opencode/mimo-v2.6-flash-free",
 ]
 
 # 5 tests: mismo schema que agent_questions.json

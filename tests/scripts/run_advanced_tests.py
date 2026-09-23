@@ -36,7 +36,7 @@ from opencode_cli import OPENCODE_CLI
 # Modelos nativos contratados (misma lista que run_opencode_models.py)
 NATIVE_MODELS = [
     "opencode/big-pickle",
-    "opencode/mimo-v2.5-free",
+    "opencode/mimo-v2.6-flash-free",
 ]
 
 

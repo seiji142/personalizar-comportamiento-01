@@ -34,7 +34,7 @@ for i in range(10):
 cmd = [
     OPENCODE_CLI, "run",
     "--attach", f"http://127.0.0.1:{port}",
-    "--model", "opencode/mimo-v2.5-free",
+    "--model", "opencode/mimo-v2.6-flash-free",
     "--format", "json",
     "Di hola"
 ]

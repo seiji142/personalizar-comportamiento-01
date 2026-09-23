@@ -28,7 +28,7 @@ for i in range(10):
 # Test 1: formato default
 print("=== FORMATO DEFAULT ===")
 cmd = [OPENCODE_CLI, "run", "--attach", f"http://127.0.0.1:{port}",
-       "--model", "opencode/mimo-v2.5-free", "Di hola"]
+       "--model", "opencode/mimo-v2.6-flash-free", "Di hola"]
 result = subprocess.run(cmd, cwd=TEST_PROJECT, capture_output=True, text=True,
                         encoding="utf-8", errors="replace", timeout=60)
 print(f"STDOUT: {result.stdout[:500]}")

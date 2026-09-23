@@ -16,6 +16,7 @@ import os
 import sys
 import json
 import subprocess
+import time
 from datetime import datetime
 
 # Agregar tests/lib al path para imports
@@ -153,13 +154,15 @@ def query_api(test_case, system_content, model_id=None):
 
 
 def run_test(test_case, system_content, native_mode=False, model_id=None):
+    t0 = time.time()
     if native_mode:
         reply = query_native(model_id, test_case["prompt"]).lower()
     else:
         reply = query_api(test_case, system_content, model_id=model_id)
 
     if reply.startswith("[error]") or reply.startswith("[timeout]"):
-        return {"status": "ERROR", "reply": reply, "error": reply}
+        return {"status": "ERROR", "reply": reply, "error": reply,
+                "time_seconds": round(time.time() - t0, 1)}
 
     passed, reasons = validate_response(reply, test_case)
 
@@ -167,7 +170,8 @@ def run_test(test_case, system_content, native_mode=False, model_id=None):
         "status": "PASS" if passed else "FAIL",
         "reply": reply,
         "reply_preview": reply[:200] + "..." if len(reply) > 200 else reply,
-        "reasons": reasons
+        "reasons": reasons,
+        "time_seconds": round(time.time() - t0, 1),
     }
 
 

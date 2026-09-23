@@ -7,7 +7,7 @@ Uso:
   python test_minimal.py
   python test_minimal.py --model opencode/big-pickle
   python test_minimal.py --prompt "Cual es tu rol?"
-  python test_minimal.py --model opencode/mimo-v2.5-free --prompt "Di hola"
+  python test_minimal.py --model opencode/mimo-v2.6-flash-free --prompt "Di hola"
 """
 import os
 import sys
@@ -171,8 +171,8 @@ def find_cli():
 
 def main():
     parser = argparse.ArgumentParser(description="Test minimal del ciclo CLI")
-    parser.add_argument("--model", default="opencode/mimo-v2.5-free",
-                        help="Modelo a usar (default: opencode/mimo-v2.5-free)")
+    parser.add_argument("--model", default="opencode/mimo-v2.6-flash-free",
+                        help="Modelo a usar (default: opencode/mimo-v2.6-flash-free)")
     parser.add_argument("--prompt", default="Di hola",
                         help="Prompt a enviar (default: 'Di hola')")
     args = parser.parse_args()

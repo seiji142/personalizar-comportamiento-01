@@ -3,7 +3,7 @@
 
 Lee API keys de Verificacion-modelos-ai/.env (centralizado).
 Ejecuta tests de API con AMBOS modelos: gpt-oss-20b (Cuenta 1) y qwen3.8-27b (Cuenta 2).
-Ejecuta tests de modelos locales: big-pickle y mimo-v2.5-free (OpenCode).
+Ejecuta tests de modelos locales: big-pickle y mimo-v2.6-flash-free (OpenCode).
 """
 import sys
 import os
@@ -28,7 +28,7 @@ MODEL_KEY_MAP = {
 # Modelos locales OpenCode
 NATIVE_MODELS = [
     "opencode/big-pickle",
-    "opencode/mimo-v2.5-free",
+    "opencode/mimo-v2.6-flash-free",
 ]
 
 
