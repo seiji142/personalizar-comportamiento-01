@@ -1,7 +1,7 @@
 # Tareas Pendientes - Suite de Validacion .ai/
 Ultima actualizacion: 23/09/2026 — **TODAS LAS TAREAS COMPLETADAS** (1-14).
-Pendiente opcional posterior: generar HTML (generate_html_report.py) y
-sesion_20260923.md.
+Cierre del dia: HTML regenerado (`docs/tests/reporte_consolidado_20260923_161730.html`)
+y sesion en `docs/tests/sesion_20260923.md`.
 
 ---
 
