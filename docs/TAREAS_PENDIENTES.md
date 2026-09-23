@@ -1,5 +1,5 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 23/09/2026 (tarea 13 completada)
+Ultima actualizacion: 23/09/2026 (tarea 13 completada + subplan run instrumentado documentado)
 
 ---
 
@@ -150,6 +150,8 @@ Ultima actualizacion: 23/09/2026 (tarea 13 completada)
       (foreign_project_markers) con 3 tests unitarios.
 
 ### 6. mimo — Timeout en C2 y D8
+> Subplan de ejecución: `docs/PLAN_RUN_INSTRUMENTADO.md` (run instrumentado
+> compartido con tareas 9 y 10, opcional 7)
 - [x] Diagnosticado: mimo hace timeout tanto en C2 como en D8
 - [x] Diagnosticado: GROQ_QUERY_TIMEOUT=180s, QUERY_TIMEOUT=120s, run_advanced_tests=1200s
 - [ ] Investigar si es lentitud del modelo OpenCode o del parser NDJSON
@@ -158,17 +160,22 @@ Ultima actualizacion: 23/09/2026 (tarea 13 completada)
 - [ ] Re-ejecutar C2 y D8 contra mimo
 
 ### 7. gpt-oss-20b — Excluido por timeout
+> Subplan opcional: `docs/PLAN_RUN_INSTRUMENTADO.md`
 - [ ] Investigar por que gpt-oss-20b tarda 1135s en tests avanzados (vs ~600s otros modelos)
 - [ ] Verificar si es rate limit o comportamiento del modelo
 - [ ] Volver a incluir en run_all_tests.py cuando se resuelva
 - [ ] Re-ejecutar suite completa con los 4 modelos
 
 ### 9. mimo T3 flaky — falla intermitente de keywords (20/09/2026)
+> Subplan de ejecución: `docs/PLAN_RUN_INSTRUMENTADO.md` (3 corridas de
+> estructura para medir flakiness)
 - [ ] Investigar por que mimo a veces menciona "react"/"typescript" y a veces no en T3
 - [ ] Decidir: agregar sinonimos mas flexibles en `ai_structure_questions.json` T3 o aceptar flakiness
 - [ ] Re-ejecutar T3 para mimo y verificar
 
 ### 10. mimo timeout advanced tests >1200s (20/09/2026)
+> Subplan de ejecución: `docs/PLAN_RUN_INSTRUMENTADO.md` (medición
+> overhead = wall − Σ time_seconds para decidir 1800s vs optimizar runner)
 - [ ] Investigar si el overhead del parser NDJSON causa la lentitud
 - [ ] Verificar tiempos de cada test individual de mimo en el ultimo run
 - [ ] Decidir: aumentar timeout de 1200s a 1800s o simplificar prompts de mimo
