@@ -57,7 +57,7 @@ class MCPStdioClient:
             self.command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
             text=True,
             bufsize=1,
         )
@@ -111,6 +111,18 @@ class MCPStdioClient:
     def _wait_response(self, req_id, timeout=MCP_INIT_TIMEOUT):
         deadline = time.time() + timeout
         while time.time() < deadline:
+            # Si el proceso murio, no esperar el timeout completo:
+            # reportar exit code + stderr (tarea 13.2)
+            if self.proc.poll() is not None:
+                stderr_tail = ""
+                try:
+                    stderr_tail = (self.proc.stderr.read() or "")[-500:]
+                except Exception:
+                    pass
+                raise MCPError(
+                    f"Bridge termino con exit code {self.proc.returncode}"
+                    + (f". stderr: {stderr_tail}" if stderr_tail else "")
+                )
             try:
                 msg = self._responses.get(timeout=1)
             except queue.Empty:

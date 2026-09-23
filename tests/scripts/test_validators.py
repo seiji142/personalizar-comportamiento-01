@@ -330,6 +330,18 @@ class TestValidateUncertaintyB3(unittest.TestCase):
         })
         self.assertTrue(passed, reasons)
 
+    def test_pass_sin_triggers_da_reason_positivo(self):
+        """13.4: PASS sin triggers no debe devolver REASONS: [] confuso"""
+        reply = "Base de datos: PostgreSQL. Backend: FastAPI."
+        passed, reasons = validate_uncertainty(reply, {
+            "uncertainty_terms": [],
+            "forbidden_invention": ["mongodb", "django"],
+            "foreign_project_markers": ["eleccion-db"],
+            "dismissal_terms": ["otro proyecto"],
+        })
+        self.assertTrue(passed, reasons)
+        self.assertTrue(any("Sin inventos detectados" in r for r in reasons), reasons)
+
 
 class TestValidateMemory(unittest.TestCase):
     """Tests para validador de memoria (D1-D3)."""

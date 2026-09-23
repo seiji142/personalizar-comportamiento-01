@@ -269,6 +269,10 @@ def validate_uncertainty(reply, test):
             else:
                 reasons.append("Memoria cross-project descartada explicitamente")
 
+    # 13.4: PASS sin triggers no debe devolver REASONS: [] confuso
+    if passed and not reasons:
+        reasons.append("Sin inventos detectados")
+
     return passed, reasons
 
 

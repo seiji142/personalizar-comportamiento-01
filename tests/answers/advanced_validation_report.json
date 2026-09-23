@@ -117,15 +117,27 @@
         "name": "Adaptacionalidad / anti-alucinacion",
         "category": "factuality",
         "status": "PASS",
-        "time_seconds": 100.4,
-        "reasons": [],
-        "response_preview": "Según el contexto real del proyecto (`context.md`):\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (con Python 3.12)",
-        "response_full": "Según el contexto real del proyecto (`context.md`):\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (con Python 3.12)",
-        "tool_calls": [],
-        "memory_used": false,
-        "mcp_available": false,
-        "mcp_error": "Timeout esperando respuesta a request 1",
-        "tokens_used": 3112
+        "time_seconds": 31.1,
+        "reasons": [
+          "Sin inventos detectados"
+        ],
+        "response_preview": "Según el contexto real del proyecto **test-ai-config** (context.md) y la memoria persistente:\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (sobre Python 3.12)\n\nAmbos datos e...",
+        "response_full": "Según el contexto real del proyecto **test-ai-config** (context.md) y la memoria persistente:\n\n- **Base de datos:** PostgreSQL 16\n- **Framework de backend:** FastAPI (sobre Python 3.12)\n\nAmbos datos están confirmados tanto en el contexto del proyecto como en un episodio guardado en memoria con alta relevancia (0.92).\n\nComo dato complementario del stack: el frontend es React 18 con TypeScript 5, se usa SQLAlchemy como ORM, Redis como cache, y todo se conteneriza con Docker.",
+        "tool_calls": [
+          {
+            "name": "memory_search",
+            "arguments": {
+              "project": "test-ai-config",
+              "query": "base de datos framework backend"
+            },
+            "success": true,
+            "result": "Encontrados 5 resultados:\n1. [0.92] (Proyecto: test-ai-config) El proyecto usa PostgreSQL 16 como base de datos y FastAPI como framework de backend.\nEl proyecto usa PostgreSQL 16 como base de datos y FastAPI como framework de backend.\n2. [0.33] (Proyecto: test-ai-config) Suite de pruebas pytest para el modulo de pagos: 44 tests en verde. Estrategia: fakes en memoria para repository/session y rate limiter (sin PostgreSQL/Redis), httpx.MockTransport con base_url para el\n3. [0.24] (Proyecto: test-a"
+          }
+        ],
+        "memory_used": true,
+        "mcp_available": true,
+        "mcp_error": null,
+        "tokens_used": 10115
       },
       "B4": {
         "name": "Consistencia de idioma",
@@ -1807,6 +1819,6 @@
       }
     }
   },
-  "timestamp": "2026-09-21T23:36:58.941328",
+  "timestamp": "2026-09-23T12:38:24.412239",
   "type": "advanced_validation"
 }

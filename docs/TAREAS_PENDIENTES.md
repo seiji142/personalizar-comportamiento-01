@@ -1,5 +1,5 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 21/09/2026 (tarea 4 QUERY_TIMEOUT 180s)
+Ultima actualizacion: 23/09/2026 (tarea 13 completada)
 
 ---
 
@@ -72,7 +72,7 @@ Ultima actualizacion: 21/09/2026 (tarea 4 QUERY_TIMEOUT 180s)
 - [x] Verificar con modelo real: 4 tool calls capturados, 15555 tokens, memory_used correcto
 - [x] Actualizar validadores D1-D3: validate_memory() ahora acepta files_read y verifica paths de memoria reales
 - [x] Verificar: 44/44 tests unitarios pasan (test_opencode_events + test_validators)
-- [ ] OJO: este fix NO cubrio GroqRunner (API). Ver tarea #11
+- [x] OJO: este fix NO cubrio GroqRunner (API) — RESUELTO por tarea 11 (21/09)
 
 ### 11. GroqRunner (API) — tool_calls siempre en [] sin diagnosticar (20/09/2026)
 - [x] Diagnosticado: _ensure_mcp() (model_runner.py:167-180) traga errores en silencio
@@ -172,6 +172,37 @@ Ultima actualizacion: 21/09/2026 (tarea 4 QUERY_TIMEOUT 180s)
 - [ ] Investigar si el overhead del parser NDJSON causa la lentitud
 - [ ] Verificar tiempos de cada test individual de mimo en el ultimo run
 - [ ] Decidir: aumentar timeout de 1200s a 1800s o simplificar prompts de mimo
+
+### 13. MCP bridge timeout en tests API (qwen) — initialize handshake falla (21/09)
+- [x] 13.1 Matar bridges huérfanos (PIDs 25360, 17144, 15804 — desde
+      18:34/19:05, pre-fix) — verificado 23/09: PIDs ya no existen, sin
+      procesos bridge/uvicorn, nada escuchando en :8000.
+- [x] 13.2 Diagnosticar handshake: causa raíz REAL NO fue IPv6 sino
+      `NameError: name 'false' is not defined` en `mcp_bridge.py:175`
+      (literal JSON en Python, commit c87e984 tarea 5, 21/09 23:38) →
+      bridge muere con exit code 1 → cliente (stderr DEVNULL) esperaba
+      30s en silencio. Fixes: `false`→`False`; `mcp_client.py` fail-fast
+      con exit code+stderr si el proceso muere; IPv4 defensivo
+      (`127.0.0.1` en BRAIN_API del bridge, health check de
+      run_advanced_tests.py y clients/memoria.py — localhost resolvía
+      primero a `::1`, evidencia netstat SYN_SENT). Verificado live:
+      initialize 0.67s, 10 tools, memory_search OK.
+- [x] 13.3 Re-run `--only B3 --api qwen/qwen3.8-27b` con MCP arriba —
+      23/09 12:38 PASS (31.1s). Verificado: mcp_available=True,
+      tool_calls_len=1 (memory_search success=true), memory_used=True,
+      arguments.project="test-ai-config", 23 casos conservados (merge).
+- [x] 13.4 validate_uncertainty: reason positivo cuando PASS sin
+      triggers → "Sin inventos detectados" (advanced_validators.py).
+      Test nuevo test_pass_sin_triggers_da_reason_positivo; 69/69 unit
+      tests PASS; e2e B3 muestra "- Sin inventos detectados".
+- [x] 13.5 Documentar en sesion: `ChildProcess.kill` de restart.py es
+      benigno (restart exitoso, PID cambio 3224->16320, /health ok).
+      Evidencia: mcp_client.py:37 MCP_INIT_TIMEOUT=30s, MCPError al
+      morir el bridge (ahora fail-fast, antes timeout silencioso);
+      model_runner.py MAX_MCP_RETRIES=3 (linea 38, print retry linea
+      211) antes de rendirse; qwen B3 PASS sin memory en 21/09 porque
+      B3 no la exige (solo D1-D3), desde 23/09 corre con
+      memory_used=True. Seccion TAREA 13 en docs/tests/sesion_20260921.md.
 
 ---
 

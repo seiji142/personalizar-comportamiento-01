@@ -48,7 +48,7 @@ def load_questions():
 def check_brain_ai_health(timeout=5):
     """Verifica que brain-ai-01 este corriendo en localhost:8000 (opcional)."""
     try:
-        r = requests.get("http://localhost:8000/health", timeout=timeout)
+        r = requests.get("http://127.0.0.1:8000/health", timeout=timeout)
         return r.status_code == 200
     except Exception:
         return False
