@@ -1,8 +1,10 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 23/09/2026 — tareas 1-14 completadas.
-**Abierta: tarea 15 (429 TPD, plan en `docs/PLAN_TPD_429.md`).**
-Suite nocturna 23/09 (10/11 OK con 2 gates rojos) ver en
-`docs/tests/sesion_20260923.md` §hallazgo nocturno.
+Ultima actualizacion: 25/09/2026 — tareas 1-15 completadas.
+**Tarea 15 (429 TPD) RESUELTA 25/09** — plan y evidencia en
+`docs/PLAN_TPD_429.md` §Ejecución. Suite nocturna 23/09 (10/11 OK con
+2 gates rojos) ver en `docs/tests/sesion_20260923.md` §hallazgo nocturno.
+Residuales de comportamiento (no 429): gpt-oss C2/D9 FAIL + estructura
+T4 "qa" FAIL, qwen D8 ERROR (max tool rounds, 2 intentos).
 
 ---
 
@@ -237,26 +239,48 @@ Suite nocturna 23/09 (10/11 OK con 2 gates rojos) ver en
 - [x] Tests unitarios: clase `TestKeywordAcentos` (5 tests) +
       `test_pruebas_matchea_plural_tests_y_pytest` → suite **75/75 PASS**.
 
-### 15. 429 TPD diario — cuota agotada no es fallo (23/09/2026)
+### 15. 429 TPD diario — cuota agotada no es fallo → RESUELTA (25/09/2026)
+> Plan/evidencia: `docs/PLAN_TPD_429.md` · Registro de sesión:
+> `docs/tests/sesion_20260925.md` · Aclaración "qué se arregló y qué NO"
+> (la cuota de Groq 200k/día no se elimina, se gestiona): §Historial del plan.
 > Plan completo: `docs/PLAN_TPD_429.md` — **incluye HISTORIAL de fixes 429
 > previos (16/09 retry backoff, 21/09 verificado, 23/09 T7). Revisar ANTES
 > de proponer cualquier fix 429. NO reimplementar el retry que ya existe
 > en `model_runner.py:288-319`.**
-- [ ] 0. Sondeo de cuota por cuenta antes de correr la suite (1 query mínima)
-- [ ] 1. Detección TPD diario en 429 → fail-fast + estado `BLOCKED_TPD`
-        (`model_runner.py`: detectar "tokens per day" / "try again >2min" →
-        1 intento, no 3; cortar resto de tests del modelo)
-- [ ] 2. Parsear "try again in ≤90s" y esperar ese tiempo exacto
-        (mejora del backoff ciego 5/10/20s, sin reemplazarlo)
-- [ ] 3. Preflight en `suite_runner`: gate `api_disponible`
-        (BLOCKED ≠ FAIL); cuenta sin cuota → correr solo nativos
-- [ ] 4. Reparar run 23/09 si hay cuota: qwen `--only-failures` (17) ·
+- [x] 0. Sondeo de cuota por cuenta antes de correr la suite (1 query mínima)
+        → `tests/scripts/quota_probe.py` escribe `tests/answers/quota_status.json`;
+        corriendo en preflight de suite_runner (fallo → exit 3). Verificado en
+        vivo 25/09 14:25: Cuenta 1 OK, Cuenta 2 OK (headers RPM/TPM capturados).
+- [x] 1. Detección TPD diario en 429 → fail-fast + estado `BLOCKED_TPD`
+        (`tests/lib/rate_limit.py` parsea "tokens per day"/espera >120s;
+        GroqRunner: 1 intento sin sleep + flag `tpd_blocked`; run_advanced
+        corta el resto de tests del modelo; exit 7 → summary BLOCKED_TPD).
+        NO toca el retry de 16/09.
+- [x] 2. Parsear "try again in ≤90s" y esperar ese tiempo exacto
+        (`rate_limit.compute_wait`: exacta +1s si ≤90s, si no el backoff
+        5/10/20 original; aplica a GroqRunner y a query_api de estructura,
+        que antes no tenia retry).
+- [x] 3. Preflight en `suite_runner`: gate `api_disponible` (BLOCKED ≠ FAIL);
+        cuenta sin cuota → `run_all_tests` salta ese modelo, marca
+        `BLOCKED_TPD` en el summary y reclasifica sus casos con evidencia
+        429-TPD. summary_ok acepta OK/BLOCKED_TPD.
+- [x] 4. Reparar run 23/09 si hay cuota: qwen `--only-failures` (17) ·
         gpt-oss estructura + `--only-failures` (28) · mimo `--only D8,D9`
-- [ ] 5. Registrar consumo diario por cuenta en `RESULTADOS_TEST_AI.md`
-        (los 429 traen `Used`/`Limit`)
-- [ ] Fix gates: `estructura_4x5`/`avanzada_4x23` solo cuentan `n`, no
-        estados — gpt-oss pasó gates con 5 FAIL + 23 ERROR (flaw anotado
-        en PLAN_TPD_429.md)
+        → **EJECUTADO 25/09 con sondeo OK:** estructura gpt-oss 4 PASS +
+        1 FAIL (keyword `qa`, comportamiento); qwen 17 → 16 PASS + 1 D8
+        TIMEOUT (retry: ERROR max-tool-rounds, 2 intentos); gpt-oss 23 →
+        21 PASS (C2/D9 FAIL comportamiento, D3 ERROR→retry PASS con
+        espera exacta 2.7s en D4); mimo D8/D9 PASS → mimo 23/23.
+        **Cero ERROR por 429 en ambos reportes.**
+- [x] 5. Registrar consumo diario por cuenta en `RESULTADOS_TEST_AI.md`
+        (los 429 traen `Used`/`Limit`) → seccion "Consumo diario TPD por
+        cuenta" en `docs/tests/RESULTADOS_TEST_AI.md` + quota_status.json
+        machine-readable (headers x-ratelimit).
+- [x] Fix gates: `estructura_4x5`/`avanzada_4x23` ahora exigen `n` exacto
+        Y estados PASS/BLOCKED_TPD (FAIL/TIMEOUT/ERROR rompen) —
+        `suite_runner.model_gate()`. Verificado: contra los reportes del
+        23/09 ambos gates dan False (bad=23/17 y bad=1) y con unit tests
+        (38 en `tests/scripts/test_rate_limit_tpd.py`, suite completa PASS).
 
 ### 13. MCP bridge timeout en tests API (qwen) — initialize handshake falla (21/09)
 - [x] 13.1 Matar bridges huérfanos (PIDs 25360, 17144, 15804 — desde

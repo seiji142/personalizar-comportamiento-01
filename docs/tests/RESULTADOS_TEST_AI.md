@@ -196,6 +196,28 @@ Score re-run: **5/5** (verificado en vivo 21/09 21:24 — C2 PASS con "Declinaci
 - Cuenta 2 (GROQ_CUENTA_2): qwen3.8-27b — funciona pero agota TPD rapido (200K tokens)
 - qwen3.6-27b: ELIMINADO de Groq (404)
 
+### Consumo diario TPD por cuenta (registro — tarea 15, paso 5)
+
+Los mensajes 429 de Groq traen `Used`/`Limit` de la cuota diaria (TPD).
+Registrar aqui cada 429 visto. Fuente machine-readable:
+`tests/answers/quota_status.json` (sondeo `tests/scripts/quota_probe.py`,
+1 query minima por cuenta, se corre automatico en el preflight).
+
+| Fecha | Cuenta | Modelo | Origen | Used/Limit TPD | Resultado |
+|-------|--------|--------|--------|----------------|-----------|
+| 23/09 (noche) | GROQ_CUENTA_1 | openai/gpt-oss-20b | 429 suite nocturna | 198485/200000 | gpt-oss 0/28 en esa corrida (reparado 25/09) |
+| 23/09 (noche) | GROQ_CUENTA_2 | qwen/qwen3.8-27b | 429 suite nocturna | 195679/200000 | qwen 6/23, 17 ERROR (reparado 25/09) |
+| 25/09 14:25 | GROQ_CUENTA_1 | openai/gpt-oss-20b | sondeo quota_probe | sin 429 (OK) | headers: 1000 req, 8000 tok/ventana; remaining 997/7920 |
+| 25/09 14:25 | GROQ_CUENTA_2 | qwen/qwen3.8-27b | sondeo quota_probe | sin 429 (OK) | headers: 1000 req, 8000 tok/ventana; remaining 995/7979 |
+| 25/09 15:25 | GROQ_CUENTA_1 | openai/gpt-oss-20b | sondeo post-reparacion | sin 429 (OK) | remaining 976/7920 tras reparacion (23 tests) |
+| 25/09 15:25 | GROQ_CUENTA_2 | qwen/qwen3.8-27b | sondeo post-reparacion | sin 429 (OK) | remaining 978/7979 tras reparacion (17 tests); 1x espera exacta 44.5s (429 transitorio) |
+
+Reglas (tarea 15):
+- Antes de cada suite, el preflight sondea la cuota: cuenta
+  `BLOCKED_TPD` → la suite corre solo nativos (BLOCKED ≠ FAIL).
+- Un 429 TPD ya no genera 17-23 ERROR rojos: fail-fast con estado
+  `BLOCKED_TPD` (1 intento, sin esperas de 9-36 min).
+
 ## Criterio de Documentacion
 
 **Regla: TODO va a `docs/` (reportes) o `tests/` (codigo de test).**
@@ -221,6 +243,8 @@ previas de este archivo estaban desactualizadas.)
 | `tests/scripts/validate_agent_responses.py` | Validacion de respuestas | `--run-model <model>` / `--api <model>` / JSON (default) |
 | `tests/scripts/run_advanced_tests.py` | Suite avanzada 23 tests | `--api <model>` / nativo (default) |
 | `tests/scripts/run_all_tests.py` | Runner maestro (15 ejecuciones) | Ejecuta todo |
+| `tests/scripts/quota_probe.py` | Sondeo de cuota Groq por cuenta (tarea 15) | 1 query mínima/cuenta → `tests/answers/quota_status.json` |
+| `tests/lib/rate_limit.py` | Parser/deteccion 429 TPD vs transitorio | — |
 | `tests/lib/validation.py` | Logica comun de validacion | — |
 | `tests/lib/advanced_validators.py` | Validadores especiales | — |
 
@@ -228,11 +252,16 @@ previas de este archivo estaban desactualizadas.)
 
 ```powershell
 # Suite completa (recomendado)
-python tests/scripts/run_all_tests.py
+python scripts/suite_runner.py   # preflight con sondeo de cuota incluido
+
+# Sondeo de cuota por cuenta antes de correr nada (1 query minima c/u)
+python tests/scripts/quota_probe.py
+python tests/scripts/quota_probe.py --reclassify  # ERROR/FAIL por 429-TPD -> BLOCKED_TPD
 
 # Solo tests locales
 python -m pytest tests/unit/test_email_validator.py -v
 python tests/scripts/test_validators.py
+python tests/scripts/test_rate_limit_tpd.py       # tests de la tarea 15 (38)
 python tests/scripts/generate_html_report.py
 
 # Test basico contra API

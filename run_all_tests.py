@@ -19,6 +19,11 @@ TESTS_LIB = os.path.join(TESTS_DIR, "lib")
 SCRIPTS_DIR = os.path.join(PROJECT_ROOT, "scripts")
 VERIFICACION_DIR = os.path.join(PROJECT_ROOT, "..", "Verificacion-modelos-ai")
 
+sys.path.insert(0, TESTS_LIB)
+from rate_limit import EXIT_BLOCKED, QUOTA_STATUS_FILENAME, reclassify_file_tpd  # noqa: E402
+
+QUOTA_PATH = os.path.join(TESTS_DIR, "answers", QUOTA_STATUS_FILENAME)
+
 # Mapeo de modelos a variables de entorno en Verificacion-modelos-ai/.env
 MODEL_KEY_MAP = {
     "openai/gpt-oss-20b": "GROQ_CUENTA_1",
@@ -63,6 +68,22 @@ def load_verificacion_env():
 # Cargar keys desde Verificacion-modelos-ai
 load_verificacion_env()
 
+
+def load_quota_status():
+    """Lee quota_status.json del sondeo (paso 0). None si no existe."""
+    try:
+        with open(QUOTA_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def account_status(quota, account):
+    """Estado del sondeo para una cuenta, o None si no hay sondeo."""
+    if not quota:
+        return None
+    return (quota.get("accounts", {}).get(account) or {}).get("status")
+
 # Configurar proyecto de tests externo
 os.environ.setdefault("TEST_PROJECT", os.path.join(PROJECT_ROOT, "..", "test-ai-config"))
 
@@ -81,7 +102,14 @@ def run_cmd(name, cmd, cwd=None, timeout=300, env=None):
         print(r.stdout[-2000:] if len(r.stdout) > 2000 else r.stdout)
         if r.stderr:
             print(f"STDERR: {r.stderr[-500:]}")
-        results[name] = {"status": "OK" if r.returncode == 0 else "FAIL",
+        if r.returncode == 0:
+            status = "OK"
+        elif r.returncode == EXIT_BLOCKED:
+            # 429 TPD: cuota diaria agotada, no es FAIL (tarea 15)
+            status = "BLOCKED_TPD"
+        else:
+            status = "FAIL"
+        results[name] = {"status": status,
                          "returncode": r.returncode, "elapsed": elapsed}
     except subprocess.TimeoutExpired:
         results[name] = {"status": "TIMEOUT", "elapsed": timeout}
@@ -104,6 +132,9 @@ run_cmd("pytest (test_email_validator)",
 run_cmd("test_validators.py (35 tests)",
         [sys.executable, os.path.join(TESTS_SCRIPTS, "test_validators.py")])
 
+run_cmd("test_rate_limit_tpd.py (429 TPD)",
+        [sys.executable, os.path.join(TESTS_SCRIPTS, "test_rate_limit_tpd.py")])
+
 
 # ============================================================
 # TESTS CON API — AMBOS modelos
@@ -117,9 +148,36 @@ print("#"*60)
 models_to_test = ["openai/gpt-oss-20b", "qwen/qwen3.8-27b"]
 
 fresh_done = False
+quota = load_quota_status()
+if quota:
+    print(f"[SONDEO] Cuota leida de {QUOTA_PATH} ({quota.get('timestamp')})")
 
 for i, model in enumerate(models_to_test):
     account = MODEL_KEY_MAP[model]
+
+    # Paso 3 (tarea 15): cuenta sin cuota diaria -> no se lanza la suite de
+    # ese modelo; se registra BLOCKED_TPD y se reclasifican sus casos con
+    # evidencia de 429-TPD. Los modelos con cuota y los nativos siguen.
+    qstatus = account_status(quota, account)
+    if qstatus == "BLOCKED_TPD":
+        print(f"\n{'#'*60}")
+        print(f"# {model} | {account}: BLOCKED_TPD (cuota diaria agotada)")
+        print(f"{'#'*60}")
+        print("[SONDEO] Cuenta sin cuota: se corren solo los modelos disponibles.")
+        if not fresh_done:
+            # El --fresh lo consume esta cuenta para que el primer modelo
+            # SI ejecutado no borre los reportes de los demas
+            fresh_done = True
+        results[f"test_ai_structure.py ({model})"] = {"status": "BLOCKED_TPD", "elapsed": 0}
+        results[f"run_advanced_tests.py --api {model}"] = {"status": "BLOCKED_TPD", "elapsed": 0}
+        label = f"api/{model}"
+        for rep_name in ("advanced_validation_report.json", "ai_validation_report.json"):
+            changed = reclassify_file_tpd(os.path.join(TESTS_DIR, "answers", rep_name),
+                                          model_labels={label})
+            if changed:
+                print(f"[TPD] {rep_name}: {changed} caso(s) con evidencia 429-TPD -> BLOCKED_TPD")
+        continue
+
     api_key = get_api_key_for_model(model)
 
     print(f"\n{'#'*60}")

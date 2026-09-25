@@ -20,10 +20,13 @@ Que hace este script (todo automatico):
        - mata mcp_bridge.py huerfanos
        - backup de reportes + summary a docs/backup_YYYYMMDD_HHMMSS/
        - verifica GROQ_CUENTA_1/2 presentes (sin imprimir valores)
+       - sondeo de cuota por cuenta (quota_probe.py, 1 query minima c/u)
+         -> tests/answers/quota_status.json (tarea 15, paso 0)
   3. Ejecuta run_all_tests.py; stdout+stderr -> tests/answers/suite_runner.log
   4. Postflight gates -> tests/answers/suite_verification.json
-       summary_nuevo, summary_ok, avanzada (4 modelos x 23),
-       estructura (4 modelos x 5), html_nuevo
+       summary_nuevo, summary_ok (OK/BLOCKED_TPD), api_disponible,
+       avanzada (4 modelos x 23, estados PASS/BLOCKED_TPD),
+       estructura (4 modelos x 5, estados PASS/BLOCKED_TPD), html_nuevo
   5. Exit: 0 todo OK · 1 algun gate fallo · 2 lock ocupado · 3 preflight
 
 Si un solo gate falla: arreglar ESA pieza y re-run selectivo del script
@@ -46,6 +49,13 @@ VERIFY_PATH = os.path.join(ANSWERS_DIR, "suite_verification.json")
 RUN_ALL = os.path.join(PROJECT_ROOT, "run_all_tests.py")
 ENV_PATH = os.path.abspath(os.path.join(PROJECT_ROOT, "..", "Verificacion-modelos-ai", ".env"))
 DOCS_DIR = os.path.join(PROJECT_ROOT, "docs")
+QUOTA_PROBE = os.path.join(PROJECT_ROOT, "tests", "scripts", "quota_probe.py")
+QUOTA_PATH = os.path.join(PROJECT_ROOT, "tests", "answers", "quota_status.json")
+
+# Estados del sondeo de cuota que no impiden correr la API
+QUOTA_OK_STATES = ("OK", "BLOCKED_TPD", "TRANSIENT")
+# Estados de caso que aprueban el gate (BLOCKED_TPD = cuota agotada != fallo)
+GATE_OK_STATES = ("PASS", "BLOCKED_TPD")
 
 ADVANCED_LABELS = [
     "api/openai/gpt-oss-20b",
@@ -191,6 +201,42 @@ def preflight():
         sys.exit(EXIT_PREFLIGHT)
     _log("Preflight: GROQ_CUENTA_1/2 presentes")
 
+    # 4) sondeo de cuota por cuenta (paso 0, tarea 15): si el sondeo no
+    # deja quota_status.json legible, no se corre la suite a ciegas
+    _log("Preflight: sondeo de cuota por cuenta (1 query minima c/u)...")
+    try:
+        out = subprocess.run(
+            [sys.executable, QUOTA_PROBE],
+            cwd=PROJECT_ROOT, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=120,
+        )
+        if out.stdout:
+            for line in out.stdout.strip().splitlines():
+                _log(f"  sondeo: {line}")
+        if out.returncode != 0:
+            _log(f"Preflight FALLO: quota_probe rc={out.returncode} "
+                 f"stderr={(out.stderr or '')[-300:]}")
+            sys.exit(EXIT_PREFLIGHT)
+    except Exception as e:
+        _log(f"Preflight FALLO: no se pudo ejecutar el sondeo: {e}")
+        sys.exit(EXIT_PREFLIGHT)
+    try:
+        with open(QUOTA_PATH, encoding="utf-8") as f:
+            quota = json.load(f)
+        accounts = quota.get("accounts", {})
+        if not accounts:
+            raise ValueError("sin cuentas en quota_status.json")
+        for account, res in accounts.items():
+            status = res.get("status")
+            if status not in QUOTA_OK_STATES:
+                _log(f"Preflight: {account} = {status} (no es cuota; "
+                     f"la API puede fallar y el gate api_disponible lo dira)")
+    except Exception as e:
+        _log(f"Preflight FALLO: quota_status.json ilegible: {e}")
+        sys.exit(EXIT_PREFLIGHT)
+    _log("Preflight: sondeo de cuota OK -> " +
+         ", ".join(f"{a}={r.get('status')}" for a, r in accounts.items()))
+
 
 def run_suite():
     """Ejecuta run_all_tests.py; devuelve returncode. Log con timestamps."""
@@ -225,6 +271,73 @@ def _mtime(path):
     return os.path.getmtime(path) if os.path.exists(path) else 0.0
 
 
+def model_gate(filename, labels, expected_n, key):
+    """Gate por modelo con conteo de ESTADOS (flaw del run 23/09, tarea 15).
+
+    Antes solo se contaba n: gpt-oss paso los gates con 5 FAIL + 23 ERROR.
+    Ahora exige n exacto y que todos los casos esten en GATE_OK_STATES
+    (PASS, o BLOCKED_TPD cuando la cuota diaria esta agotada).
+    """
+    path = os.path.join(ANSWERS_DIR, filename)
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        models = data.get("models", {})
+        detail = {}
+        ok = True
+        for lab in labels:
+            entry = models.get(lab)
+            if entry is None:
+                detail[lab] = "AUSENTE"
+                ok = False
+                continue
+            if key == "cases":
+                cases = entry if isinstance(entry, dict) else {}
+                statuses = [c.get("status") for c in cases.values()
+                            if isinstance(c, dict)]
+                n = len(cases)
+            else:  # estructura: {timestamp, results: []}
+                cases_list = entry.get("results", []) if isinstance(entry, dict) else []
+                statuses = [r.get("status") for r in cases_list
+                            if isinstance(r, dict)]
+                n = len(cases_list)
+            bad = [s for s in statuses if s not in GATE_OK_STATES]
+            detail[lab] = f"n={n} bad={len(bad)}"
+            ok = ok and n == expected_n and not bad
+        return ok, detail
+    except Exception as e:
+        return False, {"_error": str(e)}
+
+
+def summary_gate(summary_status):
+    """summary_ok: OK y BLOCKED_TPD aprueban; FAIL/TIMEOUT/ERROR no."""
+    bad = {k: s for k, s in summary_status.items()
+           if s not in ("OK", "BLOCKED_TPD")}
+    ok = bool(summary_status) and not bad
+    return ok, bad
+
+
+def api_disponible_gate(quota_path=QUOTA_PATH):
+    """Gate api_disponible: el sondeo existe y clasifico cada cuenta.
+
+    BLOCKED_TPD (cuota agotada) NO es FAIL: permite correr solo nativos.
+    Solo un sondeo ausente/ilegible o una cuenta con estado no clasificado
+    (ERROR de API) deja el gate en rojo.
+    """
+    try:
+        with open(quota_path, encoding="utf-8") as f:
+            quota = json.load(f)
+        accounts = quota.get("accounts", {})
+        if not accounts:
+            return False, {"_error": "sin cuentas"}
+        detail = {acct: res.get("status") for acct, res in accounts.items()}
+        ok = all(res.get("status") in QUOTA_OK_STATES
+                 for res in accounts.values())
+        return ok, detail
+    except Exception as e:
+        return False, {"_error": str(e)}
+
+
 def verify(started):
     """Gates post-run. Escribe suite_verification.json. Retorna (ok, gates)."""
     gates = {}
@@ -238,40 +351,16 @@ def verify(started):
         summary_status = {k: v.get("status") for k, v in summary.get("results", {}).items()}
     except Exception as e:
         summary_status = {"_error": str(e)}
-    bad = {k: s for k, s in summary_status.items() if s != "OK"}
-    gates["summary_ok"] = bool(summary_status) and not bad
+    gates["summary_ok"], bad = summary_gate(summary_status)
 
-    def _model_gate(filename, labels, expected_n, key):
-        path = os.path.join(ANSWERS_DIR, filename)
-        try:
-            with open(path, encoding="utf-8") as f:
-                data = json.load(f)
-            models = data.get("models", {})
-            detail = {}
-            ok = True
-            for lab in labels:
-                cases = models.get(lab)
-                if cases is None:
-                    detail[lab] = "AUSENTE"
-                    ok = False
-                    continue
-                if key == "cases":
-                    n = len(cases) if isinstance(cases, dict) else 0
-                    detail[lab] = f"n={n}"
-                    ok = ok and n == expected_n
-                else:  # estructura: {timestamp, results: []}
-                    n = len(cases.get("results", [])) if isinstance(cases, dict) else 0
-                    detail[lab] = f"n={n}"
-                    ok = ok and n == expected_n
-            return ok, detail
-        except Exception as e:
-            return False, {"_error": str(e)}
+    api_ok, api_detail = api_disponible_gate()
+    gates["api_disponible"] = api_ok
 
-    adv_ok, adv_detail = _model_gate(
+    adv_ok, adv_detail = model_gate(
         "advanced_validation_report.json", ADVANCED_LABELS, 23, "cases")
     gates["avanzada_4x23"] = adv_ok
 
-    st_ok, st_detail = _model_gate(
+    st_ok, st_detail = model_gate(
         "ai_validation_report.json", STRUCTURE_LABELS, 5, "results")
     gates["estructura_4x5"] = st_ok
 
@@ -286,6 +375,7 @@ def verify(started):
         "gates": gates,
         "summary_statuses": summary_status,
         "summary_bad": bad,
+        "api_disponible_detail": api_detail,
         "avanzada_detail": adv_detail,
         "estructura_detail": st_detail,
         "log": LOG_PATH,

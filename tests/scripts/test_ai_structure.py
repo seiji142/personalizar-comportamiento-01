@@ -23,6 +23,16 @@ from datetime import datetime
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
 from validation import validate_response
 from opencode_cli import OPENCODE_CLI
+from rate_limit import (
+    BLOCKED_PREFIX,
+    DEFAULT_BASE_WAIT_S,
+    DEFAULT_MAX_RETRIES,
+    EXIT_BLOCKED,
+    blocked_message,
+    compute_wait,
+    parse_rate_limit,
+    reclassify_file_tpd,
+)
 
 # Mapeo de modelos a variables de entorno en Verificacion-modelos-ai/.env
 MODEL_KEY_MAP = {
@@ -51,6 +61,10 @@ def load_verificacion_env():
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.groq.com/openai/v1")
 LLM_API_KEY  = os.getenv("GROQ_API_KEY", "") or os.getenv("LLM_API_KEY", "")
 LLM_MODEL    = os.getenv("LLM_MODEL", "qwen/qwen3.8-27b")
+
+# Estado del sondeo 429 TPD dentro de la corrida (tarea 15): una vez que la
+# API pide la cuota diaria, el resto de tests no vuelve a llamarla
+_api_state = {"blocked": False, "blocked_msg": None}
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 TEST_PROJECT = os.path.normpath(os.getenv("TEST_PROJECT", os.path.join(PROJECT_ROOT, "..", "test-ai-config")))
@@ -136,37 +150,83 @@ def query_native(model_id, prompt, timeout=180):
 
 
 def query_api(test_case, system_content, model_id=None):
+    """Consulta a la API con retry para 429 (transitorio) y fail-fast TPD.
+
+    - 429 transitorio: espera exacta (<=90s) o backoff 5/10/20s, 3 intentos.
+    - 429 TPD diario: devuelve [BLOCKED_TPD] sin reintentar y marca el
+      estado del modulo para cortar el resto de tests (tarea 15).
+    """
+    if _api_state["blocked"]:
+        return _api_state["blocked_msg"]
+
     try:
-        from openai import OpenAI
-        client = OpenAI(base_url=LLM_BASE_URL, api_key=LLM_API_KEY)
-        model = model_id or LLM_MODEL
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_content},
-                {"role": "user", "content": test_case["prompt"]}
-            ],
-            temperature=0.1,
-            max_tokens=600,
-            timeout=30
-        )
-        return response.choices[0].message.content.lower()
-    except Exception as e:
-        return f"[ERROR] {str(e)}"
+        from openai import OpenAI, RateLimitError
+    except ImportError as e:
+        return f"[ERROR] {e}"
+    client = OpenAI(base_url=LLM_BASE_URL, api_key=LLM_API_KEY)
+    model = model_id or LLM_MODEL
+    last_error = None
+
+    for retry in range(DEFAULT_MAX_RETRIES + 1):
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_content},
+                    {"role": "user", "content": test_case["prompt"]}
+                ],
+                temperature=0.1,
+                max_tokens=600,
+                timeout=30
+            )
+            return response.choices[0].message.content.lower()
+        except RateLimitError as e:
+            last_error = e
+            info = parse_rate_limit(str(e))
+            if info["is_tpd"]:
+                _api_state["blocked"] = True
+                _api_state["blocked_msg"] = blocked_message(info, model)
+                print(_api_state["blocked_msg"])
+                return _api_state["blocked_msg"]
+            if retry < DEFAULT_MAX_RETRIES:
+                wait = compute_wait(retry, info["retry_after_s"], DEFAULT_BASE_WAIT_S)
+                print(f"[RATE LIMIT] Esperando {wait:g}s (intento {retry + 1}/{DEFAULT_MAX_RETRIES})...")
+                time.sleep(wait)
+            else:
+                return f"[ERROR] {str(last_error)[:500]}"
+        except Exception as e:
+            return f"[ERROR] {str(e)[:500]}"
+    return f"[ERROR] {str(last_error)[:500]}" if last_error else "[ERROR] No response"
+
+
+def reply_status(reply):
+    """Estado tecnico de una respuesta, o None si es valida para validar.
+
+    Detecta el prefijo de forma case-insensitive: antes un 429 llegaba como
+    "[ERROR] ..." en mayusculas, no casaba con "[error]" y el texto de la
+    cuota agotada se contaba como FAIL de comportamiento (tarea 15).
+    """
+    low = (reply or "").lower()
+    if low.startswith(BLOCKED_PREFIX.lower()):
+        return "BLOCKED_TPD"
+    if low.startswith("[error]") or low.startswith("[timeout]"):
+        return "ERROR"
+    return None
 
 
 def run_test(test_case, system_content, native_mode=False, model_id=None):
     t0 = time.time()
     if native_mode:
-        reply = query_native(model_id, test_case["prompt"]).lower()
+        reply = query_native(model_id, test_case["prompt"])
     else:
         reply = query_api(test_case, system_content, model_id=model_id)
 
-    if reply.startswith("[error]") or reply.startswith("[timeout]"):
-        return {"status": "ERROR", "reply": reply, "error": reply,
+    status = reply_status(reply)
+    if status:
+        return {"status": status, "reply": reply, "error": reply,
                 "time_seconds": round(time.time() - t0, 1)}
 
-    passed, reasons = validate_response(reply, test_case)
+    passed, reasons = validate_response(reply.lower(), test_case)
 
     return {
         "status": "PASS" if passed else "FAIL",
@@ -208,9 +268,10 @@ def generate_report(results, mode_label="api", fresh=False):
     print(f"REPORTE DE VALIDACION .ai/ ({mode_label}) |", datetime.now().strftime("%Y-%m-%d %H:%M"))
     print("=" * 60)
 
-    pass_count = fail_count = error_count = 0
+    pass_count = fail_count = error_count = blocked_count = 0
     for r in results:
-        status_icon = "PASS" if r["status"] == "PASS" else ("ERROR" if r["status"] == "ERROR" else "FAIL")
+        status_icon = {"PASS": "PASS", "ERROR": "ERROR",
+                       "BLOCKED_TPD": "BLOCKED_TPD"}.get(r["status"], "FAIL")
         desc = sanitize(r['description'])
         print(f"  Test {r['id']} ({r['target']}) -> {status_icon} | {desc}")
         if r.get("reasons"):
@@ -224,11 +285,14 @@ def generate_report(results, mode_label="api", fresh=False):
             print(f"    - Respuesta: {preview[:200]}")
         elif r["status"] == "FAIL":
             fail_count += 1
+        elif r["status"] == "BLOCKED_TPD":
+            blocked_count += 1
         else:
             error_count += 1
 
     print("=" * 60)
-    print(f"Resultado: {pass_count} PASS | {fail_count} FAIL | {error_count} ERROR")
+    print(f"Resultado: {pass_count} PASS | {fail_count} FAIL | "
+          f"{error_count} ERROR | {blocked_count} BLOCKED_TPD")
 
     report_path = os.path.join(TESTS_DIR, "answers", "ai_validation_report.json")
     report = load_existing_report(report_path, fresh=fresh)
@@ -282,12 +346,14 @@ def main():
                 # Formato nuevo: buscar en todos los modelos
                 for model_name, model_data in report.get("models", {}).items():
                     for r in model_data.get("results", []):
-                        if r.get("status") in ("FAIL", "TIMEOUT", "ERROR"):
+                        # BLOCKED_TPD se re-ejecuta: con cuota pasa a PASS,
+                        # sin cuota vuelve a BLOCKED_TPD sin gastar API
+                        if r.get("status") in ("FAIL", "TIMEOUT", "ERROR", "BLOCKED_TPD"):
                             failed_ids.add(r["id"])
                 # Fallback formato viejo
                 if not failed_ids:
                     for r in report.get("results", []):
-                        if r.get("status") in ("FAIL", "TIMEOUT", "ERROR"):
+                        if r.get("status") in ("FAIL", "TIMEOUT", "ERROR", "BLOCKED_TPD"):
                             failed_ids.add(r["id"])
                 if not failed_ids:
                     print("No hay fallos previos. Nada que re-ejecutar.")
@@ -321,8 +387,9 @@ def main():
                 print(f"WARNING: Sin respuesta para Test {tid}, saltando...")
                 continue
             reply = answers_by_id[tid].lower()
-            if reply.startswith("[error]") or reply.startswith("[timeout]"):
-                result = {"status": "ERROR", "reply": reply, "error": reply}
+            status = reply_status(reply)
+            if status:
+                result = {"status": status, "reply": reply, "error": reply}
             else:
                 passed, reasons = validate_response(reply, test)
                 result = {"status": "PASS" if passed else "FAIL", "reply": reply,
@@ -347,7 +414,9 @@ def main():
             res.update({"id": test["id"], "target": test["target"],
                         "description": test["description"]})
             results.append(res)
-
+            if res["status"] == "BLOCKED_TPD":
+                print("Cortando resto de tests: cuota diaria (TPD) agotada.")
+                break
     # Modo API (default o explicito)
     else:
         # Cargar API keys desde Verificacion-modelos-ai
@@ -366,8 +435,20 @@ def main():
             res.update({"id": test["id"], "target": test["target"],
                         "description": test["description"]})
             results.append(res)
+            if res["status"] == "BLOCKED_TPD":
+                print("Cortando resto de tests: cuota diaria (TPD) agotada.")
+                break
 
     generate_report(results, mode_label, fresh=args.fresh)
+
+    # Cierre 429 TPD (tarea 15): reclasificar casos que quedaron como
+    # ERROR/FAIL con evidencia textual de cuota diaria agotada
+    report_file = os.path.join(TESTS_DIR, "answers", "ai_validation_report.json")
+    blocked_count = sum(1 for r in results if r["status"] == "BLOCKED_TPD")
+    if blocked_count:
+        changed = reclassify_file_tpd(report_file, model_labels={mode_label})
+        print(f"[TPD] {changed} caso(s) con evidencia 429-TPD -> BLOCKED_TPD")
+        sys.exit(EXIT_BLOCKED)
 
 
 if __name__ == "__main__":

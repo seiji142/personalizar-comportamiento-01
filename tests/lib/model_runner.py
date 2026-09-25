@@ -24,6 +24,7 @@ import threading
 from mcp_client import MCPStdioClient, mcp_tools_to_openai, MCPError
 from opencode_cli import OPENCODE_CLI
 from opencode_events import parse_ndjson
+from rate_limit import blocked_message, compute_wait, parse_rate_limit
 
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -171,6 +172,10 @@ class GroqRunner(ModelRunner):
         self.mcp_available = False
         self.mcp_error = None
         self._mcp_started = False
+        # 429 TPD diario (tarea 15): una vez detectado, fail-fast en el
+        # resto de tests del modelo sin volver a llamar a la API
+        self.tpd_blocked = False
+        self._tpd_message = None
 
     def _ensure_mcp(self):
         """Inicializa MCP client y descubre tools con reintentos.
@@ -253,6 +258,13 @@ class GroqRunner(ModelRunner):
 
     def _execute_query(self, prompt):
         """Ejecuta la consulta real con tool loop via MCP y retry para 429."""
+        # Fail-fast 429 TPD (tarea 15): la cuota diaria no se recupera en
+        # minutos, asi que no se vuelve a llamar a la API en este runner
+        if self.tpd_blocked:
+            return {"text": "", "tool_calls": [], "memory_used": False,
+                    "tokens_used": 0,
+                    "error": self._tpd_message or blocked_message(model_id=self.model_id)}
+
         try:
             from openai import OpenAI, RateLimitError
         except ImportError:
@@ -308,9 +320,20 @@ class GroqRunner(ModelRunner):
                     break  # Éxito, salir del retry loop
                 except RateLimitError as e:
                     last_error = e
+                    info = parse_rate_limit(str(e))
+                    if info["is_tpd"]:
+                        # 429 TPD diario: 1 intento, sin esperas futiles
+                        # (el backoff 5/10/20s nunca alcanza 9-36 min de cuota)
+                        self.tpd_blocked = True
+                        self._tpd_message = blocked_message(info, self.model_id)
+                        print(self._tpd_message)
+                        return {"text": "", "tool_calls": [], "memory_used": False,
+                                "tokens_used": 0, "error": self._tpd_message}
                     if retry < MAX_RETRIES:
-                        wait = BASE_WAIT_SECONDS * (2 ** retry)  # 5s, 10s, 20s
-                        print(f"[RATE LIMIT] Esperando {wait}s (intento {retry + 1}/{MAX_RETRIES})... ", end="", flush=True)
+                        # Transitorio: espera exacta si la API la indica (<=90s),
+                        # si no el backoff original (paso 2 del plan)
+                        wait = compute_wait(retry, info["retry_after_s"], BASE_WAIT_SECONDS)
+                        print(f"[RATE LIMIT] Esperando {wait:g}s (intento {retry + 1}/{MAX_RETRIES})... ", end="", flush=True)
                         time.sleep(wait)
                     else:
                         print(f"[RATE LIMIT] Agotados {MAX_RETRIES} reintentos")

@@ -155,6 +155,27 @@ consolidar()
   sin post-filtrado no es un filtro — validar siempre el contrato con un
   test que meta datos en 2 proyectos.
 
+## 429 TPD / BLOCKED_TPD (tarea 15, 25/09/2026)
+- **Regla de oro:** un 429 TPD ("tokens per day", cuota diaria de Groq
+  200k/cuenta) **no es fallo del modelo** → estado `BLOCKED_TPD`, que es
+  distinto de FAIL/ERROR. La cuota NO se "arregla": se gestiona.
+- **Antes de diagnosticar cualquier 429:** leer `docs/PLAN_TPD_429.md`
+  §Historial. El retry transitorio (5/10/20s, MAX_RETRIES=3) existe desde
+  el 16/09 en `model_runner.py` y funciona — NO reimplementarlo.
+- **Herramientas:** `tests/scripts/quota_probe.py` (sondeo 1 query/cuenta
+  → `tests/answers/quota_status.json`; corre en preflight de
+  `suite_runner.py`), parser puro en `tests/lib/rate_limit.py`
+  (TPD vs transitorio, espera exacta ≤90s, reclasificación de reportes).
+- **Comportamiento del sistema:** cuenta `BLOCKED_TPD` → `run_all_tests`
+  la salta (summary `BLOCKED_TPD`, exit 7), corre solo nativos; gates
+  `avanzada_4x23`/`estructura_4x5` exigen PASS (BLOCKED_TPD pasa,
+  FAIL/TIMEOUT/ERROR rompen) + gate `api_disponible` (BLOCKED ≠ FAIL).
+- **Lección:** un 429 puede disfrazarse — en estructura el texto de la
+  cuota caía al validador como FAIL por case-sensitivity (`"[ERROR]"` vs
+  `"[error]"`, fix `reply_status()`); siempre clasificar el error ANTES de
+  validarlo.
+- Detalle completo: `docs/tests/sesion_20260925.md`.
+
 ## Consolidación
 - Ejecutar `brain-ai_memory_consolidate()` periódicamente
 - Promueve episodios a semántico si confidence >= 0.6

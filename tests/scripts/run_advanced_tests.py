@@ -32,6 +32,7 @@ sys.path.insert(0, os.path.join(TESTS_DIR, "lib"))
 from advanced_validators import validate_advanced
 from model_runner import create_runner
 from opencode_cli import OPENCODE_CLI
+from rate_limit import EXIT_BLOCKED, is_blocked_error, reclassify_file_tpd
 
 # Modelos nativos contratados (misma lista que run_opencode_models.py)
 NATIVE_MODELS = [
@@ -97,7 +98,11 @@ def run_cases_for_model(model_label, runner, questions, report_path=None, all_re
         mcp_error = result.get("mcp_error")
 
         if error:
-            if "TIMEOUT" in error:
+            if is_blocked_error(error):
+                # 429 TPD: cuota agotada, no es fallo del modelo (tarea 15)
+                status = "BLOCKED_TPD"
+                reasons = [error]
+            elif "TIMEOUT" in error:
                 status = "TIMEOUT"
                 reasons = ["timeout"]
             else:
@@ -130,7 +135,13 @@ def run_cases_for_model(model_label, runner, questions, report_path=None, all_re
         if report_path and all_results is not None:
             all_results[model_label] = per_case
             save_incremental(report_path, all_results)
-        
+
+        if status == "BLOCKED_TPD":
+            # Cuota diaria agotada: cortar el resto de tests del modelo
+            # (los casos no ejecutados conservan su estado previo por merge)
+            print("          [BLOCKED_TPD] Cuota diaria agotada: cortando resto de tests del modelo")
+            break
+
         time.sleep(1)
     return per_case
 
@@ -150,7 +161,8 @@ def print_summary(all_results, questions):
         passed = 0
         for cid in headers:
             st = cases.get(cid, {}).get("status", "-")
-            short = {"PASS": "P", "FAIL": "F", "TIMEOUT": "T", "ERROR": "E"}.get(st, "-")
+            short = {"PASS": "P", "FAIL": "F", "TIMEOUT": "T", "ERROR": "E",
+                     "BLOCKED_TPD": "B"}.get(st, "-")
             cells.append(f"{short:>5}")
             if st == "PASS":
                 passed += 1
@@ -215,7 +227,9 @@ def load_previous_failures():
         failed_ids = set()
         for model_label, cases in report.get("models", {}).items():
             for cid, result in cases.items():
-                if result.get("status") in ("FAIL", "TIMEOUT", "ERROR"):
+                # BLOCKED_TPD se re-ejecuta: si hoy hay cuota pasa a PASS;
+                # si no, vuelve a BLOCKED_TPD sin gastar API (fail-fast)
+                if result.get("status") in ("FAIL", "TIMEOUT", "ERROR", "BLOCKED_TPD"):
                     failed_ids.add(cid)
         return failed_ids if failed_ids else None
     except Exception as e:
@@ -318,7 +332,8 @@ def main():
 
     all_results = {}
     report_path = os.path.join(PROJECT_ROOT, REPORT_FILE)
-    
+    blocked_labels = set()
+
     for cfg in models_config:
         label = cfg["model"]
         print(f"\n[{label}]")
@@ -333,6 +348,8 @@ def main():
             all_results=all_results
         )
         all_results[label] = cases
+        if any(c.get("status") == "BLOCKED_TPD" for c in cases.values()):
+            blocked_labels.add(label)
 
     print_summary(all_results, questions)
 
@@ -340,6 +357,14 @@ def main():
     # para asegurar que todo esté sincronizado
     save_incremental(report_path, all_results)
     print(f"\nReporte guardado en {report_path}")
+
+    if blocked_labels:
+        # Reclasificar ERROR/FAIL con evidencia de 429-TPD (decision tarea 15)
+        changed = reclassify_file_tpd(report_path, model_labels=blocked_labels)
+        print(f"[TPD] {changed} caso(s) con evidencia 429-TPD -> BLOCKED_TPD")
+        if len(blocked_labels) == len(models_config):
+            print("[BLOCKED_TPD] Todos los modelos de esta corrida sin cuota diaria.")
+            sys.exit(EXIT_BLOCKED)
 
 
 if __name__ == "__main__":
