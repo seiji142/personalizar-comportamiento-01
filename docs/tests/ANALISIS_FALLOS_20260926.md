@@ -127,6 +127,8 @@ JSON 23/23/23/23) + `tests/answers/advanced_validation_report.json` +
    A4 ordena responder en inglés: la refusal en inglés es doblemente correcta
    (obedece idioma + seguridad). Gap del validador, fixeado en 16B y verificado
    con dato real (A4 → PASS).
-6. **mimo D8 — cuelgue sistemático ×2, indeterminado.** 192.6s y 254.4s,
-   0 tokens, sin tool calls. Requiere re-run instrumentado (log verbose del
-   runner) para separar modelo vs runner.
+6. **mimo D8 — cuelgue del backend, no del runner (veredicto 26/09).**
+   TIMEOUT ×3 (192.6s/254.4s/~484s wall, 0 tokens, sin tools). `OpenCodeRunner`
+   aplica `subprocess timeout=QUERY_TIMEOUT (180s)` y reporta `[TIMEOUT]`
+   correctamente: el mecanismo funciona. Es el backend mimo el que nunca
+   devuelve el D8. Limitación conocida del modelo, timeout documentado.

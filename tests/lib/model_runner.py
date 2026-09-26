@@ -34,6 +34,10 @@ TEST_PROJECT = os.path.normpath(os.getenv("TEST_PROJECT", os.path.join(PROJECT_R
 QUERY_TIMEOUT = 180  # antes 120; C2 big-pickle llego a 138s (tarea 4)
 GROQ_QUERY_TIMEOUT = 180  # 3 minutos máximo para Groq
 MAX_TOOL_ITERATIONS = 5
+MAX_TOKENS_PER_TEST = 15000
+# Tope de tokens por test (tarea 16C): D8-qwen quemo ~28k tokens en un solo
+# test con un loop improductivo; un test normal usa 4-10k. Al superarlo se
+# aborta el loop con TIMEOUT explicito (no ERROR generico).
 
 # Retry de MCP (tarea #11): si bridge tarda en arrancar/falla, reintentar
 MAX_MCP_RETRIES = 3
@@ -163,9 +167,11 @@ class GroqRunner(ModelRunner):
     mismo camino que OpenCode con mcp_bridge.py.
     """
 
-    def __init__(self, model_id, system_prompt=None, max_tool_rounds=MAX_TOOL_ITERATIONS):
+    def __init__(self, model_id, system_prompt=None, max_tool_rounds=MAX_TOOL_ITERATIONS,
+                 max_tokens_per_test=MAX_TOKENS_PER_TEST):
         super().__init__(model_id, system_prompt)
         self.max_tool_rounds = max_tool_rounds
+        self.max_tokens_per_test = max_tokens_per_test
         self.mcp = None
         self.tools = []
         self.name_map = {}
@@ -294,6 +300,16 @@ class GroqRunner(ModelRunner):
         tokens_from_api = 0
         
         for round_num in range(self.max_tool_rounds):
+            # Tope de tokens por test (tarea 16C): abortar loops improductivos
+            # tipo D8-qwen (~28k en un test) antes de quemar la cuota diaria.
+            if tokens_from_api >= self.max_tokens_per_test:
+                capped = (f"[TIMEOUT] Tope de tokens por test superado "
+                          f"({tokens_from_api} >= {self.max_tokens_per_test}): "
+                          f"loop de tools abortado en round {round_num}")
+                print(capped)
+                return {"text": "", "tool_calls": all_tool_calls,
+                        "memory_used": memory_used,
+                        "tokens_used": tokens_from_api, "error": capped}
             response = None
             last_error = None
             
