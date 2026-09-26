@@ -1,6 +1,6 @@
 # Plan — Adoptar gitflow-scaffold 2026.09.25 en personalizar-comportamiento-01
 
-**Fecha:** 2026-09-26 · **Estado:** PENDIENTE (documentado, sin ejecutar)
+**Fecha:** 2026-09-26 · **Estado:** EJECUTADA — 6/6 fases
 **Fuente:** `Proyecto AI/templates/gitflow-scaffold` (VERSION 2026.09.25) ·
   referencia: `youtube-transcripts` commit `d4967b6` (patrón sin Pages).
 **Decisiones del usuario:** merge clean-main→main primero · mantener
@@ -14,12 +14,13 @@
   + merge (sync 65 commits) — PR #1 creado y mergeado vía script 25/09;
   validación pre-PR: pytest unit + validators + rate_limit exit 0
 - [x] Fase 2 — Crear `develop` desde `main` + push `-u origin develop` (25/09)
-- [ ] Fase 3 — Kit en `develop`: `ci.yml` Python (pytest unit + validators +
+- [x] Fase 3 — Kit en `develop`: `ci.yml` Python (pytest unit + validators +
   rate_limit), sección Ramas en `.ai/context.md`, Variante B + Publicación
-  en `.ai/commands.md`
-- [ ] Fase 4 — Protección `main` MANUAL en UI (Require PR + check `build`,
-  SIN approvals)
-- [ ] Fase 5 — Verificación (branches, status limpio, CI en próximo PR)
+  en `.ai/commands.md` (commit aa862c1, 25/09; lint N/A documentado)
+- [x] Fase 4 — Protección `main` MANUAL en UI (Require PR + check `build`,
+  SIN approvals) — activada por el usuario 26/09; verificado `protected:true`
+- [x] Fase 5 — Verificación (branches, status limpio, CI en próximo PR) —
+  main/develop/clean-main presentes, CI verde en develop (run 36242400260)
 - [ ] No aplica: `deploy.yml`, `opencode.json` del kit
 
 ## Estado de partida (verificado 26/09, solo lectura)
