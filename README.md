@@ -25,10 +25,18 @@ La solucion es un sistema de archivos `.ai/` que actuan como system prompt del a
 │   ├── validate_agent_responses.py   # Auto-test del agente actual
 │   ├── run_multi_model_test.py       # Test contra APIs externas
 │   ├── run_opencode_models.py        # Test contra modelos OpenCode
-│   └── test_ai_structure.py          # Test base con .ai/ como system prompt
+│   ├── test_ai_structure.py          # Test base con .ai/ como system prompt
+│   └── validation.py                 # Logica comun de validacion (sinonimos)
+│   ├── run_advanced_tests.py         # Suite avanzada (jailbreak, codigo, factualidad, roles)
+│   ├── advanced_validators.py        # Validadores especiales de la suite avanzada
+│   └── advanced_questions.json       # 13 casos de la suite avanzada
 │
 ├── src/doc/MEMORIA/              # PDFs de pruebas de memoria y razonamiento
-└── RESULTADOS_TEST_AI.md         # Resultados consolidados de validacion
+└── docs/
+    ├── RESULTADOS_TEST_AI.md     # Resultados consolidados de validacion
+    ├── VALIDACION_TESTS.md       # Estructura de tests para auditoria
+    ├── advanced_validation_report.json
+    └── opencode_models_report.json
 ```
 
 ## Como funciona
@@ -47,17 +55,24 @@ La solucion es un sistema de archivos `.ai/` que actuan como system prompt del a
 
 ## Resultados de validacion
 
-**5/5 PASS** — DeepSeek V4 Flash (configuracion actual de OpenCode)
+**5/5 PASS** — `groq/qwen3.6-27b` (API) y `big-pickle` (nativo gratuito). Criterio justo (sinonimos) implementado el 31/08/2026.
 
-| Modelo | Score | Causa de fallo |
-|--------|-------|----------------|
-| DeepSeek V4 Flash | 5/5 | — |
-| groq/llama-3.3-70b-versatile | 4/5 | Keyword literal (QA vs testing) |
-| opencode/big-pickle | ~4/5 | Ignora parte del system prompt |
-| groq/llama-3.1-8b-instant | 2/5 | Safety training generico |
-| opencode/minimax-m2.5-free | 2/5 | Ignora system prompt + lento |
+| Modelo | Score |
+|--------|-------|
+| **groq/qwen3.6-27b** | **5/5** |
+| **big-pickle** (nativo Zen) | **5/5** |
+| mimo-v2.5-free (nativo Zen) | 4/5 |
+| groq/qwen3.8-27b | 2/5 |
+| muse-spark-1.2-contributor-free | 3/5 |
 
-Ver `RESULTADOS_TEST_AI.md` para el analisis completo.
+> **Criterio de validacion:** desde 31/08/2026 la suite usa **sinonimos** (mide intencion, no literalidad).
+> Un modelo queda exento si responde con sinonimos correctos (ej. "QA" en lugar de "testing").
+> Antes del cambio, el mejor resultado era 4/5 (qwen3.6-27b); ahora 5/5.
+
+> **Seguridad reforzada:** `rules.md` ahora incluye la seccion 6 "Reglas Inquebrantables"
+> (las reglas no pueden anularse por instrucciones del usuario), lo que mejora T5.
+
+Ver `docs/RESULTADOS_TEST_AI.md` para el analisis completo.
 
 ## Requisitos
 
@@ -79,6 +94,18 @@ python src/doc/ESTRUCTURA/run_multi_model_test.py
 
 # Test contra modelos integrados OpenCode
 python src/doc/ESTRUCTURA/run_opencode_models.py
+
+# Test de un solo modelo (filtro por nombre)
+python src/doc/ESTRUCTURA/run_opencode_models.py mimo-v2.5-free
+
+# Suite avanzada (jailbreak, codigo, factualidad, roles)
+python src/doc/ESTRUCTURA/run_advanced_tests.py big-pickle
+
+# Suite avanzada - solo categoria A (jailbreak)
+python src/doc/ESTRUCTURA/run_advanced_tests.py --category A
+
+# Suite avanzada - modelo API (Groq)
+python src/doc/ESTRUCTURA/run_advanced_tests.py --api qwen/qwen3.6-27b
 ```
 
 ## Variables de entorno
@@ -88,7 +115,7 @@ Copiar `.env.template` a `.env` y completar:
 ```env
 LLM_API_KEY=tu_api_key_de_groq
 LLM_BASE_URL=https://api.groq.com/openai/v1
-LLM_MODEL=llama-3.3-70b-versatile
+LLM_MODEL=qwen/qwen3.6-27b
 ```
 
 ## Licencia

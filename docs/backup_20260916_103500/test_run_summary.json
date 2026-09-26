@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-09-15T21:24:35.299890",
+  "results": {
+    "pytest (test_email_validator)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 1.5
+    },
+    "test_validators.py (35 tests)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 0.2
+    },
+    "generate_html_report.py": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 0.1
+    },
+    "test_ai_structure.py (openai/gpt-oss-20b)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 55.2
+    },
+    "validate_agent_responses.py (openai/gpt-oss-20b)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 89.7
+    },
+    "run_advanced_tests.py --api openai/gpt-oss-20b": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 673.7
+    },
+    "test_ai_structure.py (qwen/qwen3.8-27b)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 55.2
+    },
+    "validate_agent_responses.py (qwen/qwen3.8-27b)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 109.7
+    },
+    "run_advanced_tests.py --api qwen/qwen3.8-27b": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 831.1
+    },
+    "test_ai_structure.py --native opencode/big-pickle": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 132.3
+    },
+    "validate_agent_responses.py --run-model opencode/big-pickle": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 95.0
+    },
+    "run_advanced_tests.py opencode/big-pickle": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 627.3
+    },
+    "test_ai_structure.py --native opencode/mimo-v2.5-free": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 298.8
+    },
+    "validate_agent_responses.py --run-model opencode/mimo-v2.5-free": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 167.1
+    },
+    "run_advanced_tests.py opencode/mimo-v2.5-free": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 610.8
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "timestamp": "2026-09-23T23:06:26.875597",
+  "results": {
+    "pytest (test_email_validator)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 2.1
+    },
+    "test_validators.py (35 tests)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 0.3
+    },
+    "test_ai_structure.py (openai/gpt-oss-20b)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 6.9
+    },
+    "run_advanced_tests.py --api openai/gpt-oss-20b": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 896.5
+    },
+    "test_ai_structure.py (qwen/qwen3.8-27b)": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 56.4
+    },
+    "run_advanced_tests.py --api qwen/qwen3.8-27b": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 948.0
+    },
+    "test_ai_structure.py --native opencode/big-pickle": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 149.3
+    },
+    "run_advanced_tests.py opencode/big-pickle": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 463.7
+    },
+    "test_ai_structure.py --native opencode/mimo-v2.6-flash-free": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 169.5
+    },
+    "run_advanced_tests.py opencode/mimo-v2.6-flash-free": {
+      "status": "TIMEOUT",
+      "elapsed": 1200
+    },
+    "generate_html_report.py": {
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 0.5
+    }
+  }
+}

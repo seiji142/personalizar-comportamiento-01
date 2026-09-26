@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-09-25T16:13:08.820572",
+  "accounts": {
+    "GROQ_CUENTA_1": {
+      "model": "openai/gpt-oss-20b",
+      "status": "OK",
+      "used": null,
+      "limit": null,
+      "retry_after_s": null,
+      "detail": "query minima exitosa",
+      "rate_limit_headers": {
+        "x-ratelimit-limit-requests": "1000",
+        "x-ratelimit-limit-tokens": "8000",
+        "x-ratelimit-remaining-requests": "999",
+        "x-ratelimit-remaining-tokens": "7920",
+        "x-ratelimit-reset-requests": "1m26.4s",
+        "x-ratelimit-reset-tokens": "600ms"
+      }
+    },
+    "GROQ_CUENTA_2": {
+      "model": "qwen/qwen3.8-27b",
+      "status": "OK",
+      "used": null,
+      "limit": null,
+      "retry_after_s": null,
+      "detail": "query minima exitosa",
+      "rate_limit_headers": {
+        "x-ratelimit-limit-requests": "1000",
+        "x-ratelimit-limit-tokens": "8000",
+        "x-ratelimit-remaining-requests": "999",
+        "x-ratelimit-remaining-tokens": "7979",
+        "x-ratelimit-reset-requests": "1m26.4s",
+        "x-ratelimit-reset-tokens": "157ms"
+      }
+    }
+  }
+}

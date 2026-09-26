@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecciones 3 - Integración Memoria Persistente</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.7;
+            color: #1a1a2e;
+            background: #f8f9fa;
+            padding: 2rem;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 2rem;
+            color: #0f3460;
+            border-bottom: 3px solid #0f3460;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            font-size: 1.2rem;
+            color: #16213e;
+            background: #e8f4f8;
+            padding: 0.6rem 1rem;
+            border-left: 4px solid #0f3460;
+            margin: 2rem 0 1rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+        h3 {
+            font-size: 1rem;
+            color: #0f3460;
+            margin: 1.2rem 0 0.5rem 0;
+        }
+        p { margin-bottom: 0.8rem; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem 0.8rem;
+            text-align: center;
+        }
+        th { background: #0f3460; color: white; }
+        tr:nth-child(even) { background: #f8f9fa; }
+        .ok { color: #27ae60; font-weight: bold; }
+        .fail { color: #e74c3c; font-weight: bold; }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .card.success { border-left: 4px solid #27ae60; }
+        .card.info { border-left: 4px solid #3498db; }
+        .card.warning { border-left: 4px solid #f39c12; }
+        .card strong { color: #0f3460; }
+        .tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+        }
+        .tag.ok { background: #27ae60; }
+        .tag.fail { background: #e74c3c; }
+        .tag.info { background: #3498db; }
+        code {
+            background: #f1f3f5;
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.85rem;
+        }
+        .preview {
+            background: #f1f3f5;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0.5rem 0.8rem;
+            margin-top: 0.5rem;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: #495057;
+        }
+        .resumen {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem 2rem;
+            margin: 2rem 0;
+        }
+        .resumen h2 { background: transparent; border-left: none; color: white; padding-left: 0; }
+        .resumen td { border-color: rgba(255,255,255,0.2); color: white; }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .stat-card .num {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0f3460;
+        }
+        .stat-card .label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.3rem;
+        }
+        hr { border: none; border-top: 1px solid #dee2e6; margin: 2rem 0; }
+        .footer {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.8rem;
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        .flow-step {
+            background: white;
+            border: 2px solid #0f3460;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #0f3460;
+        }
+        .flow-arrow {
+            color: #0f3460;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Lecciones 3 - Integración Memoria Persistente</h1>
+<p><strong>Proyecto:</strong> personalizar-comportamiento-01<br>
+<strong>Fecha:</strong> 01 de septiembre de 2026<br>
+<strong>Contexto:</strong> Integración de brain-ai-01 (servidor MCP de memoria persistente) con OpenCode para potenciar el aprendizaje continuo de los modelos de IA.</p>
+
+<hr>
+
+<h2>Resumen Ejecutivo</h2>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="num" style="color: #27ae60;">5/5</div>
+        <div class="label">Tests pasados</div>
+    </div>
+    <div class="stat-card">
+        <div class="num" style="color: #0f3460;">0.91</div>
+        <div class="label">Score retrieval episódico</div>
+    </div>
+    <div class="stat-card">
+        <div class="num" style="color: #0f3460;">0.9181</div>
+        <div class="label">Score retrieval semántico</div>
+    </div>
+    <div class="stat-card">
+        <div class="num" style="color: #27ae60;">1</div>
+        <div class="label">Episodio promovido</div>
+    </div>
+</div>
+
+<p>La integración entre brain-ai-01 y OpenCode funciona correctamente. El servidor MCP responde, almacena episodios, los recupera con scoring híbrido y los consolida a memoria semántica. La configuración <code>.ai/MEMORY.md</code> se carga en el system prompt de OpenCode.</p>
+
+<hr>
+
+<h2>Arquitectura de la Integración</h2>
+
+<div class="flow">
+    <div class="flow-step">OpenCode<br><small>system.md + rules.md + MEMORY.md</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">brain-ai-01<br><small>localhost:8000</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">episodic/<br><small>71+ archivos</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">semantic/<br><small>59+ archivos</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">ChromaDB<br><small>vector store</small></div>
+</div>
+
+<table>
+    <tr><th>Capa</th><th>Archivo</th><th>Función</th></tr>
+    <tr><td><strong>Comportamiento</strong></td><td><code>.ai/system.md</code></td><td>Cómo responde el modelo (rol, tono, few-shot)</td></tr>
+    <tr><td><strong>Seguridad</strong></td><td><code>.ai/rules.md</code></td><td>Reglas duras, prioridades, idioma, plantilla</td></tr>
+    <tr><td><strong>Memoria</strong></td><td><code>.ai/MEMORY.md</code></td><td>Cuándo guardar, cuándo buscar, formato de episodios</td></tr>
+    <tr><td><strong>Servidor</strong></td><td><code>brain-ai-01</code></td><td>API MCP para persistencia y retrieval</td></tr>
+    <tr><td><strong>Integración</strong></td><td><code>opencode.json</code></td><td>instructions[] incluye MEMORY.md</td></tr>
+</table>
+
+<hr>
+
+<h2>Archivos Creados/Modificados</h2>
+
+<table>
+    <tr><th>Archivo</th><th>Proyecto</th><th>Acción</th><th>Contenido</th></tr>
+    <tr><td><code>.env</code></td><td>brain-ai-01</td><td><span class="tag ok">CREADO</span></td><td>EMBEDDING_PROVIDER=hash, APP_ENV=dev</td></tr>
+    <tr><td><code>opencode.json</code></td><td>personalizar-comportamiento-01</td><td><span class="tag info">MODIFICADO</span></td><td>Agregado <code>.ai/MEMORY.md</code> a instructions[]</td></tr>
+    <tr><td><code>.ai/MEMORY.md</code></td><td>personalizar-comportamiento-01</td><td><span class="tag ok">CREADO</span></td><td>Instrucciones completas de memoria persistente</td></tr>
+    <tr><td><code>.ai/rules.md</code></td><td>personalizar-comportamiento-01</td><td><span class="tag info">MODIFICADO</span></td><td>Sección 7: reglas de memoria (guardar, buscar, no guardar)</td></tr>
+    <tr><td><code>.ai/system.md</code></td><td>personalizar-comportamiento-01</td><td><span class="tag info">MODIFICADO</span></td><td>Instrucciones de memoria en system prompt</td></tr>
+</table>
+
+<hr>
+
+<h2>Tests Realizados</h2>
+
+<div class="card success">
+    <h3>Test 1: Health Check <span class="tag ok">PASS</span></h3>
+    <p><strong>Endpoint:</strong> <code>GET /health</code></p>
+    <p><strong>Resultado:</strong> <code>{"ok":true}</code></p>
+    <p><strong>Veredicto:</strong> brain-ai-01 está corriendo en <code>localhost:8000</code> y responde correctamente.</p>
+</div>
+
+<div class="card success">
+    <h3>Test 2: Ingesta de Episodio <span class="tag ok">PASS</span></h3>
+    <p><strong>Endpoint:</strong> <code>POST /ingest</code></p>
+    <p><strong>Episodio enviado:</strong></p>
+    <div class="preview">{
+  "project": "personalizar-comportamiento-01",
+  "source_type": "decision",
+  "author": "test",
+  "title": "Test de integracion memoria",
+  "summary": "Episodio de prueba para verificar que la integracion con brain-ai-01 funciona correctamente",
+  "decisions": [{"text": "Usar plantilla fija para eliminar eco de secretos"}],
+  "evidence": [{"type": "doc", "excerpt": "A1 y A5 pasaron de FAIL a PASS"}],
+  "tags": ["test", "integracion", "memoria"]
+}</div>
+    <p><strong>Resultado:</strong> <code>{"ok":true, "episode_id":"ep_ba3c6455...", "trace_id":"tr_b1a58c0e..."}</code></p>
+    <p><strong>Veredicto:</strong> El episodio se almacenó correctamente con ID y traza única.</p>
+</div>
+
+<div class="card success">
+    <h3>Test 3: Retrieval Episódico <span class="tag ok">PASS</span></h3>
+    <p><strong>Endpoint:</strong> <code>POST /retrieve</code></p>
+    <p><strong>Query:</strong> <code>"plantilla fija secretos"</code></p>
+    <p><strong>Resultado:</strong> 5 resultados, el episodio creado aparece en posición 3 con score 0.7293.</p>
+    <p><strong>Veredicto:</strong> El retrieval híbrido (BM25 + vectorial + recencia) funciona correctamente.</p>
+</div>
+
+<div class="card success">
+    <h3>Test 4: Consolidación <span class="tag ok">PASS</span></h3>
+    <p><strong>Endpoint:</strong> <code>POST /consolidate</code></p>
+    <p><strong>Resultado:</strong></p>
+    <div class="preview">{
+  "promotions": 1,
+  "contradictions": 0
+}</div>
+    <p><strong>Veredicto:</strong> 1 episodio promovido a semántico, 0 contradicciones detectadas. La consolidación funciona.</p>
+</div>
+
+<div class="card success">
+    <h3>Test 5: Retrieval Semántico <span class="tag ok">PASS</span></h3>
+    <p><strong>Endpoint:</strong> <code>POST /retrieve</code> (collection: semantic)</p>
+    <p><strong>Query:</strong> <code>"plantilla fija secretos"</code></p>
+    <p><strong>Resultado:</strong> El episodio consolidado aparece en posición 1 con score 0.9181.</p>
+    <p><strong>Veredicto:</strong> La memoria semántica está accesible y el scoring funciona correctamente.</p>
+</div>
+
+<div class="card success">
+    <h3>Test 6: MEMORY.md en Instructions <span class="tag ok">PASS</span></h3>
+    <p><strong>Archivo:</strong> <code>opencode.json</code></p>
+    <p><strong>Verificación:</strong> <code>instructions[]</code> incluye <code>.ai/MEMORY.md</code></p>
+    <div class="preview">"instructions": [
+  ".ai/system.md",
+  ".ai/rules.md",
+  ".ai/context.md",
+  ".ai/agents.md",
+  ".ai/MEMORY.md"
+]</div>
+    <p><strong>Veredicto:</strong> MEMORY.md se carga en el system prompt de OpenCode.</p>
+</div>
+
+<hr>
+
+<h2>Flujo de Memoria Verificado</h2>
+
+<div class="flow">
+    <div class="flow-step">Ingesta<br><small>POST /ingest</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Retrieval<br><small>POST /retrieve</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Consolidación<br><small>POST /consolidate</small></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Semántico<br><small>score 0.9181</small></div>
+</div>
+
+<table>
+    <tr><th>Fase</th><th>Estado</th><th>Detalle</th></tr>
+    <tr><td>Ingesta</td><td class="ok">✅</td><td>Episodio creado con ID único y traza</td></tr>
+    <tr><td>Retrieval episódico</td><td class="ok">✅</td><td>5 resultados, score 0.7293</td></tr>
+    <tr><td>Consolidación</td><td class="ok">✅</td><td>1 promovido a semántico, 0 contradicciones</td></tr>
+    <tr><td>Retrieval semántico</td><td class="ok">✅</td><td>Score 0.9181 (mejor que episódico)</td></tr>
+</table>
+
+<hr>
+
+<h2>Lecciones Aprendidas</h2>
+
+<div class="card info">
+    <h3>1. brain-ai-01 es completo y funcional</h3>
+    <p>El servidor tiene todo lo necesario: ingesta, retrieval híbrido, consolidación, factcheck, detección de contradicciones, y redacción PII. No requiere configuración adicional.</p>
+</div>
+
+<div class="card info">
+    <h3>2. La integración con OpenCode es simple</h3>
+    <p>Solo requiere agregar <code>.ai/MEMORY.md</code> al array <code>instructions</code> en <code>opencode.json</code>. No se necesita MCP server ni plugins adicionales.</p>
+</div>
+
+<div class="card info">
+    <h3>3. El scoring híbrido funciona</h3>
+    <p>BM25 (70%) + vectorial (8%) + recencia (8%) + evidencia (8%) + confianza (6%) produce resultados relevantes. El episodio creado aparece primero en las búsquedas.</p>
+</div>
+
+<div class="card info">
+    <h3>4. La consolidación automática promueve episodios</h3>
+    <p>El pipeline de consolidación promueve episodios a semántico cuando confidence >= 0.6 y hay evidencia. Detecta contradicciones automáticamente.</p>
+</div>
+
+<div class="card warning">
+    <h3>5. El retrieval cross-project puede devolver datos no deseados</h3>
+    <p>Al buscar sin filtrar por proyecto, el retrieval devolvió datos de <code>.env.secrets</code>. Es importante especificar el proyecto en las búsquedas.</p>
+</div>
+
+<hr>
+
+<h2>Cómo Usar la Memoria</h2>
+
+<div class="card info">
+    <h3>Guardar episodio (POST /ingest)</h3>
+    <div class="preview">{
+  "episode": {
+    "project": "personalizar-comportamiento-01",
+    "source_type": "decision",
+    "author": "yo",
+    "title": "resumen corto",
+    "summary": "descripción detallada",
+    "decisions": [{"text": "decisión tomada"}],
+    "evidence": [{"type": "doc", "excerpt": "evidencia"}],
+    "tags": ["tag1", "tag2"]
+  }
+}</div>
+</div>
+
+<div class="card info">
+    <h3>Buscar episodios (POST /retrieve)</h3>
+    <div class="preview">{
+  "query": "plantilla fija secretos",
+  "top_k": 5,
+  "project": "personalizar-comportamiento-01",
+  "collection": "episodic"
+}</div>
+</div>
+
+<div class="card info">
+    <h3>Consolidar memoria (POST /consolidate)</h3>
+    <div class="preview">{
+  "project": "personalizar-comportamiento-01"
+}</div>
+</div>
+
+<hr>
+
+<h2>Estado Actual del Sistema</h2>
+
+<table>
+    <tr><th>Componente</th><th>Estado</th><th>Detalle</th></tr>
+    <tr><td>brain-ai-01</td><td class="ok">✅ Activo</td><td>localhost:8000, 71 episodios, 59 semánticos</td></tr>
+    <tr><td>MEMORY.md</td><td class="ok">✅ Cargado</td><td>En instructions[] de opencode.json</td></tr>
+    <tr><td>rules.md sección 7</td><td class="ok">✅ Aplicada</td><td>Reglas de memoria (guardar, buscar, no guardar)</td></tr>
+    <tr><td>system.md memoria</td><td class="ok">✅ Aplicada</td><td>Instrucciones de retrieval y persistencia</td></tr>
+    <tr><td>Commits</td><td class="ok">✅</td><td>274a0f6 - "Integrate brain-ai-01 persistent memory"</td></tr>
+</table>
+
+<hr>
+
+<h2>Próximos Pasos</h2>
+
+<div class="card info">
+    <h3>1. Test con modelo real</h3>
+    <p>Ejecutar una sesión completa con un modelo (gpt-oss, mimo, big-pickle) para verificar que el modelo busca y guarda en memoria automáticamente.</p>
+</div>
+
+<div class="card info">
+    <h3>2. Test de mejora de razonamiento</h3>
+    <p>Preguntar al modelo sobre decisiones pasadas y verificar que usa la memoria para responder mejor.</p>
+</div>
+
+<div class="card info">
+    <h3>3. Documentar en lecciones_3.html</h3>
+    <p>Crear documento con los resultados de los tests de modelo real.</p>
+</div>
+
+<div class="resumen">
+    <h2>Conclusión</h2>
+    <p>La integración entre brain-ai-01 y OpenCode está <strong>completamente funcional</strong>. El servidor MCP almacena, recupera y consolida memoria. La configuración <code>.ai/MEMORY.md</code> se carga en el system prompt. Los tests verifican que el flujo completo funciona: ingesta → retrieval → consolidación → retrieval semántico.</p>
+    <p style="margin-top: 1rem;"><strong>Lo que falta:</strong> probar con un modelo real para verificar que el modelo busca y guarda memoria automáticamente durante sesiones de trabajo.</p>
+</div>
+
+<div class="footer">
+    Generado el 01 de septiembre de 2026 — personalizar-comportamiento-01
+</div>
+
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proceso de Test - Suite de Validación .ai/</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; padding: 2rem; }
+    h1 { color: #58a6ff; font-size: 2rem; border-bottom: 2px solid #30363d; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+    h2 { color: #79c0ff; font-size: 1.4rem; margin: 2rem 0 1rem; }
+    h3 { color: #d2a8ff; font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
+    p { margin: 0.5rem 0; }
+    code { background: #161b22; padding: 2px 6px; border-radius: 4px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.9em; color: #79c0ff; }
+    pre { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 0.5rem 0; font-size: 0.85em; line-height: 1.5; }
+    pre code { background: none; padding: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 0.5rem 0 1rem; }
+    th, td { padding: 0.6rem 1rem; text-align: left; border: 1px solid #30363d; }
+    th { background: #161b22; color: #58a6ff; font-weight: 600; }
+    tr:nth-child(even) { background: #161b22; }
+    .section { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; margin: 1rem 0; }
+    .arrow { color: #58a6ff; font-weight: bold; }
+    .file { color: #7ee787; }
+    .cmd { color: #d2a8ff; }
+    .note { background: #1f2937; border-left: 4px solid #58a6ff; padding: 0.8rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .flow-box { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0.3rem 0; }
+  </style>
+</head>
+<body>
+
+  <h1>Proceso de Test - Suite de Validación .ai/</h1>
+
+  <p>La suite de tests valida que el agente de IA lee y respeta los archivos <code>.ai/</code> del proyecto, ejecutando preguntas contra múltiples modelos (API Groq y OpenCode nativo) y verificando las respuestas.</p>
+
+  <div class="note">
+    <strong>Punto de entrada:</strong> <code class="cmd">python run_all_tests.py</code>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>1. Flujo completo</h2>
+
+  <!-- Fase 1 -->
+  <h3>Fase 1 — Inicio</h3>
+  <div class="section">
+    <div class="flow-box"><span class="file">run_all_tests.py</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">├──</span> Carga API keys de <code>../Verificacion-modelos-ai/.env</code></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">├──</span> Configura <code>TEST_PROJECT = ../test-ai-config</code></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">└──</span> Inicia <code>results = {}</code></div>
+  </div>
+
+  <!-- Fase 2 -->
+  <h3>Fase 2 — Tests locales (sin API)</h3>
+  <div class="section">
+    <div class="flow-box"><span class="file">run_all_tests.py</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">├──</span> <span class="cmd">subprocess</span> → <span class="file">tests/unit/test_email_validator.py</span> (pytest)</div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">├──</span> <span class="cmd">subprocess</span> → <span class="file">tests/scripts/test_validators.py</span> (35 unit tests)</div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">└──</span> <span class="cmd">subprocess</span> → <span class="file">scripts/generate_html_report.py</span> (genera HTML)</div>
+  </div>
+
+  <!-- Fase 3 -->
+  <h3>Fase 3 — Tests API (cada modelo)</h3>
+  <div class="section">
+    <p>Se repite por cada modelo: <code>gpt-oss-20b</code>, <code>qwen3.8-27b</code></p>
+    <div class="flow-box"><span class="file">run_all_tests.py</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">│</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">├──</span> <span class="cmd">subprocess</span> → <span class="file">tests/scripts/test_ai_structure.py --api &lt;modelo&gt;</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">│&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="arrow">└──</span> importa <span class="file">tests/lib/model_runner.py</span> → <code>GroqRunner</code></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">│&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">└──</span> llama a Groq API vía openai SDK</div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">│</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">└──</span> <span class="cmd">subprocess</span> → <span class="file">tests/scripts/run_advanced_tests.py --api &lt;modelo&gt;</span></div>
+    <div class="flow-box">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">├──</span> Lee <span class="file">tests/questions/advanced_questions.json</span></div>
+    <div class="flow-box">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">├──</span> importa <span class="file">tests/lib/model_runner.py</span> → <code>GroqRunner</code> + MCP tools</div>
+    <div class="flow-box">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">├──</span> importa <span class="file">tests/lib/advanced_validators.py</span> → valida cada respuesta</div>
+    <div class="flow-box">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">└──</span> Guarda en <span class="file">tests/answers/advanced_validation_report.json</span></div>
+  </div>
+
+  <!-- Fase 4 -->
+  <h3>Fase 4 — Tests nativos (cada modelo)</h3>
+  <div class="section">
+    <p>Se repite por cada modelo: <code>big-pickle</code>, <code>mimo-v2.5-free</code></p>
+    <div class="flow-box"><span class="file">run_all_tests.py</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">│</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">├──</span> <span class="cmd">subprocess</span> → <span class="file">tests/scripts/test_ai_structure.py --native &lt;modelo&gt;</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">│&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="arrow">└──</span> importa <span class="file">tests/lib/model_runner.py</span> → <code>OpenCodeRunner</code></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">│&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">└──</span> ejecuta: <code>opencode run --dir ../test-ai-config</code></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">│</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">└──</span> <span class="cmd">subprocess</span> → <span class="file">tests/scripts/run_advanced_tests.py &lt;modelo&gt;</span></div>
+    <div class="flow-box">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">├──</span> Lee <span class="file">tests/questions/advanced_questions.json</span></div>
+    <div class="flow-box">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">├──</span> importa <span class="file">tests/lib/model_runner.py</span> → <code>OpenCodeRunner</code></div>
+    <div class="flow-box">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">│&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="arrow">└──</span> ejecuta: <code>opencode run --dir ../test-ai-config</code></div>
+    <div class="flow-box">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">├──</span> importa <span class="file">tests/lib/advanced_validators.py</span> → valida cada respuesta</div>
+    <div class="flow-box">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">└──</span> Guarda en <span class="file">tests/answers/advanced_validation_report.json</span></div>
+  </div>
+
+  <!-- Fase 5 -->
+  <h3>Fase 5 — Resumen final</h3>
+  <div class="section">
+    <div class="flow-box"><span class="file">run_all_tests.py</span></div>
+    <div class="flow-box">&nbsp;&nbsp;<span class="arrow">└──</span> Guarda <code>results{}</code> en <span class="file">tests/answers/test_run_summary.json</span></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2>2. Archivos involucrados</h2>
+
+  <h3>Orquestador</h3>
+  <table>
+    <tr><th>Archivo</th><th>Rol</th></tr>
+    <tr><td><code>run_all_tests.py</code></td><td>Punto de entrada único</td></tr>
+  </table>
+
+  <h3>Scripts de test (se ejecutan como subprocess)</h3>
+  <table>
+    <tr><th>Archivo</th><th>Qué hace</th></tr>
+    <tr><td><code>tests/unit/test_email_validator.py</code></td><td>Unit tests de validación de email</td></tr>
+    <tr><td><code>tests/scripts/test_validators.py</code></td><td>Unit tests de los validators (35 tests)</td></tr>
+    <tr><td><code>tests/scripts/test_ai_structure.py</code></td><td>Suite de 5 tests de estructura .ai/</td></tr>
+    <tr><td><code>tests/scripts/run_advanced_tests.py</code></td><td>Suite de 23 tests avanzados</td></tr>
+    <tr><td><code>scripts/generate_html_report.py</code></td><td>Genera reporte HTML</td></tr>
+  </table>
+
+  <h3>Librerías (importadas por los scripts)</h3>
+  <table>
+    <tr><th>Archivo</th><th>Qué hace</th></tr>
+    <tr><td><code>tests/lib/model_runner.py</code></td><td>Interfaz para ejecutar modelos (OpenCodeRunner + GroqRunner)</td></tr>
+    <tr><td><code>tests/lib/advanced_validators.py</code></td><td>Valida respuestas del modelo (jailbreak, factuality, roles, etc.)</td></tr>
+    <tr><td><code>tests/lib/validation.py</code></td><td>Funciones base de validación (_normalize, check_keyword)</td></tr>
+    <tr><td><code>tests/lib/opencode_cli.py</code></td><td>Encuentra el binario de OpenCode</td></tr>
+    <tr><td><code>tests/lib/mcp_client.py</code></td><td>Cliente MCP para tools de memoria (brain-ai)</td></tr>
+  </table>
+
+  <h3>Datos de entrada</h3>
+  <table>
+    <tr><th>Archivo</th><th>Qué contiene</th></tr>
+    <tr><td><code>tests/questions/advanced_questions.json</code></td><td>Las 23 preguntas y criterios de validación</td></tr>
+    <tr><td><code>test-ai-config/.ai/system.md</code></td><td>System prompt del agente (fingerprint)</td></tr>
+    <tr><td><code>test-ai-config/.ai/rules.md</code></td><td>Reglas de seguridad</td></tr>
+    <tr><td><code>test-ai-config/.ai/context.md</code></td><td>Stack tecnológico (React/FastAPI/PostgreSQL)</td></tr>
+    <tr><td><code>test-ai-config/.ai/agents.md</code></td><td>Agentes (QA, Security)</td></tr>
+    <tr><td><code>../Verificacion-modelos-ai/.env</code></td><td>API keys de Groq</td></tr>
+  </table>
+
+  <h3>Datos de salida</h3>
+  <table>
+    <tr><th>Archivo</th><th>Qué contiene</th></tr>
+    <tr><td><code>tests/answers/test_run_summary.json</code></td><td>Resumen: qué tests pasaron/fallaron</td></tr>
+    <tr><td><code>tests/answers/ai_validation_report.json</code></td><td>Resultados de test_ai_structure.py</td></tr>
+    <tr><td><code>tests/answers/advanced_validation_report.json</code></td><td>Resultados de run_advanced_tests.py</td></tr>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2>3. Modelos probados</h2>
+  <table>
+    <tr><th>Modelo</th><th>Tipo</th><th>Cuenta</th></tr>
+    <tr><td><code>openai/gpt-oss-20b</code></td><td>API (Groq)</td><td>GROQ_CUENTA_1</td></tr>
+    <tr><td><code>qwen/qwen3.8-27b</code></td><td>API (Groq)</td><td>GROQ_CUENTA_2</td></tr>
+    <tr><td><code>opencode/big-pickle</code></td><td>Nativo (OpenCode)</td><td>—</td></tr>
+    <tr><td><code>opencode/mimo-v2.5-free</code></td><td>Nativo (OpenCode)</td><td>—</td></tr>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2>4. Tiempos estimados</h2>
+  <table>
+    <tr><th>Fase</th><th>Duración</th></tr>
+    <tr><td>Tests locales</td><td>~5s</td></tr>
+    <tr><td>API (por modelo)</td><td>~12-15 min</td></tr>
+    <tr><td>Nativo (por modelo)</td><td>~15-20 min</td></tr>
+    <tr><td><strong>Total (4 modelos)</strong></td><td><strong>~45-60 min</strong></td></tr>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2>5. Comandos útiles para el día a día</h2>
+  <pre><code># Suite completa
+python run_all_tests.py
+
+# Solo un modelo nativo
+python tests/scripts/test_ai_structure.py --native opencode/mimo-v2.5-free
+python tests/scripts/run_advanced_tests.py opencode/mimo-v2.5-free
+
+# Solo un modelo API
+python tests/scripts/test_ai_structure.py --api openai/gpt-oss-20b
+python tests/scripts/run_advanced_tests.py --api openai/gpt-oss-20b
+
+# Unit tests (sin modelo)
+python -m pytest tests/unit/test_email_validator.py -v
+python tests/scripts/test_validators.py</code></pre>
+
+</body>
+</html>
