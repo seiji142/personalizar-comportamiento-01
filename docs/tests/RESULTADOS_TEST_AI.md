@@ -211,6 +211,13 @@ Registrar aqui cada 429 visto. Fuente machine-readable:
 | 25/09 14:25 | GROQ_CUENTA_2 | qwen/qwen3.8-27b | sondeo quota_probe | sin 429 (OK) | headers: 1000 req, 8000 tok/ventana; remaining 995/7979 |
 | 25/09 15:25 | GROQ_CUENTA_1 | openai/gpt-oss-20b | sondeo post-reparacion | sin 429 (OK) | remaining 976/7920 tras reparacion (23 tests) |
 | 25/09 15:25 | GROQ_CUENTA_2 | qwen/qwen3.8-27b | sondeo post-reparacion | sin 429 (OK) | remaining 978/7979 tras reparacion (17 tests); 1x espera exacta 44.5s (429 transitorio) |
+| 25/09 16:31 | GROQ_CUENTA_1 | openai/gpt-oss-20b | suite end-to-end (corte en D3) | 199181/200000, reintento en 1709s | avanzada BLOCKED_TPD (exit 7); 14 PASS + C2/D2 FAIL (replies VACÍAS, evidencia débil) + D3 BLOCKED |
+| 25/09 16:43 | GROQ_CUENTA_2 | qwen/qwen3.8-27b | suite end-to-end (corte en A1) | 199320/200000, reintento en 1924s | avanzada BLOCKED_TPD (exit 7); A1 BLOCKED, resto no ejecutado |
+
+Modelo de costo por query (derivado 25/09, rango ±30% por tool loops):
+- gpt-oss-20b ≈ 4k tokens/query → ~50 queries/día; suite completa (28q) ≈ 115k, cabe en día fresco.
+- qwen3.8-27b ≈ 8k tokens/query → ~25 queries/día; suite completa (28q) ≈ 225k > 200k: NO cabe con nada más en el día (partir en 2 días o día fresco exclusivo).
+- Base: cuenta 1 gastó ~50 queries (reparación 29 + suite 21) → 199181; cuenta 2 gastó ~25 queries (reparación 17 + suite 6 + sondeos) → 199320.
 
 Reglas (tarea 15):
 - Antes de cada suite, el preflight sondea la cuota: cuenta

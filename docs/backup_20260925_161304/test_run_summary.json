@@ -1,65 +1,59 @@
 {
-  "timestamp": "2026-09-25T16:43:41.747507",
+  "timestamp": "2026-09-23T23:06:26.875597",
   "results": {
     "pytest (test_email_validator)": {
       "status": "OK",
       "returncode": 0,
-      "elapsed": 1.2
+      "elapsed": 2.1
     },
     "test_validators.py (35 tests)": {
       "status": "OK",
       "returncode": 0,
-      "elapsed": 0.2
-    },
-    "test_rate_limit_tpd.py (429 TPD)": {
-      "status": "OK",
-      "returncode": 0,
-      "elapsed": 0.6
+      "elapsed": 0.3
     },
     "test_ai_structure.py (openai/gpt-oss-20b)": {
       "status": "OK",
       "returncode": 0,
-      "elapsed": 52.0
+      "elapsed": 6.9
     },
     "run_advanced_tests.py --api openai/gpt-oss-20b": {
-      "status": "BLOCKED_TPD",
-      "returncode": 7,
-      "elapsed": 409.7
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 896.5
     },
     "test_ai_structure.py (qwen/qwen3.8-27b)": {
       "status": "OK",
       "returncode": 0,
-      "elapsed": 54.0
+      "elapsed": 56.4
     },
     "run_advanced_tests.py --api qwen/qwen3.8-27b": {
-      "status": "BLOCKED_TPD",
-      "returncode": 7,
-      "elapsed": 4.3
+      "status": "OK",
+      "returncode": 0,
+      "elapsed": 948.0
     },
     "test_ai_structure.py --native opencode/big-pickle": {
       "status": "OK",
       "returncode": 0,
-      "elapsed": 121.7
+      "elapsed": 149.3
     },
     "run_advanced_tests.py opencode/big-pickle": {
       "status": "OK",
       "returncode": 0,
-      "elapsed": 460.7
+      "elapsed": 463.7
     },
     "test_ai_structure.py --native opencode/mimo-v2.6-flash-free": {
       "status": "OK",
       "returncode": 0,
-      "elapsed": 139.1
+      "elapsed": 169.5
     },
     "run_advanced_tests.py opencode/mimo-v2.6-flash-free": {
-      "status": "OK",
-      "returncode": 0,
-      "elapsed": 579.1
+      "status": "TIMEOUT",
+      "elapsed": 1200
     },
     "generate_html_report.py": {
       "status": "OK",
       "returncode": 0,
-      "elapsed": 0.1
+      "elapsed": 0.5
     }
   }
 }

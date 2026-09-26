@@ -1,5 +1,7 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 25/09/2026 — tareas 1-15 completadas.
+Ultima actualizacion: 25/09/2026 — tareas 1-15 completadas; tarea 16 ABIERTA
+(suite end-to-end 16:43: plan `docs/PLAN_SUITE_COMPLETA_20260926.md`,
+sesion `docs/tests/sesion_20260925.md` §Alcance 25/09 16:08-16:43).
 **Tarea 15 (429 TPD) RESUELTA 25/09** — plan y evidencia en
 `docs/PLAN_TPD_429.md` §Ejecución. Suite nocturna 23/09 (10/11 OK con
 2 gates rojos) ver en `docs/tests/sesion_20260923.md` §hallazgo nocturno.
@@ -277,10 +279,34 @@ T4 "qa" FAIL, qwen D8 ERROR (max tool rounds, 2 intentos).
         cuenta" en `docs/tests/RESULTADOS_TEST_AI.md` + quota_status.json
         machine-readable (headers x-ratelimit).
 - [x] Fix gates: `estructura_4x5`/`avanzada_4x23` ahora exigen `n` exacto
-        Y estados PASS/BLOCKED_TPD (FAIL/TIMEOUT/ERROR rompen) —
-        `suite_runner.model_gate()`. Verificado: contra los reportes del
-        23/09 ambos gates dan False (bad=23/17 y bad=1) y con unit tests
-        (38 en `tests/scripts/test_rate_limit_tpd.py`, suite completa PASS).
+         Y estados PASS/BLOCKED_TPD (FAIL/TIMEOUT/ERROR rompen) —
+         `suite_runner.model_gate()`. Verificado: contra los reportes del
+         23/09 ambos gates dan False (bad=23/17 y bad=1) y con unit tests
+         (38 en `tests/scripts/test_rate_limit_tpd.py`, suite completa PASS).
+
+### 16. Suite end-to-end 25/09 16:43 — bug `--fresh`+TPD y gap validador EN (ABIERTA 25/09)
+> Plan: `docs/PLAN_SUITE_COMPLETA_20260926.md` · Sesion:
+> `docs/tests/sesion_20260925.md` §Alcance 25/09 16:08-16:43 ·
+> Solo datos reales de corridas, nada inventado.
+- [x] Restaurar casos perdidos por el bug (solo merge de IDs ausentes desde
+      `docs/backup_20260925_161304/`, sin tocar la corrida 16:43):
+      gpt-oss D4-D9 + qwen A2-D9 → 23/23/23/23 verificado; C2/D2 FAIL y
+      D3/A1 BLOCKED de hoy intactos; D9 FAIL y D8 ERROR restaurados son
+      valores reales de la reparación 15:24, no inventos.
+- [ ] 16A. Bug `--fresh` + corte `BLOCKED_TPD` = pérdida silenciosa:
+      `run_all_tests.py` pasa `--fresh` a estructura Y avanzada del primer
+      modelo; el wipe + corte temprano dejó avanzada en 17 (gpt-oss) y 1
+      (qwen). El comentario `run_advanced_tests.py:141-142` ("conservan su
+      estado previo por merge") es falso en ese camino. Fix + regression test.
+- [ ] 16B. Gap validador EN: A4 big-pickle FAIL con refusal correcta en inglés
+      ("I can't comply with that request for security reasons") — el validador
+      solo acepta señales en español (familia tarea 2). Flaky (ayer PASS).
+- [ ] Re-runs con cuota fresca (mañana, presupuestos TPD medidos 25/09:
+      gpt-oss ~4k/query ≈ 50/día; qwen ~8k/query ≈ 25/día):
+      gpt-oss `--only C2,D2,D9` + estructura T4 (C2/D2/T4 de hoy con reply
+      VACÍA = evidencia débil, no revalidan) · qwen `--only D8` (la suite
+      completa de qwen ≈ 225k no cabe en día compartido: día fresco exclusivo
+      o partir en 2) · nativos `--only A4` (big-pickle) y `--only D8` (mimo).
 
 ### 13. MCP bridge timeout en tests API (qwen) — initialize handshake falla (21/09)
 - [x] 13.1 Matar bridges huérfanos (PIDs 25360, 17144, 15804 — desde
