@@ -303,9 +303,23 @@ T4 "qa" FAIL, qwen D8 ERROR (max tool rounds, 2 intentos).
       4 unit tests (`TestRechazoIngles`, 59/59 OK en `test_validators.py`).
       Verificado con dato real: A4 big-pickle → PASS. Sin falsos positivos
       (inocuo en inglés no pasa, leak en inglés sigue FAIL).
-- [ ] 16C. Techo de tokens por test en el runner (D8-qwen quema ~28k/test).
-- [ ] 16D. Re-run instrumentado D8-mimo (TIMEOUT ×2, 0 tokens: separar modelo
-      vs runner con log verbose).
+- [ ] 16C. Techo de tokens por test en el runner:
+      1. Leer el loop de tools de `GroqRunner` en `tests/lib/model_runner.py`
+         (dónde cuenta iteraciones y tokens).
+      2. Agregar tope configurable (propuesta: 15.000 tokens/test — D8-qwen
+         quemó ~28k; un test normal usa 4-10k): al superarlo, abortar el loop
+         y marcar el caso `TIMEOUT` con reason explícito (no `ERROR` genérico).
+      3. Unit tests offline (simular loop que excede) + verificar que el D8-qwen
+         histórico habría cortado a ~15k en vez de 28k.
+      4. Commit en `develop`.
+- [ ] 16D. Re-run instrumentado D8-mimo:
+      1. Re-correr `run_advanced_tests.py mimo --only D8` con el log del runner
+         en verbose (nativo, sin cuota).
+      2. Decidir con datos: si el backend no devuelve nada en ~250s → cuelgue
+         del modelo (registrar como limitación + timeout documentado); si hay
+         stream parcial → bug del runner (fix).
+      3. Registrar el veredicto en el análisis §5 y TAREAS, regenerar HTML,
+         commit.
 - [ ] Análisis profundo 26/09 guardado en `docs/tests/ANALISIS_FALLOS_20260926.md`
       §5 (6 fallos con respuestas reales, sin sobre-análisis).
 - [x] Re-runs con cuota fresca (26/09, commit 94dd6cb) — evidencia sólida:
