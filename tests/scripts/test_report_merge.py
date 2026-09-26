@@ -119,5 +119,54 @@ class TestMergeModelsReport(unittest.TestCase):
         self.assertIn("timestamp", merged)  # metadata no se pierde
 
 
+class TestFreshReplaceOnSuccess(unittest.TestCase):
+    """Tarea 16A: --fresh con reemplazo al exito (no borrado previo).
+
+    Regresion del 25/09: borrar el JSON al inicio + corte BLOCKED_TPD a mitad
+    dejo avanzada en 17/1 (gpt-oss/qwen) perdiendo los casos no ejecutados.
+    """
+
+    def setUp(self):
+        self.finalize = run_advanced.finalize_fresh_replace
+        self.tmp = os.path.join(os.path.dirname(__file__), "_tmp_fresh_test.json")
+
+    def tearDown(self):
+        if os.path.exists(self.tmp):
+            os.remove(self.tmp)
+
+    def _write(self, content):
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            json.dump(content, f)
+
+    def _read(self):
+        with open(self.tmp, "r", encoding="utf-8") as f:
+            return json.load(f)
+
+    def test_completado_reemplaza_stale(self):
+        self._write({"models": {"m": {"A1": {"status": "PASS"},
+                                      "STALE": {"status": "PASS"}}}})
+        new = {"m": {"A1": {"status": "FAIL"}, "A2": {"status": "PASS"}}}
+        n = self.finalize(self.tmp, new, ["m"])
+        self.assertEqual(n, 1)
+        model = self._read()["models"]["m"]
+        self.assertNotIn("STALE", model)  # reset aplicado
+        self.assertEqual(model["A1"]["status"], "FAIL")  # nuevo pisa viejo
+
+    def test_corte_parcial_no_toca_nada(self):
+        before = {"models": {"m": {"A1": {"status": "PASS"},
+                                       "D9": {"status": "FAIL"}}}}
+        self._write(before)
+        new = {"m": {"A1": {"status": "PASS"}}}  # corte: D9 no ejecutado
+        n = self.finalize(self.tmp, new, [])  # vacio = nada completo
+        self.assertEqual(n, 0)
+        self.assertEqual(self._read(), before)  # archivo intacto
+
+    def test_sin_completados_no_escribe(self):
+        before = {"models": {}}
+        self._write(before)
+        self.assertEqual(self.finalize(self.tmp, {"m": {}}, []), 0)
+        self.assertEqual(self._read(), before)
+
+
 if __name__ == "__main__":
     unittest.main()
