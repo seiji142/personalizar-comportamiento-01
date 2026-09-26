@@ -10,9 +10,10 @@
 
 - [x] Fase 0 — Commit trabajo pendiente (12 paths suite de hoy) en clean-main + push
   (commit 507f051, 25/09)
-- [ ] Fase 1 — Copiar `scripts/gh-publish.ps1`, commit; PR clean-main→main
-  + merge (sync 65 commits)
-- [ ] Fase 2 — Crear `develop` desde `main` + push `-u origin develop`
+- [x] Fase 1 — Copiar `scripts/gh-publish.ps1`, commit; PR clean-main→main
+  + merge (sync 65 commits) — PR #1 creado y mergeado vía script 25/09;
+  validación pre-PR: pytest unit + validators + rate_limit exit 0
+- [x] Fase 2 — Crear `develop` desde `main` + push `-u origin develop` (25/09)
 - [ ] Fase 3 — Kit en `develop`: `ci.yml` Python (pytest unit + validators +
   rate_limit), sección Ramas en `.ai/context.md`, Variante B + Publicación
   en `.ai/commands.md`
