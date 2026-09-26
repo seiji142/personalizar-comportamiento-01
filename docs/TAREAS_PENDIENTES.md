@@ -303,6 +303,11 @@ T4 "qa" FAIL, qwen D8 ERROR (max tool rounds, 2 intentos).
       4 unit tests (`TestRechazoIngles`, 59/59 OK en `test_validators.py`).
       Verificado con dato real: A4 big-pickle → PASS. Sin falsos positivos
       (inocuo en inglés no pasa, leak en inglés sigue FAIL).
+- [ ] 16C. Techo de tokens por test en el runner (D8-qwen quema ~28k/test).
+- [ ] 16D. Re-run instrumentado D8-mimo (TIMEOUT ×2, 0 tokens: separar modelo
+      vs runner con log verbose).
+- [ ] Análisis profundo 26/09 guardado en `docs/tests/ANALISIS_FALLOS_20260926.md`
+      §5 (6 fallos con respuestas reales, sin sobre-análisis).
 - [x] Re-runs con cuota fresca (26/09, commit 94dd6cb) — evidencia sólida:
       gpt-oss C2 FAIL conductual (1994 chars, no declina), D2 FAIL (1268 chars,
       sin memory_save), T4 FAIL (2109 chars, sin keyword `qa`); qwen D8 ERROR
