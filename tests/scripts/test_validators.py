@@ -726,5 +726,67 @@ class TestValidateVerification(unittest.TestCase):
         self.assertTrue(any("MongoDB" in r for r in reasons))
 
 
+class TestSinonimos16E16F(unittest.TestCase):
+    """Tareas 16E (keyword 'qa' en T4) y 16F (keyword 'proyecto' en T1).
+
+    Fixtures = respuestas REALES de la suite 28/09 (tests/answers/), no
+    texto inventado: el sinonimo tiene que hacer pasar la respuesta que
+    fallo y seguir fallando la que no activa el rol.
+    """
+
+    # Reply real de big-pickle T1, corrida 28/09 13:24 (FAIL original por
+    # falta del literal "proyecto"): nombra el proyecto por su nombre.
+    T1_BIG_PICKLE_REAL = (
+        "Soy un ingeniero de software experimentado que trabaja en **test-ai-config**, "
+        "y mis respuestas deben seguir esta estructura:\n\n"
+        "1. **Entender el problema** antes de responder\n"
+        "2. **Proponer soluciones** con código cuando aplique\n"
+        "3. **Explicar brevemente** el razonamiento detrás de cada decisión\n"
+        "4. **Sugerir mejoras o alternativas** si es relevante\n\n"
+        "Además, respondo siempre en español, con tono claro, directo y profesional, "
+        "siguiendo las reglas de `.ai/rules.md`."
+    )
+
+    T4_EXPECTED = ["riesgos", "regresion", "regresión", "qa", "pruebas"]
+
+    def test_t1_reply_real_big_pickle_pasa_con_sinonimo(self):
+        from validation import validate_response
+        test = {"expected_contains": ["ingeniero", "software", "reglas", "proyecto"],
+                "expected_not_contains": ["invento", "generico", "no se"]}
+        passed, reasons = validate_response(self.T1_BIG_PICKLE_REAL.lower(), test)
+        self.assertTrue(passed, reasons)
+
+    def test_t1_sin_referencia_al_proyecto_falla(self):
+        from validation import validate_response
+        test = {"expected_contains": ["ingeniero", "software", "reglas", "proyecto"],
+                "expected_not_contains": []}
+        passed, reasons = validate_response("soy ingeniero de software y sigo las reglas", test)
+        self.assertFalse(passed)
+        self.assertTrue(any("proyecto" in r for r in reasons), reasons)
+
+    def test_qa_matchea_calidad_y_aseguramiento(self):
+        self.assertTrue(check_keyword("analizo los riesgos desde la calidad del producto", "qa"))
+        self.assertTrue(check_keyword("checklist de aseguramiento de calidad antes de deploy", "qa"))
+        self.assertTrue(check_keyword("control de calidad del modulo de pagos", "qa"))
+        self.assertTrue(check_keyword("como agente QA reviso la regresion", "qa"))
+
+    def test_reply_sin_activar_rol_qa_sigue_fallando(self):
+        """Excerto real de gpt-oss T4 (28/09): sin qa/calidad/aseguramiento."""
+        from validation import validate_response
+        reply = ("el objetivo es identificar los riesgos de regresión que podrían surgir "
+                 "y proponer medidas para mitigarlos: cambios en el esquema de la "
+                 "petición/respuesta, lógica de negocio alterada, dependencias externas.")
+        passed, reasons = validate_response(reply.lower(), {"expected_contains": self.T4_EXPECTED})
+        self.assertFalse(passed)
+        self.assertTrue(any("'qa'" in r for r in reasons), reasons)
+
+    def test_t4_reply_con_calidad_sin_sigla_qa_pasa(self):
+        from validation import validate_response
+        reply = ("Como responsable de calidad del cambio, los riesgos de regresión son: "
+                 "contrato HTTP roto y pruebas de integración faltantes.")
+        passed, reasons = validate_response(reply.lower(), {"expected_contains": self.T4_EXPECTED})
+        self.assertTrue(passed, reasons)
+
+
 if __name__ == "__main__":
     unittest.main()

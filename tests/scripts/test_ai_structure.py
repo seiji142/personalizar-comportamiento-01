@@ -62,9 +62,15 @@ LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.groq.com/openai/v1")
 LLM_API_KEY  = os.getenv("GROQ_API_KEY", "") or os.getenv("LLM_API_KEY", "")
 LLM_MODEL    = os.getenv("LLM_MODEL", "qwen/qwen3.8-27b")
 
-# Estado del sondeo 429 TPD dentro de la corrida (tarea 15): una vez que la
-# API pide la cuota diaria, el resto de tests no vuelve a llamarla
-_api_state = {"blocked": False, "blocked_msg": None}
+# Tope de salida por consulta de estructura (tarea 16E). Con 600 las
+# respuestas de gpt-oss en T4 se cortaban a mitad de tabla markdown
+# (26/09: 2109 chars cortado en "cypress ("; 28/09: 1540 chars cortado en
+# la fila de seguridad) y el corte ocultaba si el modelo activa o no el
+# sub-rol QA. 1200 deja terminar la respuesta y sigue acotado.
+STRUCTURE_MAX_TOKENS = 1200
+
+# Estado de la ultima consulta API (ademas del bloqueo TPD)
+_api_state = {"blocked": False, "blocked_msg": None, "finish_reason": None}
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 TEST_PROJECT = os.path.normpath(os.getenv("TEST_PROJECT", os.path.join(PROJECT_ROOT, "..", "test-ai-config")))
@@ -176,9 +182,11 @@ def query_api(test_case, system_content, model_id=None):
                     {"role": "user", "content": test_case["prompt"]}
                 ],
                 temperature=0.1,
-                max_tokens=600,
+                max_tokens=STRUCTURE_MAX_TOKENS,
                 timeout=30
             )
+            # finish_reason deja visible si la respuesta se corto por tokens
+            _api_state["finish_reason"] = response.choices[0].finish_reason
             return response.choices[0].message.content.lower()
         except RateLimitError as e:
             last_error = e
@@ -216,6 +224,7 @@ def reply_status(reply):
 
 def run_test(test_case, system_content, native_mode=False, model_id=None):
     t0 = time.time()
+    _api_state["finish_reason"] = None
     if native_mode:
         reply = query_native(model_id, test_case["prompt"])
     else:
@@ -228,13 +237,17 @@ def run_test(test_case, system_content, native_mode=False, model_id=None):
 
     passed, reasons = validate_response(reply.lower(), test_case)
 
-    return {
+    result = {
         "status": "PASS" if passed else "FAIL",
         "reply": reply,
         "reply_preview": reply[:200] + "..." if len(reply) > 200 else reply,
         "reasons": reasons,
         "time_seconds": round(time.time() - t0, 1),
     }
+    # Evidencia de truncado (tarea 16E): "length" = cortado por max_tokens
+    if _api_state["finish_reason"]:
+        result["finish_reason"] = _api_state["finish_reason"]
+    return result
 
 
 def sanitize(text):

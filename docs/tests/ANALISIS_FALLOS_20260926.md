@@ -149,3 +149,25 @@ JSON 23/23/23/23) + `tests/answers/advanced_validation_report.json` +
 - **T1 big-pickle (estructura):** FAIL keyword `proyecto` → 16F.
 - **qwen D2:** ERROR upstream connect (red transitorio).
 - **Cuota:** 0 BLOCKED_TPD en toda la corrida — la suite cabía sin bloqueos.
+
+## 7. Cierre 16E-16H (28/09, tarde) — causas raíz verificadas
+
+Correcciones selectivas 14:31-14:50 sobre los residuales de §6.
+
+| Residual | Causa raíz (evidencia) | Fix | Verificación |
+|----------|------------------------|-----|--------------|
+| **T4 gpt-oss (16E)** | truncado por `max_tokens=600` en `query_api`: 26/09 la respuesta de 2109 chars termina en `cypress (` y 28/09 la de 1540 chars en la fila de seguridad — ambas cortadas a mitad de tabla, antes de nombrar el rol | `STRUCTURE_MAX_TOKENS=1200` + `finish_reason` en el reporte + sinónimo `qa` (calidad/aseguramiento) | **estructura gpt-oss 5/5 PASS** (14:31); T4 = 4035 chars, `finish=length`, "agente QA" en la cabecera |
+| **T1 big-pickle (16F)** | validador literal: mismo día 12:34 PASS ("en el **proyecto** test-ai-config") vs 13:24 FAIL ("trabaja en test-ai-config") | sinónimo `"test-ai-config"` para `"proyecto"` + test con la respuesta real fallida | regress offline FAIL→PASS solo en T1; **estructura big-pickle 5/5 PASS** (14:35) |
+| **qwen advanced (16G)** | suma de los 23 tests = **1598s > cap 1200s** → `run_cmd` mata el proceso (summary: `TIMEOUT 1200`) | caps por paso como constantes (API 2400/300, nativa 1800/960) + `test_suite_timeouts.py` (invariante cap ≥ máximo del hijo) | 5/5 unit tests; end-to-end en la próxima suite con cuota fresca |
+| **D2 gpt-oss (16H)** | **desajuste de nombres**: el bridge MCP publica `memory_save`/`memory_search`, pero los `.ai/` le piden `brain_ai_memory_save` (system.md) y `brain-ai_memory_*` (MEMORY.md) → Groq: `tool_use_failed: attempted to call tool 'brain_ai_memory_save' which was not in request.tools`. Descartado el truncado: `failed_generation=606 chars` con techo de 800 intacto | alias `brain_ai_`/`brain-ai_` en `mcp_client.mcp_tools_to_openai` (10 tools → 16, todos apuntando al mismo MCP); error explícito sin reintento si el nombre no está en `request.tools`; reintento único con techo 4000 para el tool_use_failed genérico | `test_tool_use_failed.py` 10/10; **D2 PASS** (14:50) con `tool_calls=[brain_ai_memory_save]` ejecutada vía MCP |
+
+**Hallazgo lateral (16I, sin fixear):** `test_ai_structure.py --only-failures`
+destruye el bloque del modelo: `generate_report` reemplaza
+`report["models"][label]` entero con solo los re-ejecutados, y el gate
+`estructura_4x5` exige n=5. La avanzada sí mergea por ID.
+
+**Secuencia real de D2 hoy (por qué hace falta verificar con datos):**
+14:35 FAIL (el modelo escribió el tool call como JSON en texto) → 14:41 PASS →
+14:42 ERROR 400 (reproducido, mensaje completo) → 14:50 PASS con alias.
+El 400 depende de qué nombre elija el modelo: con los tres nombres publicados
+las dos variantes resuelven.

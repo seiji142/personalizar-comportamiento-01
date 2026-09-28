@@ -252,18 +252,34 @@
       "D2": {
         "name": "Guardado automático en memoria",
         "category": "memory",
-        "status": "ERROR",
-        "time_seconds": 62.0,
+        "status": "PASS",
+        "time_seconds": 24.6,
         "reasons": [
-          "[ERROR] Error code: 400 - {'error': {'message': 'Tool choice is none, but model called a tool', 'type': 'invalid_request_error', 'code': 'tool_use_failed', 'failed_generation': '{\"name\": \"brain_ai_memory_save\", \"arguments\": {\"project\":\"test-ai-config\",\"decision\":\"Implementación de función de validación de email en Python\",\"evidence\":\"def is_valid_email(email: str) -> bool:\\\\n    \\\\\"\\\\\"\\\\\"\\\\n    Valida si la cadena proporcionada es un email válido.\\\\n    Utiliza una expresión regular simple que verifica "
+          "Tool ejecutada: brain_ai_memory_save"
         ],
-        "response_preview": "",
-        "response_full": "",
-        "tool_calls": [],
-        "memory_used": false,
+        "response_preview": "Aquí tienes una función sencilla de validación de email en Python:\n\n```python\ndef is_valid_email(email: str) -> bool:\n    \"\"\"\n    Valida un correo electrónico usando una expresión regular simple.\n    ...",
+        "response_full": "Aquí tienes una función sencilla de validación de email en Python:\n\n```python\ndef is_valid_email(email: str) -> bool:\n    \"\"\"\n    Valida un correo electrónico usando una expresión regular simple.\n    Se verifica que el email tenga la forma local@dominio, donde el dominio\n    contiene al menos un punto y los caracteres permitidos son letras, dígitos,\n    guiones y puntos. No se comprueba la existencia real del dominio.\n    \"\"\"\n    import re\n    pattern = r\"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$\"\n    return re.match(pattern, email) is not None\n```\n\nEsta función devuelve `True` si el correo cumple con la estructura básica y `False` en caso contrario.  \n\nEl episodio de la decisión ha sido guardado en la memoria persistente.",
+        "tool_calls": [
+          {
+            "name": "brain_ai_memory_save",
+            "arguments": {
+              "decision": "Implementación de función de validación de email en Python",
+              "evidence": "def is_valid_email(email: str) -> bool:\n    \"\"\"Valida un correo electrónico usando una expresión regular simple.\n\n    Se verifica que el email tenga la forma local@dominio, donde el dominio\n    contiene al menos un punto y los caracteres permitidos son letras, dígitos,\n    guiones y puntos. No se comprueba la existencia real del dominio.\n    \"\"\"\n    import re\n    pattern = r\"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$\"\n    return re.match(pattern, email) is not None",
+              "project": "test-ai-config",
+              "tags": [
+                "validación",
+                "email",
+                "python"
+              ]
+            },
+            "success": true,
+            "result": "Episodio guardado exitosamente. ID: ep_f06da1a0632e4dc1a7a95a00d21af0ba"
+          }
+        ],
+        "memory_used": true,
         "mcp_available": true,
         "mcp_error": null,
-        "tokens_used": 0
+        "tokens_used": 10749
       },
       "D3": {
         "name": "Recall de decisión específica",
@@ -2806,6 +2822,6 @@
       }
     }
   },
-  "timestamp": "2026-09-28T13:35:50.615696",
+  "timestamp": "2026-09-28T14:50:04.842941",
   "type": "advanced_validation"
 }

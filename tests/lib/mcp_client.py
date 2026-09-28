@@ -163,24 +163,45 @@ def sanitize_tool_name(name):
     return re.sub(r"[^a-zA-Z0-9_\-]", "_", name)
 
 
+# Los .ai/ le piden al modelo brain_ai_memory_* (system.md) y
+# brain-ai_memory_* (MEMORY.md), pero el bridge MCP expone memory_*.
+# Sin alias, cuando el modelo obedece el prompt Groq responde 400
+# tool_use_failed: "attempted to call tool 'brain_ai_memory_save' which
+# was not in request.tools" (D2 gpt-oss, tarea 16H, 28/09/2026).
+MEMORY_ALIAS_PREFIXES = ("brain_ai_", "brain-ai_")
+
+
+def _tool_schema(name, tool):
+    return {
+        "type": "function",
+        "function": {
+            "name": name,
+            "description": tool.get("description", ""),
+            "parameters": tool.get("inputSchema",
+                                   {"type": "object", "properties": {}}),
+        },
+    }
+
+
 def mcp_tools_to_openai(mcp_tools):
     """
     Convierte tools MCP al formato OpenAI/Groq.
     Devuelve (tools_openai, name_map) donde name_map traduce
     nombre_api -> nombre_mcp real.
+
+    Cada tool de memoria se publica tambien con los prefijos que usan los
+    .ai/ (brain_ai_ y brain-ai_), apuntando al mismo tool MCP.
     """
     tools = []
     name_map = {}
     for t in mcp_tools:
         api_name = sanitize_tool_name(t["name"])
         name_map[api_name] = t["name"]
-        tools.append({
-            "type": "function",
-            "function": {
-                "name": api_name,
-                "description": t.get("description", ""),
-                "parameters": t.get("inputSchema", {"type": "object", "properties": {}}),
-            },
-        })
+        tools.append(_tool_schema(api_name, t))
+        if api_name.startswith("memory_"):
+            for prefix in MEMORY_ALIAS_PREFIXES:
+                alias = prefix + api_name
+                name_map[alias] = t["name"]
+                tools.append(_tool_schema(alias, t))
 
     return tools, name_map

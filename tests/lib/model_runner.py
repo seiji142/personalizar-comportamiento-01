@@ -16,6 +16,7 @@ Resultado estandarizado:
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -39,6 +40,16 @@ MAX_TOKENS_PER_TEST = 15000
 # test con un loop improductivo; un test normal usa 4-10k. Al superarlo se
 # aborta el loop con TIMEOUT explicito (no ERROR generico).
 
+# Techo de salida por round (tarea 16H). PLAIN_ROUND_MAX_TOKENS es el
+# techo historico y el que se usa en cada round. Si Groq rechaza un tool
+# call con tool_use_failed (400), se reintenta UNA vez con
+# TOOL_USE_FAILED_RETRY_MAX_TOKENS: cubre el caso de `arguments` largos
+# (evidence con codigo). El 400 "not in request.tools" NO se reintenta
+# porque mas techo no lo arregla: ahi el problema es el nombre de la tool
+# (fix de alias en mcp_client.mcp_tools_to_openai).
+PLAIN_ROUND_MAX_TOKENS = 800
+TOOL_USE_FAILED_RETRY_MAX_TOKENS = 4000
+
 # Retry de MCP (tarea #11): si bridge tarda en arrancar/falla, reintentar
 MAX_MCP_RETRIES = 3
 MCP_RETRY_WAIT = 2  # segundos base, backoff lineal (2s, 4s)
@@ -46,6 +57,50 @@ MCP_RETRY_WAIT = 2  # segundos base, backoff lineal (2s, 4s)
 # Retry con backoff para rate limits (429)
 MAX_RETRIES = 3
 BASE_WAIT_SECONDS = 5
+
+
+def _is_tool_use_failed(error_str):
+    """True si Groq rechazo un tool call generado (400 tool_use_failed).
+
+    Es distinto de "el modelo no soporta tools": ahi hay que quitar las
+    tools; aca hay que ver por que Groq rechazo el call (16H).
+    """
+    low = (error_str or "").lower()
+    return "tool_use_failed" in low or "failed_generation" in low
+
+
+def _tool_not_in_request(error_str):
+    """True si Groq rechazo el call porque la tool no estaba en request.tools."""
+    return "not in request.tools" in (error_str or "").lower()
+
+
+def _failed_generation(error_str):
+    """Generation que Groq rechazo, o '' si no es accesible."""
+    if "failed_generation" not in (error_str or ""):
+        return ""
+    try:
+        import ast
+        payload = ast.literal_eval(error_str.split(" - ", 1)[1])
+        generation = payload.get("error", {}).get("failed_generation")
+        return generation if isinstance(generation, str) else ""
+    except Exception:
+        return ""
+
+
+def _failed_generation_len(error_str):
+    """Largo de la generation rechazada (-1 si no esta). Diagnostico 16H."""
+    generation = _failed_generation(error_str)
+    return len(generation) if generation else -1
+
+
+def _attempted_tool_name(error_str):
+    """Tool que el modelo intento llamar, o '' si no se puede leer.
+
+    failed_generation arranca con {"name": "...", "arguments": {...}; el
+    nombre viene primero, asi que se lee aunque el resto este cortado.
+    """
+    match = re.search(r'"name"\s*:\s*"([^"]+)"', _failed_generation(error_str))
+    return match.group(1) if match else ""
 
 
 def _load_system_prompt():
@@ -298,7 +353,12 @@ class GroqRunner(ModelRunner):
         memory_used = False
 
         tokens_from_api = 0
-        
+        # 16H: techo historico por round; solo se sube si Groq rechaza un
+        # tool_use_failed (reintento unico con TOOL_USE_FAILED_RETRY_...).
+        use_tools = bool(mcp_available and self.tools)
+        round_max_tokens = PLAIN_ROUND_MAX_TOKENS
+        retried_tool_use = False
+
         for round_num in range(self.max_tool_rounds):
             # Tope de tokens por test (tarea 16C): abortar loops improductivos
             # tipo D8-qwen (~28k en un test) antes de quemar la cuota diaria.
@@ -321,10 +381,10 @@ class GroqRunner(ModelRunner):
                         model=self.model_id,
                         messages=messages,
                         temperature=0.1,
-                        max_tokens=800,
+                        max_tokens=round_max_tokens,
                         timeout=60
                     )
-                    if mcp_available and self.tools:
+                    if use_tools:
                         kwargs["tools"] = self.tools
                         kwargs["tool_choice"] = "auto"
                     
@@ -358,6 +418,36 @@ class GroqRunner(ModelRunner):
                                 "error": f"[RATE LIMIT] {str(last_error)[:500]}"}
                 except Exception as e:
                     error_str = str(e)
+                    if _is_tool_use_failed(error_str):
+                        # 16H: el modelo SI llamo a una tool y Groq rechazo la
+                        # generacion. Quitar las tools aqui empeora: el modelo
+                        # vuelve a llamar y Groq responde otro 400.
+                        if _tool_not_in_request(error_str):
+                            # Causa raiz 16H: el MCP expone memory_* y los
+                            # .ai/ piden brain_ai_memory_* / brain-ai_memory_*.
+                            # Subir el techo no lo arregla: el fix son los
+                            # alias de mcp_client.mcp_tools_to_openai.
+                            attempted = _attempted_tool_name(error_str) or "?"
+                            sent = ", ".join(sorted(self.name_map))[:300]
+                            return {"text": "", "tool_calls": all_tool_calls,
+                                    "memory_used": memory_used,
+                                    "tokens_used": tokens_from_api,
+                                    "error": (f"[ERROR] Tool '{attempted}' no estaba en "
+                                              f"request.tools (enviadas: {sent})")}
+                        if not retried_tool_use:
+                            retried_tool_use = True
+                            round_max_tokens = TOOL_USE_FAILED_RETRY_MAX_TOKENS
+                            gen_len = _failed_generation_len(error_str)
+                            print(f"[TOOL USE] 400 tool_use_failed "
+                                  f"(failed_generation={gen_len} chars): "
+                                  f"reintento con max_tokens={round_max_tokens}")
+                            continue
+                        return {"text": "", "tool_calls": all_tool_calls,
+                                "memory_used": memory_used,
+                                "tokens_used": tokens_from_api,
+                                "error": (f"[ERROR] Tool call rechazada tras retry "
+                                          f"con {round_max_tokens} tokens: "
+                                          f"{error_str[:500]}")}
                     if "tool" in error_str.lower():
                         # Modelo no soporta tools, reintentar sin tools
                         try:
@@ -365,7 +455,7 @@ class GroqRunner(ModelRunner):
                                 model=self.model_id,
                                 messages=messages,
                                 temperature=0.1,
-                                max_tokens=800,
+                                max_tokens=PLAIN_ROUND_MAX_TOKENS,
                                 timeout=60
                             )
                             usage = getattr(response, 'usage', None)

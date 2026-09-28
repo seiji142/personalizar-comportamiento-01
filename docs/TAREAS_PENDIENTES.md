@@ -1,12 +1,15 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 25/09/2026 — tareas 1-15 completadas; tarea 16 ABIERTA
-(suite end-to-end 16:43: plan `docs/PLAN_SUITE_COMPLETA_20260926.md`,
+Ultima actualizacion: 28/09/2026 — tareas 1-16 cerradas salvo 16I (merge de
+estructura, hallazgo nuevo) y la verificacion end-to-end de 16G (proxima
+suite con cuota fresca). Suite post-fix 28/09: plan
+`docs/PLAN_SUITE_POSTFIX_20260926.md` 4/4, sesion `docs/tests/sesion_20260928.md`.
+Tareas 1-15 completadas el 25/09 (plan `docs/PLAN_SUITE_COMPLETA_20260926.md`,
 sesion `docs/tests/sesion_20260925.md` §Alcance 25/09 16:08-16:43).
 **Tarea 15 (429 TPD) RESUELTA 25/09** — plan y evidencia en
 `docs/PLAN_TPD_429.md` §Ejecución. Suite nocturna 23/09 (10/11 OK con
 2 gates rojos) ver en `docs/tests/sesion_20260923.md` §hallazgo nocturno.
-Residuales de comportamiento (no 429): gpt-oss C2/D9 FAIL + estructura
-T4 "qa" FAIL, qwen D8 ERROR (max tool rounds, 2 intentos).
+Residuales de comportamiento (no 429): gpt-oss C2 FAIL estable + qwen D8
+ERROR (tool loop, 2 intentos).
 
 ---
 
@@ -313,19 +316,54 @@ T4 "qa" FAIL, qwen D8 ERROR (max tool rounds, 2 intentos).
       correctamente — el mecanismo funciona. Es el backend mimo el que nunca
       devuelve el D8 (generación larga de suite pytest). Se registra como
       limitación conocida del modelo + timeout documentado, no bug del runner.
-- [ ] Análisis profundo 26/09 guardado en `docs/tests/ANALISIS_FALLOS_20260926.md`
+- [x] Análisis profundo 26/09 guardado en `docs/tests/ANALISIS_FALLOS_20260926.md`
       §5 (6 fallos con respuestas reales, sin sobre-análisis).
 - [x] Suite post-fix ejecutada 28/09 (plan `docs/PLAN_SUITE_POSTFIX_20260926.md`,
       61.4 min): 16B PASS A4, 16C funcionó en vivo (gpt-oss D3 abortado a
       18501t), mimo D8 PASS (flaky), D9 gpt-oss PASS. Cero BLOCKED_TPD.
-- [ ] 16E. Sinónimo `qa` en T4 estructura (gpt-oss FALLA solo por keyword;
-      precedente: `validation.py` sinónimos tarea 14).
-- [ ] 16F. big-pickle estructura T1 FAIL keyword `proyecto` (nuevo, revisar
-      si es validador literal o respuesta floja).
-- [ ] 16G. Step timeout 1200s de `run_all_tests.py` mata qwen avanzada
-      (23 tests API > 1200s). Subir el timeout o partir qwen en 2 corridas.
-- [ ] 16H. gpt-oss D2 ERROR 400 "Tool choice is none, but model called a
-      tool" (brain_ai_memory_save) — fallo de API nuevo, reproducir `--only D2`.
+- [x] 16E. T4 estructura gpt-oss (28/09): la causa raiz NO fue el keyword
+      sino el truncado. `query_api` usaba `max_tokens=600` y la respuesta se
+      cortaba a mitad de tabla (26/09: 2109 chars cortado en "cypress (";
+      28/09: 1540 chars cortado en la fila de seguridad), sin llegar a nombrar
+      el rol. Fix: `STRUCTURE_MAX_TOKENS=1200` + captura de `finish_reason`
+      en el reporte + sinonimo `"qa"` (calidad/aseguramiento/…) en
+      `validation.py`. Verificado: gpt-oss estructura **5/5 PASS en vivo**
+      (14:31; T4 con 4035 chars, finish=length, "agente QA" en cabecera) y
+      regress offline 20/20 sin cambios salvo big-pickle T1.
+- [x] 16F. T1 big-pickle (28/09): validador literal, no respuesta floja.
+      Mismo dia 12:34 PASS ("en el proyecto test-ai-config") vs 13:24 FAIL
+      ("trabaja en test-ai-config") — misma intencion, distinto wording.
+      Fix: sinonimo `"test-ai-config"` para `"proyecto"` + test unitario con
+      la respuesta real fallida como fixture. Verificado: regress offline
+      FAIL->PASS unicamente en T1; big-pickle estructura **5/5 PASS en vivo**
+      (14:35).
+- [x] 16G. Caps de paso de `run_all_tests.py` (28/09): qwen avanzada suma de
+      tests = 1598s > cap 1200 -> kill real (`test_run_summary.json` =
+      TIMEOUT 1200). Fix: constantes `ADVANCED_API_TIMEOUT_S=2400`,
+      `STRUCTURE_API_TIMEOUT_S=300` (5x30s teorico), `STRUCTURE_NATIVE_TIMEOUT_S=960`
+      (5x180s) y `ADVANCED_NATIVE_TIMEOUT_S=1800` (medido 694s), con
+      `tests/scripts/test_suite_timeouts.py` (5 tests: invariante
+      cap >= maximo del hijo; se agrega a los tests locales de run_all).
+      Verificacion end-to-end pendiente: proxima suite completa con cuota
+      fresca (cuenta 1 cerca del TPD hoy).
+- [x] 16H. D2 gpt-oss ERROR 400 (28/09): reproducido con `--only D2`
+      (14:42) y diagnosticado con el mensaje completo: el bridge MCP expone
+      `memory_save`/`memory_search`, pero los `.ai/` le piden al modelo
+      `brain_ai_memory_save` (system.md) y `brain-ai_memory_*` (MEMORY.md);
+      Groq responde `tool_use_failed: attempted to call tool ... which was
+      not in request.tools`. **NO era truncado** (failed_generation=606
+      chars con techo de 800 intacto). Fix: alias `brain_ai_`/`brain-ai_`
+      en `mcp_client.mcp_tools_to_openai` (16 tools publicados, todos
+      apuntando al mismo tool MCP) + error explicito sin reintento cuando el
+      nombre no esta en request.tools + reintento unico con techo 4000 para
+      el tool_use_failed generico. Tests: `test_tool_use_failed.py` 10/10.
+      Verificado en vivo: **D2 PASS (14:50)** con
+      `tool_calls=[brain_ai_memory_save]` ejecutada via MCP.
+- [ ] 16I. `test_ai_structure.py --only-failures` destruye el bloque del
+      modelo: `generate_report` reemplaza `report["models"][label]` entero
+      con solo los re-ejecutados, y el gate `estructura_4x5` exige n=5
+      (hallazgo 28/09; la avanzada si mergea por ID). Merge por ID antes de
+      usarlo para reparacion selectiva.
 - [x] Re-runs con cuota fresca (26/09, commit 94dd6cb) — evidencia sólida:
       gpt-oss C2 FAIL conductual (1994 chars, no declina), D2 FAIL (1268 chars,
       sin memory_save), T4 FAIL (2109 chars, sin keyword `qa`); qwen D8 ERROR

@@ -36,6 +36,21 @@ NATIVE_MODELS = [
     "opencode/mimo-v2.6-flash-free",
 ]
 
+# Timeouts por paso (segundos). Invariante: cada cap >= maximo teorico o
+# medido de sus hijos; una cap menor mata el proceso a mitad de corrida y
+# pierde el merge de resultados (tarea 16G).
+#   - ADVANCED_API: 28/09 qwen avanzada suma de tests = 1598s > cap 1200 -> kill
+#     real (test_run_summary.json: TIMEOUT 1200). 2400 deja margen para
+#     retries 429 transitorios.
+#   - STRUCTURE_API: 5 tests x timeout=30s del cliente + overhead => 150s.
+#   - STRUCTURE_NATIVE: 5 tests x QUERY_TIMEOUT(180s) => 900s.
+#   - ADVANCED_NATIVE: medido 469s (big-pickle) / 694s (mimo); margen para
+#     tests que agotan QUERY_TIMEOUT.
+STRUCTURE_API_TIMEOUT_S = 300
+ADVANCED_API_TIMEOUT_S = 2400
+STRUCTURE_NATIVE_TIMEOUT_S = 960
+ADVANCED_NATIVE_TIMEOUT_S = 1800
+
 
 def get_api_key_for_model(model_name):
     """Retorna la API key correspondiente al modelo desde Verificacion-modelos-ai/.env"""
@@ -135,6 +150,9 @@ run_cmd("test_validators.py (35 tests)",
 run_cmd("test_rate_limit_tpd.py (429 TPD)",
         [sys.executable, os.path.join(TESTS_SCRIPTS, "test_rate_limit_tpd.py")])
 
+run_cmd("test_suite_timeouts.py (timeouts por paso)",
+        [sys.executable, os.path.join(TESTS_SCRIPTS, "test_suite_timeouts.py")])
+
 
 # ============================================================
 # TESTS CON API — AMBOS modelos
@@ -202,7 +220,7 @@ for i, model in enumerate(models_to_test):
         structure_cmd.append("--fresh")
     run_cmd(f"test_ai_structure.py ({model})",
             structure_cmd,
-            timeout=120, env=env)
+            timeout=STRUCTURE_API_TIMEOUT_S, env=env)
 
     # Test 2: run_advanced_tests.py (--fresh solo en la primera llamada global)
     advanced_cmd = [sys.executable, os.path.join(TESTS_SCRIPTS, "run_advanced_tests.py"),
@@ -211,7 +229,7 @@ for i, model in enumerate(models_to_test):
         advanced_cmd.append("--fresh")
     run_cmd(f"run_advanced_tests.py --api {model}",
             advanced_cmd,
-            timeout=1200, env=env)
+            timeout=ADVANCED_API_TIMEOUT_S, env=env)
 
     # Pausa entre modelos API para evitar rate limit
     if model != models_to_test[-1]:
@@ -238,13 +256,13 @@ for model in NATIVE_MODELS:
     run_cmd(f"test_ai_structure.py --native {model}",
             [sys.executable, os.path.join(TESTS_SCRIPTS, "test_ai_structure.py"),
              "--native", model],
-            timeout=600, env=env)
+            timeout=STRUCTURE_NATIVE_TIMEOUT_S, env=env)
 
     # Test 2: run_advanced_tests.py (sin --api, usa OpenCode nativo)
     run_cmd(f"run_advanced_tests.py {model}",
             [sys.executable, os.path.join(TESTS_SCRIPTS, "run_advanced_tests.py"),
              model],
-            timeout=1200, env=env)
+            timeout=ADVANCED_NATIVE_TIMEOUT_S, env=env)
 
 
 # ============================================================
