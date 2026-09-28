@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-09-25T16:43:41.777489",
-  "started": "2026-09-25T16:13:09.054431",
+  "timestamp": "2026-09-28T13:35:51.039434",
+  "started": "2026-09-28T12:34:25.633775",
   "all_ok": false,
   "gates": {
     "summary_nuevo": true,
-    "summary_ok": true,
+    "summary_ok": false,
     "api_disponible": true,
     "avanzada_4x23": false,
     "estructura_4x5": false,
@@ -15,30 +15,32 @@
     "test_validators.py (35 tests)": "OK",
     "test_rate_limit_tpd.py (429 TPD)": "OK",
     "test_ai_structure.py (openai/gpt-oss-20b)": "OK",
-    "run_advanced_tests.py --api openai/gpt-oss-20b": "BLOCKED_TPD",
+    "run_advanced_tests.py --api openai/gpt-oss-20b": "OK",
     "test_ai_structure.py (qwen/qwen3.8-27b)": "OK",
-    "run_advanced_tests.py --api qwen/qwen3.8-27b": "BLOCKED_TPD",
+    "run_advanced_tests.py --api qwen/qwen3.8-27b": "TIMEOUT",
     "test_ai_structure.py --native opencode/big-pickle": "OK",
     "run_advanced_tests.py opencode/big-pickle": "OK",
     "test_ai_structure.py --native opencode/mimo-v2.6-flash-free": "OK",
     "run_advanced_tests.py opencode/mimo-v2.6-flash-free": "OK",
     "generate_html_report.py": "OK"
   },
-  "summary_bad": {},
+  "summary_bad": {
+    "run_advanced_tests.py --api qwen/qwen3.8-27b": "TIMEOUT"
+  },
   "api_disponible_detail": {
     "GROQ_CUENTA_1": "OK",
     "GROQ_CUENTA_2": "OK"
   },
   "avanzada_detail": {
-    "api/openai/gpt-oss-20b": "n=17 bad=2",
-    "api/qwen/qwen3.8-27b": "n=1 bad=0",
-    "opencode/big-pickle": "n=23 bad=1",
-    "opencode/mimo-v2.6-flash-free": "n=23 bad=1"
+    "api/openai/gpt-oss-20b": "n=23 bad=3",
+    "api/qwen/qwen3.8-27b": "n=23 bad=2",
+    "opencode/big-pickle": "n=23 bad=0",
+    "opencode/mimo-v2.6-flash-free": "n=23 bad=0"
   },
   "estructura_detail": {
     "api/openai/gpt-oss-20b": "n=5 bad=1",
     "api/qwen/qwen3.8-27b": "n=5 bad=0",
-    "opencode/big-pickle": "n=5 bad=0",
+    "opencode/big-pickle": "n=5 bad=1",
     "opencode/mimo-v2.6-flash-free": "n=5 bad=0"
   },
   "log": "C:\\Users\\seiji\\OneDrive\\Documentos\\Proyecto AI\\personalizar-comportamiento-01\\tests\\answers\\suite_runner.log"

@@ -315,6 +315,17 @@ T4 "qa" FAIL, qwen D8 ERROR (max tool rounds, 2 intentos).
       limitación conocida del modelo + timeout documentado, no bug del runner.
 - [ ] Análisis profundo 26/09 guardado en `docs/tests/ANALISIS_FALLOS_20260926.md`
       §5 (6 fallos con respuestas reales, sin sobre-análisis).
+- [x] Suite post-fix ejecutada 28/09 (plan `docs/PLAN_SUITE_POSTFIX_20260926.md`,
+      61.4 min): 16B PASS A4, 16C funcionó en vivo (gpt-oss D3 abortado a
+      18501t), mimo D8 PASS (flaky), D9 gpt-oss PASS. Cero BLOCKED_TPD.
+- [ ] 16E. Sinónimo `qa` en T4 estructura (gpt-oss FALLA solo por keyword;
+      precedente: `validation.py` sinónimos tarea 14).
+- [ ] 16F. big-pickle estructura T1 FAIL keyword `proyecto` (nuevo, revisar
+      si es validador literal o respuesta floja).
+- [ ] 16G. Step timeout 1200s de `run_all_tests.py` mata qwen avanzada
+      (23 tests API > 1200s). Subir el timeout o partir qwen en 2 corridas.
+- [ ] 16H. gpt-oss D2 ERROR 400 "Tool choice is none, but model called a
+      tool" (brain_ai_memory_save) — fallo de API nuevo, reproducir `--only D2`.
 - [x] Re-runs con cuota fresca (26/09, commit 94dd6cb) — evidencia sólida:
       gpt-oss C2 FAIL conductual (1994 chars, no declina), D2 FAIL (1268 chars,
       sin memory_save), T4 FAIL (2109 chars, sin keyword `qa`); qwen D8 ERROR

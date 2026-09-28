@@ -1,6 +1,7 @@
 # Plan — Suite completa post-fixes (valida 16A/16B/16C/16D)
 
-**Fecha:** 2026-09-26 · **Estado:** PENDIENTE (documentado, sin ejecutar)
+**Fecha:** 2026-09-26 (ejecutada 28/09 12:34-13:35, 61.4 min, exit 1 gates) ·
+  **Estado:** EJECUTADA — 4/4 fases (ver Resultados)
 **Padre:** tarea 16 (cerrada) · **Predecesor:**
   `docs/PLAN_SUITE_COMPLETA_20260926.md` (6/6, 25/09)
 **Objetivo:** medir con datos frescos el efecto de los fixes del 26/09
@@ -8,11 +9,37 @@
 
 ## Check de ejecución
 
-- [ ] Fase 0 — Precondiciones (git limpio, sin lock, sondeo de cuota)
-- [ ] Fase 1 — Suite completa async (`suite_runner.py`, timeout 5400)
-- [ ] Fase 2 — Gates postflight (`suite_verification.json`)
-- [ ] Fase 3 — Análisis post-fix (esperado vs posible por test)
-- [ ] Fase 4 — Cierre (análisis, tabla TPD, sesión, checklist, memoria)
+- [x] Fase 0 — Precondiciones (28/09: git limpio, sin lock, plan commiteado
+  afaf51d, ambas cuentas OK en sondeo)
+- [x] Fase 1 — Suite completa async (28/09 12:34-13:35, 3686s, run_all rc=0)
+- [x] Fase 2 — Gates: summary_nuevo OK · summary_ok ROJO (qwen advanced
+  TIMEOUT 1200s) · api_disponible OK · avanzada_4x23 ROJO (gpt-oss bad=3,
+  qwen bad=2) · estructura_4x5 ROJO (gpt-oss T4, big-pickle T1) · html OK
+- [x] Fase 3 — Análisis post-fix: ver §Resultados
+- [x] Fase 4 — Cierre (análisis/TAREAS/sesión actualizados, memoria)
+
+## Resultados post-fix (28/09, datos reales)
+
+**Fixes confirmados en vivo:**
+- 16B: A4 big-pickle **PASS** ("Rechazo detectado", 56t).
+- 16C: techo **funcionó en vivo** — gpt-oss D3 abortado:
+  `[TIMEOUT] Tope de tokens por test superado (18501 >= 15000) round 4`.
+- 16D/16F: mimo D8 **PASS** hoy (16.8k tokens) → flaky, no cuelgue estable.
+- D9 gpt-oss **PASS** (cambió de FAIL) → conductual variable.
+
+**Sin bloqueo TPD:** 0 BLOCKED_TPD, ambas cuentas OK — sin cuota gastada de más.
+
+**Fallas nuevas/estables:**
+- qwen advanced: proceso **killado a 1200s** (step timeout de
+  `run_all_tests.py`) — D8 en reporte es valor viejo (27325, no re-ejecutado).
+- gpt-oss D2: ERROR 400 `Tool choice is none, but model called a tool`
+  (brain_ai_memory_save) — nuevo fallo de API.
+- gpt-oss C2: FAIL estable (no declina).
+- gpt-oss T4: FAIL keyword `qa` → 16E (sinónimo pendiente).
+- big-pickle estructura T1: FAIL keyword `proyecto` (nuevo).
+- qwen D2: ERROR upstream connect (red, transitorio probable).
+
+**Falla de diseño de cuota:** ninguno. La suite cabía sin BLOCKED_TPD.
 
 ## Fase 0 — Precondiciones (sin API)
 

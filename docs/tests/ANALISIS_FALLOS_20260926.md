@@ -132,3 +132,20 @@ JSON 23/23/23/23) + `tests/answers/advanced_validation_report.json` +
    aplica `subprocess timeout=QUERY_TIMEOUT (180s)` y reporta `[TIMEOUT]`
    correctamente: el mecanismo funciona. Es el backend mimo el que nunca
    devuelve el D8. Limitación conocida del modelo, timeout documentado.
+
+## 6. Suite post-fix 28/09 — estado de cada residual
+
+- **A4 big-pickle:** PASS (16B en vivo, 56t). Cerrado.
+- **mimo D8:** PASS (16.8k tokens, 65-96s) → era **flaky**, no cuelgue estable.
+- **D9 gpt-oss:** PASS (cambió de FAIL) → conductual **variable**, no estable.
+- **C2 gpt-oss:** FAIL estable (no declina, escribe código).
+- **D2 gpt-oss:** ERROR nuevo 400 "Tool choice is none, but model called a
+  tool" (brain_ai_memory_save) — reproducir `--only D2` (16H).
+- **D3 gpt-oss:** `[TIMEOUT] Tope de tokens (18501 >= 15000)` — **16C funcionó
+  en vivo**; el caso era un loop improductivo, no cuota.
+- **D8-qwen:** no re-ejecutado (proceso killado a 1200s, ver 16G); el valor
+  27325 del reporte es el viejo. El techo aún no se ejercitó en D8-qwen.
+- **T4 gpt-oss (estructura):** FAIL solo keyword `qa` → 16E.
+- **T1 big-pickle (estructura):** FAIL keyword `proyecto` → 16F.
+- **qwen D2:** ERROR upstream connect (red transitorio).
+- **Cuota:** 0 BLOCKED_TPD en toda la corrida — la suite cabía sin bloqueos.
