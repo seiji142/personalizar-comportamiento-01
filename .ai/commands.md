@@ -1,33 +1,40 @@
 # Comandos Personalizados
 
-## Comandos Básicos
+## Herramientas MCP (se invocan por nombre en el chat)
 
-| Comando | Descripción |
-|---------|-------------|
-| `/deploy` | Desplegar a producción |
-| `/test` | Ejecutar tests |
-| `/lint` | Ejecutar linter |
-| `/git-push` | Subir cambios a git |
+No son comandos slash: son tools del servidor MCP `brain-ai`, registradas como
+`<server_name>_<tool_name>`. Se escriben en el chat del modelo.
 
-## Comandos de Memoria
+### Memoria
 
-| Comando | Descripción |
-|---------|-------------|
-| `/memory-save` | Guardar episodio en memoria |
-| `/memory-search` | Buscar en memoria |
-| `/memory-consolidate` | Consolidar memoria |
+| Tool | Descripción |
+|------|-------------|
+| `brain-ai_memory_search` | Buscar episodios, decisiones y conocimiento en memoria |
+| `brain-ai_memory_save` | Guardar un episodio en memoria |
+| `brain-ai_memory_consolidate` | Consolidar episodios en conocimiento semántico |
 
-## Comandos de Provenance
+### Provenance
 
-| Comando | Descripción |
-|---------|-------------|
-| `/resolve` | Resolver referencia |
-| `/handle` | Ver metadatos de handle |
-| `/action` | Ejecutar acción con efectos |
+| Tool | Descripción |
+|------|-------------|
+| `brain-ai_resolver_referencia` | Resolver una referencia contra fuentes autorizadas |
+| `brain-ai_describir_handle` | Ver metadatos de un handle |
+| `brain-ai_ejecutar_accion` | Ejecutar una acción con efectos |
 
-## Uso
+### Ejecución
 
-Los comandos se ejecutan escribiéndolos en el chat del modelo.
+| Tool | Descripción |
+|------|-------------|
+| `brain-ai_run_tests` | Ejecutar tests en background |
+| `brain-ai_test_status` | Consultar el estado de un task de tests |
+| `brain-ai_run_command` | Ejecutar un comando en background |
+| `brain-ai_command_status` | Consultar el estado de un task de comando |
+
+## Comandos slash custom
+
+Este proyecto **no define comandos slash**. Crear uno requiere un archivo en
+`.opencode/commands/<nombre>.md` o una sección `command` en `opencode.json`; ninguno
+de los dos existe. Los built-in de OpenCode son `/init`, `/undo`, `/redo`, `/share`, `/help`.
 
 ## Validacion pre-PR (obligatoria, bloqueante)
 

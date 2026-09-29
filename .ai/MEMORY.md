@@ -72,36 +72,36 @@ brain-ai-01 es tu fuente de información para decisiones y credenciales.
 
 | Situación | Herramienta | Ejemplo |
 |-----------|-------------|---------|
-| Pregunta sobre decisión pasada | `brain_ai_memory_search` | "¿Qué base de datos usamos?" |
-| Pregunta sobre configuración | `brain_ai_memory_search` | "¿Cómo configuramos JWT?" |
-| Credencial o secret | `brain_ai_memory_search` | "¿Tenemos la API key de Groq?" |
+| Pregunta sobre decisión pasada | `brain-ai_memory_search` | "¿Qué base de datos usamos?" |
+| Pregunta sobre configuración | `brain-ai_memory_search` | "¿Cómo configuramos JWT?" |
+| Credencial o secret | `brain-ai_memory_search` | "¿Tenemos la API key de Groq?" |
 
 ### Flujo Obligatorio
 
 1. **Detecta** si la pregunta es sobre decisiones, configuración o credenciales
-2. **Busca** en memoria con `brain_ai_memory_search(query="...", project="...")`
+2. **Busca** en memoria con `brain-ai_memory_search(query="...", project="...")`
 3. **Si hay resultado** → úsalo como base para tu respuesta
 4. **Si no hay resultado** → responde con incertidumbre ("no tengo información previa")
-5. **Si tomas una decisión importante** → `brain_ai_memory_save(...)` para registrarla
+5. **Si tomas una decisión importante** → `brain-ai_memory_save(...)` para registrarla
 
 ### Ejemplo
 
 ```
 Usuario: "¿Qué base de datos usamos?"
-Acción: brain_ai_memory_search(query="base de datos", project="personalizar-comportamiento-01")
+Acción: brain-ai_memory_search(query="base de datos", project="personalizar-comportamiento-01")
 Resultado: Encontré que usamos MySQL.
 Respuesta: Según la memoria, usamos MySQL como base de datos.
 ```
 
 ```
 Usuario: "Haz deploy a staging"
-Acción: brain_ai_memory_search(query="GROQ_API_KEY", project="personalizar-comportamiento-01")
+Acción: brain-ai_memory_search(query="GROQ_API_KEY", project="personalizar-comportamiento-01")
 Resultado: No encontré la clave en memoria.
-Acción: resolver_referencia("GROQ_API_KEY", expected_kind="secret")
+Acción: brain-ai_resolver_referencia("GROQ_API_KEY", expected_kind="secret")
 Resultado: handle vh_abc123
-Acción: ejecutar_accion("deploy", {environment: "staging", api_key: {handle: "vh_abc123"}, region: "us-east-1"})
+Acción: brain-ai_ejecutar_accion("deploy", {environment: "staging", api_key: {handle: "vh_abc123"}, region: "us-east-1"})
 Resultado: Deploy exitoso
-Acción: brain_ai_memory_save(project="personalizar-comportamiento-01", decision="Deploy a staging exitoso", tags=["deploy", "staging"])
+Acción: brain-ai_memory_save(project="personalizar-comportamiento-01", decision="Deploy a staging exitoso", tags=["deploy", "staging"])
 ```
 
 ## Categorías de memoria
