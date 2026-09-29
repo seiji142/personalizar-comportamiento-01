@@ -1,11 +1,15 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 28/09/2026 22:40 — tareas 1-16 cerradas salvo 16I
-(merge de estructura) y 16K (nuevo: `finish_reason` en GroqRunner, propuesto
-sin implementar). 16J (convencion de nombres de tools MCP) tiene las 5 fases
-cerradas: Fases 0, 1, 3, 2 y 4 ejecutadas, Fase 5 verificada en parte (unit +
-`--only D2` API + `--only D1,D2,D3` nativo). Sigue pendiente la verificacion
-end-to-end de 16G (suite completa con cuota fresca) y D3. El fix de 16H quedo
-como parche: la causa raiz se documento en 16J con plan
+Ultima actualizacion: 28/09/2026 23:25 — 16J cerrada (Fases 0-5, commit `fe4648a`
+en `develop`, pusheado). Abiertas: 16I (merge de estructura), 16K
+(`finish_reason` en `GroqRunner`), y **4 nuevas de la sesion del 28/09 23:00**:
+16L (no guardar sin `project`), 16M (`memory_search` solo busca en
+`semantic`), 16N (documentar MCP ausente del esquema + script), 16O
+(`toolCount` desactualizado en `PLANTILLA_MCP.md`). Diagnostico completo,
+evidencia y propuestas de las 4 en
+`docs/PLAN_MCP_BRIDGE_Y_RETRIEVAL.md`; **nada implementado, esperando
+decision**. Sigue pendiente la verificacion end-to-end de 16G (suite completa
+con dia dedicado de cuota) y D3. El fix de 16H quedo como parche: la causa raiz
+se documento en 16J con plan
 `docs/PLAN_CONVENCION_TOOLS_MCP.md`. Suite post-fix 28/09: plan
 `docs/PLAN_SUITE_POSTFIX_20260926.md` 4/4, sesion `docs/tests/sesion_20260928.md`.
 Tareas 1-15 completadas el 25/09 (plan `docs/PLAN_SUITE_COMPLETA_20260926.md`,
@@ -465,6 +469,70 @@ ERROR (tool loop, 2 intentos).
       techo mayor si `finish_reason == "length"`; (3) subir
       `PLAIN_ROUND_MAX_TOKENS` en rounds con tools. **No implementado:** requiere
       acuerdo.
+- [ ] 16L. Bridge: **no guardar un episodio sin `project`** (nuevo, 28/09 23:10,
+      pedido explícito del usuario). Diagnóstico completo, evidencia y propuesta
+      en `docs/PLAN_MCP_BRIDGE_Y_RETRIEVAL.md` §3.
+      **El servidor YA valida:** `brain-ai-01/ai_architect/pipelines/ingest.py:9`
+      tiene `REQUIRED = ["project", ...]` y `validate_episode` (L11-14) rechaza
+      `None`/`""` con `Missing required field: project` -> HTTP 400. O sea que
+      hoy **no se guarda nada sin proyecto**; el defecto es de mensaje.
+      **Los 2 defectos estan en el bridge** (`mcp_bridge.py:456-476`):
+      (1) sin la key `project` -> `args["project"]` lanza `KeyError` (L460) y el
+      modelo recibe `Error ejecutando memory_save: 'project'`;
+      (2) `project: ""` o `null` -> 400 con `{"detail": {...}}` y la L474 lee
+      `result.get("error")` en el nivel equivocado -> el modelo recibe
+      **`Error al guardar: Unknown error`** y el motivo real queda enterrado.
+      **Propuesta:** validar `project` y `decision` antes del request (sin HTTP
+      en el error) y desenvolver `detail` para que el error real llegue al
+      modelo. Codigo exacto en el plan §3.4. Incluye `ValueError` temprano en
+      `clients/memoria.py:99` (hoy `None`/`""` se van al 400 en silencio) y
+      `tests/test_mcp_bridge_validacion.py` con 6 casos sin HTTP (§3.6).
+      **Decisiones pendientes:** (a) si se toca la `description` de
+      `memory_save` (viaja en el schema que ve Groq en D1-D3, asi que obliga a
+      re-correr la suite; se recomienda NO); (b) `brain-ai-01` esta en
+      `main-clean`, no en `develop`, y es otro repo: solo en disco o commiteado
+      alla. **Nada implementado.**
+- [ ] 16M. `memory_search` solo busca en `semantic` por defecto
+      (`mcp_bridge.py:433` y schema L168-173), pero `.ai/MEMORY.md` (este repo y
+      5 mas) promete "combina busqueda episodica + semantica" y
+      `clients/memoria.py:114` si busca en las dos. Un episodio recien guardado
+      (episodico, sin consolidar) es **invisible** por la via MCP salvo que se
+      pida `collection="episodic"`. Caso disparador: el episodio
+      `ep_0c550738ea5d461e8cc058d898b32356` (16J Fases 2/4) **si esta
+      guardado** — trace en `logs/traces/ingest.jsonl` con el project correcto,
+      JSON de 4951 bytes en `memory/episodic/`, y `failures.jsonl` sin
+      movimientos desde el 25/09 (nada fallo al indexar) — pero 4 busquedas no
+      lo devuelven. Detalle y 3 opciones (C1 cambiar el default / C2 corregir
+      la documentacion en 6 repos / C3 solo documentar el criterio) en el plan
+      §4.6. **Causa raiz del caso concreto NO confirmada**: ni siquiera la
+      busqueda explicita en `episodic` lo trajo, asi que hay un segundo factor
+      (indexado o ranking) que no se investigo. Recomendacion: C3 ahora, C1
+      despues de la suite completa. **Nada implementado.**
+- [ ] 16N. Documentar "MCP ausente del esquema != servicio caido" + script de
+      diagnostico (nuevo, 28/09 23:05). La conexion MCP `brain-ai` del proceso
+      OpenCode de larga duracion (`run=d5c3b641`, arrancado el 26/09 10:55)
+      murio **1,9 s despues** de que alguien lanzara `python
+      scripts/suite_runner.py` (28/09 **12:34:17** -> 3 x `MCP connection closed
+      server=brain-ai` a las 12:34:19) y **nunca se reconecto**: las 2 sesiones
+      siguientes (la de la noche y la del 23:00) quedaron sin tools `brain-ai_*`.
+      Descartado con evidencia: servicio caido, `opencode.json` mal, path del
+      bridge, `python`, bridge roto, problema de nombres. Los procesos **hijos**
+      (`opencode run --dir test-ai-config`, que lanza el harness) si conectan y
+      si usan las tools. **Resuelto reiniciando OpenCode** (23:05: proceso nuevo
+      `run=376417c8`, las 10 tools presentes, llamada real funcionando).
+      **Lo que NO se sabe:** por que murio el bridge (no hay error en el log, solo
+      el cierre; la correlacion con la suite es fuerte pero no probada) y por que
+      `git_publisher` si se recupero del mismo `server unavailable` del 26/09.
+      **Propuesta:** (A1) texto de criterio para `.ai/rules.md` y
+      `PLAN_CONVENCION_TOOLS_MCP.md` §7.4 caso 3 (hoy solo cubre `unavailable
+      tool` y `not in request.tools`); (A2)
+      `tests/scripts/verificar_mcp_esquema.py` que lea el log y diga que server
+      esta vivo y cuando murio. **Descartado:** poner el path absoluto de
+      `python` en el `opencode.json` (contradice §9.1 del plan 16J y la
+      evidencia no lo sostiene). Detalle en el plan §2.
+- [ ] 16O. `~/.config/opencode/PLANTILLA_MCP.md:44` dice `toolCount=8` y el
+      bridge expone **10** (deuda de `PLAN_CONVENCION_TOOLS_MCP.md` §7.5). Es
+      config global, fuera de este repo: requiere OK explicito.
 - [x] Re-runs con cuota fresca (26/09, commit 94dd6cb) — evidencia sólida:
       gpt-oss C2 FAIL conductual (1994 chars, no declina), D2 FAIL (1268 chars,
       sin memory_save), T4 FAIL (2109 chars, sin keyword `qa`); qwen D8 ERROR
