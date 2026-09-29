@@ -1,8 +1,8 @@
 # Convención de nombres de tools MCP — diagnóstico y plan de reestructuración
 
 **Creado:** 2026-09-28
-**Actualizado:** 2026-09-28 — Fase 0 completada, D1 resuelta
-**Estado:** DIAGNÓSTICO CERRADO. Ningún cambio de código aplicado todavía.
+**Actualizado:** 2026-09-28 — Fases 0-4 cerradas; Fase 5 parcial (unit + D2 API + D1-D3 nativo)
+**Estado:** Fases 2 y 4 implementadas y verificadas. Falta la suite completa (D3/16G).
 **Origen:** cierre de 16H (fix de alias) y hallazgo de `LECCIONES.md:217` (youtube-transcripts)
 **Alcance:** 7 repositorios, 3 convenciones de nombres coexistiendo
 
@@ -513,10 +513,10 @@ nombres de tool invocables.
 |---|---|---|
 | **0. Verificación empírica** | Determinar el nombre canónico | **COMPLETADA** (§2) |
 | **1. Documentar** | Este doc + 16J + §8 de ANALISIS_FALLOS | **COMPLETADA** |
-| **2. `mcp_client.py`** | Quitar el alias dual. Un solo nombre por tool. 16 → 10 tools | **DISEÑADA** (§8.2) |
+| **2. `mcp_client.py`** | Quitar el alias dual. Un solo nombre por tool. 16 → 10 tools | **COMPLETADA** (§8.2) |
 | **3. Unificar `.ai/`** | 6 repos, ~153 ocurrencias, 3 formas | **COMPLETADA** (§7A.9) |
-| **4. Código de tests** | Ver nota 8.3 | **DISEÑADA** (§8.3) |
-| **5. Verificar** | Unit tests. Re-run `--only D1,D2,D3`. Suite completa si cambia `test-ai-config` | Pendiente |
+| **4. Código de tests** | Ver nota 8.3 | **COMPLETADA** (§8.3) |
+| **5. Verificar** | Unit tests. Re-run `--only D1,D2,D3`. Suite completa si cambia `test-ai-config` | **PARCIAL** (§8.5.1) |
 
 **La Fase 0 confirmó que no hace falta tocar el bridge ni ningún `opencode.json`.** El trabajo
 restante es el ajuste del harness de tests (Fases 2, 4 y 5).
@@ -542,7 +542,7 @@ Documentación del diagnóstico en 3 archivos de este repo:
 Decisiones del usuario: **no** crear `docs/LECCIONES.md`; **no** tocar
 `brain-ai-01/CHANGELOG.md`; **no** corregir los `docs/` históricos de los otros repos.
 
-### 8.2 Fase 2 — diseño cerrado (pendiente de implementar)
+### 8.2 Fase 2 — implementada y verificada (28/09 22:30)
 
 **Objetivo:** que el canal API (`GroqRunner`) publique el mismo nombre que OpenCode, para que el
 system prompt (`.ai/`, ahora con `brain-ai_*`) coincida con la lista de tools.
@@ -623,16 +623,40 @@ ese path de error explícito.
    entera habría fallado. Confirmar con 1 llamada (`--only D2`).
 2. **Regresión D2** si se olvida el prompt → se cambia en el mismo commit.
 
-### 8.3 Fase 4 — diseño cerrado
+#### Ejecución 28/09 22:30 — qué quedó implementado
 
-| Archivo | Línea | Qué asume | Acción |
-|---|---|---|---|
-| `tests/lib/opencode_events.py` | 15-17 | `MEMORY_TOOL_NAMES` con ambas variantes | Sin cambio (normaliza) |
-| `tests/lib/advanced_validators.py` | 364 | `_norm_tool_name` normaliza guion/underscore | Sin cambio (normaliza) |
-| `tests/scripts/test_tool_use_failed.py` | 153-155, 167-176 | Fixtures y assert de 3 nombres | Cambiar a 1 nombre |
-| `tests/test_opencode_events.py` | 61, 68, 74 | Fixtures NDJSON | Sin cambio |
-| `tests/questions/advanced_questions.json` | 147 | Prompt D2 con `brain_ai_memory_save` | Cambiar a `brain-ai_` |
-| `tests/questions/advanced_questions.json` | 136, 149, 164 | `expected_tool` con underscore | Cambiar a `brain-ai_` |
+| Archivo | Cambio real |
+|---|---|
+| `tests/lib/mcp_client.py` | `MEMORY_ALIAS_PREFIXES` eliminado. `discover_server_name()` + `_server_name_from_config()` + `DEFAULT_SERVER_NAME="brain-ai"`. `mcp_tools_to_openai(mcp_tools, server_name=None)` publica **una** tool por nombre real |
+| `tests/questions/advanced_questions.json` | 8 ocurrencias `brain_ai_` → `brain-ai_`: prompt D2 (147), `expected_tool` de D1/D2/D3 (136, 149, 164) y los textos de `expected_behavior`/`description` que nombraban la tool |
+| `tests/lib/model_runner.py` | Comentarios de L49 y L426-429: el fix ya no son "los alias" sino el nombre único |
+| `tests/lib/advanced_validators.py` | Solo el docstring de `_norm_tool_name` (el código normaliza igual; ya no hay 3 grafías, hay 2) |
+| `tests/scripts/test_tool_use_failed.py` | Fixtures y asserts a 1 nombre; `TestAliasToolsMemoria` → `TestNombreUnicoPorTool` (5 tests) + `TestDiscoverServerName` (6 tests) |
+
+**Decisión de diseño aplicada:** `discover_server_name()` acepta `test_project`/`project_root`
+opcionales. Los tests unitarios pasan rutas de un tmpdir y no dependen del filesystem del
+proyecto; el runner real llama sin argumentos.
+
+**Conteo verificado en runtime:** las 10 tools del bridge se publican como
+`brain-ai_memory_search`, `brain-ai_memory_save`, `brain-ai_memory_consolidate`,
+`brain-ai_resolver_referencia`, `brain-ai_describir_handle`, `brain-ai_ejecutar_accion`,
+`brain-ai_run_tests`, `brain-ai_test_status`, `brain-ai_run_command`,
+`brain-ai_command_status` — las mismas del log de OpenCode (§2.2). 16 publicadas → **10**.
+
+**Riesgo 1 resuelto:** Groq acepta el guion. Con 3 corridas de `--only D2` no apareció ni un
+`400 tool_use_failed`; las 2 que pasaron muestran `tool_calls=[brain-ai_memory_save]`
+ejecutada vía MCP (`success: true`, `memory_used: true`).
+
+### 8.3 Fase 4 — implementada junto a la Fase 2
+
+| Archivo | Línea | Qué asumía | Acción | Estado |
+|---|---|---|---|---|
+| `tests/lib/opencode_events.py` | 15-17 | `MEMORY_TOOL_NAMES` con ambas variantes | Sin cambio (normaliza) | Igual |
+| `tests/lib/advanced_validators.py` | 364 | `_norm_tool_name` normaliza guion/underscore | Sin cambio de código | Docstring actualizado |
+| `tests/scripts/test_tool_use_failed.py` | 153-155, 167-176 | Fixtures y assert de 3 nombres | Cambiar a 1 nombre | **Hecho** |
+| `tests/test_opencode_events.py` | 61, 68, 74 | Fixtures NDJSON | Sin cambio | Igual (11/11) |
+| `tests/questions/advanced_questions.json` | 147 | Prompt D2 con `brain_ai_memory_save` | Cambiar a `brain-ai_` | **Hecho** |
+| `tests/questions/advanced_questions.json` | 136, 149, 164 | `expected_tool` con underscore | Cambiar a `brain-ai_` | **Hecho** |
 
 Nota: `opencode_events.memory_used` normaliza guion a underscore en línea 61 porque el fixture
 histórico mezclaba variantes. Se conserva: el NDJSON puede venir de versiones distintas de OpenCode.
@@ -644,6 +668,98 @@ evalúan si el modelo usa memoria; si el prompt cambia, los resultados anteriore
 comparables y hay que re-correr la suite completa.
 
 ### 8.5 Estado de la sesión (28/09/2026) y handoff
+
+#### 8.5.1 Segunda sesión (22:30) — Fases 2, 4 y 5 parcial
+
+**Cerrado y verificado:** Fases 0, 1, 2, 3 y 4.
+
+| Verificación de Fase 5 | Resultado |
+|---|---|
+| `test_tool_use_failed.py` | **18/18** (era 10/10): 5 de nombre único + 6 de `discover_server_name` + 7 de 16H |
+| `test_validators.py` | 64/64 |
+| `test_opencode_events.py` (pytest) | 11/11 |
+| `test_token_cap.py` | 4/4 |
+| `test_rate_limit_tpd.py` | 38/38 |
+| `test_suite_timeouts.py` | 5/5 |
+| `test_report_merge.py` | 9/9 |
+| Live `--only D2` (gpt-oss, API) | 3 corridas: 2 PASS con `tool_calls=[brain-ai_memory_save]`, 1 FAIL por truncamiento (§8.5.2). **0 errores 400** |
+| Live `--only D1,D2,D3` (big-pickle, nativo) | **3/3 PASS** con `brain-ai_memory_search` / `brain-ai_memory_save` |
+| Live `--only D1,D2,D3` (gpt-oss, API) 22:51 | D1 **PASS** (`brain-ai_memory_search`), D2 **PASS** (`brain-ai_memory_save`), D3 **TIMEOUT por el tope de 16C** (18893 ≥ 15000) con 4 llamadas a `brain-ai_memory_search` y `memory_used: true` |
+| Suite completa | **PENDIENTE** (D3/16G) |
+
+**Cuota usada en esta sesión:** ~19k tokens de la cuenta 1 en las 3 corridas de D2 + el sondeo,
+y ~37k en el `--only D1,D2,D3` final (9163 + 8845 + 18893). **Ningún 429**, ningún
+`BLOCKED_TPD`. La cuenta 2 (qwen) no se tocó.
+
+**Sobre el TIMEOUT de D3 en gpt-oss:** no es regresión de la Fase 2. Es el tope de tokens por
+test de la tarea 16C (`MAX_TOKENS_PER_TEST = 15000`) y es exactamente el mismo cuadro que la
+corrida de la mañana del 28/09 (`18501 >= 15000`, round 4). La diferencia es que ahora se ve
+que la tool **sí** se ejecuta 4 veces: el nombre correcto no es lo que frena a D3, es el
+presupuesto de tokens. Las entradas de D1/D3 que quedaban viejas (14:50, con
+`tool_calls=[memory_search]` sin prefijo) quedaron refrescadas a las 22:51.
+
+**Cambio en el reporte:** `tests/answers/advanced_validation_report.json` — D1 y D2 de gpt-oss
+en PASS con nombres prefixados, D3 en TIMEOUT, D1/D2/D3 de big-pickle en PASS. El commit
+anterior (`b05cdf7`) conserva el estado viejo (`brain_ai_memory_save`, D1/D3 sin prefijo).
+
+**Nada commiteado ni pusheado al momento de escribir esta sección.** Los cambios de código y
+docs están en el worktree.
+
+#### 8.5.2 Hallazgo nuevo: el tope de 800 tokens trunca el tool call de gpt-oss
+
+La 1 de las 3 corridas de `--only D2` dio **FAIL** (`Tool brain-ai_memory_save no ejecutada`,
+4.9s, 4805 tokens) — sin 400 y con `mcp_available: true`. **No es un problema de nombres:**
+
+| Evidencia | Dato |
+|---|---|
+| `response_full` termina en | ```` ```commentary to=functions.brain-ai_memory_save <|constrain|>json<|message|>{...} ```` **sin** el token de cierre `<|call|>` |
+| Tokens | 4805 ≈ 4k de input + ~800 de salida = `PLAIN_ROUND_MAX_TOKENS` (tarea 16H) |
+| Comportamiento del runner | `model_runner.py:487` — si no hay `tool_calls`, devuelve el texto como respuesta final |
+| Corridas 2 y 3 | PASS, respuesta de 734 chars y tool call completa |
+
+Es decir: gpt-oss escribió la llamada MCP **dentro del texto** (canal harmony) y la generación
+se cortó antes del token que la cierra. Groq la devuelve como `content`, no como tool call, y el
+validador la cuenta como "no ejecutada".
+
+**Lo que NO se sabe:** el `finish_reason` exacto. El runner API **no lo registra** (16C lo
+agregó solo para el test de estructura, `test_ai_structure.py`). Sin ese dato no se puede
+distinguir truncamiento de un modelo que elige no llamar la tool.
+
+**Candidatos a fix (NO implementados — fuera del alcance de este plan):**
+
+1. Registrar `finish_reason` en el resultado de `GroqRunner` (diagnóstico primero, como en 16C).
+2. Si `finish_reason == "length"`, reintentar el round con `TOOL_USE_FAILED_RETRY_MAX_TOKENS`,
+   igual que el path de `tool_use_failed`.
+3. Subir `PLAIN_ROUND_MAX_TOKENS` para rounds con tools.
+
+El mismo phenomenon ya había aparecido como "D3 tope 16C" en la corrida de la mañana del
+28/09, así que no es nuevo; lo nuevo es que ahora se puede atribuir a la truncación y no al
+nombre de la tool.
+
+#### 8.5.3 Por qué la suite completa no se lanzó el 28/09
+
+El sondeo (`quota_probe.py`, 22:31) dice `OK` en ambas cuentas, pero **no mide el TPD**: los
+únicos headers que devuelve Groq son por minuto (`limit-tokens: 8000/min`,
+`limit-requests: 1000/min`) y en `quota_status.json` los campos diarios quedan `used: null`,
+`limit: null`. El único dato fidedigno del presupuesto diario es el 429 o la consola de Groq.
+
+| Dato | Valor | Fuente |
+|---|---|---|
+| TPD por cuenta | 200k tokens/día | `docs/PLAN_TPD_429.md:40` |
+| Avanzada completa, gpt-oss | 122k tokens (23 casos) | reporte actual |
+| Avanzada completa, qwen | 191k tokens (23 casos) | reporte actual |
+| 25/09: ambas cuentas al tope | 199181/200000 y 199320/200000 | `RESULTADOS_TEST_AI.md:214-215` |
+| 28/09 12:34: cuenta 1 completa | sin 429, 23/23 | `RESULTADOS_TEST_AI.md:216` |
+| Gasto de esta sesión, cuenta 1 | ~56k (19k + 37k), sin 429 | reporte |
+
+Con el margen indeterminado, se opted por cerrar la Fase 5 con corridas dirigidas
+(`--only D2`, `--only D1,D2,D3`) y dejar la suite completa para un día con presupuesto dedicado.
+`suite_runner.py` no acepta flags: es todo-o-nada, así que no hay corrida parcial por modelo.
+
+El riesgo de correrla igual está acotado: `run_all_tests` salta las cuentas `BLOCKED_TPD`, las
+marca en el summary y sigue con los nativos (que no gastan cuota Groq), saliendo con exit 7.
+
+#### 8.5.4 Estado anterior (sesión de la noche, 21:00)
 
 **Cerrado y verificado:** Fases 0, 1 y 3. Nada de esto hay que re-investigar.
 
@@ -663,39 +779,38 @@ comparables y hay que re-correr la suite completa.
 **Memoria:** episodios `ep_7ab6c3cc0308414faf502ca227ba45b0` (diagnóstico + Fase 3) y
 `ep_d92dc63846d54e9f98ab5566c2b2537b` (handoff Fase 2).
 
-**Pendiente, en orden:**
+**Pendiente, en orden (actualizado 22:40):**
 
-1. **Fase 2** — implementar según §8.2 (no está hecha; solo diseñada).
-   - `mcp_client.py`: `discover_server_name()` + prefijo único.
-   - `advanced_questions.json:147`: prompt D2 → `brain-ai_memory_save`.
-   - `advanced_questions.json:136,149,164`: `expected_tool` → `brain-ai_*`.
-   - `model_runner.py:49,426-429`: comentarios.
-   - `test_tool_use_failed.py`: fixtures y assert.
-2. **Fase 4** — ver §8.3 (la mayor parte se resuelve junto a la Fase 2).
-3. **Fase 5** — verificación (abajo).
+1. ~~**Fase 2**~~ — **HECHA** 22:30, ver §8.2.
+2. ~~**Fase 4**~~ — **HECHA** 22:30, ver §8.3.
+3. **Fase 5** — **parcial**: unit + D2 API + D1-D3 nativo verificados. Falta la suite completa.
 4. **D3 / 16G** — re-correr la suite completa con cuota fresca. Cierra también 16G y regenera
    `suite_verification.json`.
 5. **16I** — sigue abierto, independiente de este plan: `test_ai_structure.py --only-failures`
    destruye el bloque del modelo en el reporte.
+6. **16K (nuevo, propuesto)** — registrar `finish_reason` en `GroqRunner` y decidir el retry
+   ante truncamiento (§8.5.2). No se implementó sin acuerdo.
 
 **Prompt sugerido para retomar:**
 
-> Continuamos con la Fase 2 del plan `docs/PLAN_CONVENCION_TOOLS_MCP.md` (§8.2). El contexto está
-> en ese documento, `docs/TAREAS_PENDIENTES.md` ítem 16J y `docs/tests/ANALISIS_FALLOS_20260926.md`
-> §8. Implementar el diseño de §8.2, verificar con unit tests + `--only D2`, y no pushear sin pedirlo.
+> Cerramos las Fases 2, 4 y 5 parcial de `docs/PLAN_CONVENCION_TOOLS_MCP.md`. Sigue pendiente la
+> suite completa (cierra D3/16G) y 16I. Antes hay que decidir si se commitea el trabajo del
+> worktree: 5 archivos de `tests/` + 3 de `docs/`, sin pushear.
 
-#### Verificación de Fase 5 (plan)
+#### Verificación de Fase 5 (resultado)
 
-1. **Unit tests offline:**
-   `python tests/scripts/test_tool_use_failed.py`,
-   `python tests/scripts/test_validators.py`,
-   `python tests/test_opencode_events.py`,
-   `python tests/scripts/test_token_cap.py`.
-2. **Live `--only D2`** con gpt-oss (canal API): confirmar `tool_calls=[brain-ai_memory_save]` y
-   ausencia del 400.
-3. **Live `--only D1,D2,D3`** con un modelo nativo (big-pickle): confirmar que no se rompió el
-   canal nativo.
-4. **Suite completa** con cuota fresca: cierra D3/16G.
+1. **Unit tests offline:** `python tests/scripts/test_tool_use_failed.py` (18/18),
+   `python tests/scripts/test_validators.py` (64/64), `python -m pytest tests/test_opencode_events.py`
+   (11/11), `python tests/scripts/test_token_cap.py` (4/4). Extra: `test_rate_limit_tpd.py` 38/38,
+   `test_suite_timeouts.py` 5/5, `test_report_merge.py` 9/9.
+2. **Live `--only D2`** con gpt-oss (canal API): `tool_calls=[brain-ai_memory_save]` ejecutado vía
+   MCP en 2 de 3 corridas, sin 400. La tercera falló por truncamiento del round (§8.5.2).
+3. **Live `--only D1,D2,D3`** con big-pickle (nativo): 3/3 PASS, canal nativo intacto.
+4. **Live `--only D1,D2,D3`** con gpt-oss (API, 22:51): D1 PASS, D2 PASS, D3 TIMEOUT por 16C
+   (mismo cuadro que la corrida de la mañana, con las tools ejecutándose bien).
+5. **Suite completa** con cuota fresca: **PENDIENTE**, cierra D3/16G. No se lanzó hoy a
+   propósito: el TPD es 200k/cuenta y una pasada completa de la avanzada son 122k (gpt-oss) /
+   191k (qwen) — el 25/09 ambas cuentas llegaron a 199k el mismo día (§8.5.4).
 
 #### Datos para no re-investigar
 
@@ -723,9 +838,10 @@ comparables y hay que re-correr la suite completa.
 | **D6** | Eliminar `brain_ai_*` de la documentación | **APLICADA** — 0 residuales |
 | **D7** | Comandos slash inexistentes | **APLICADA** — B2, borrados y reemplazados por tabla de tools |
 | **D8** | `portfolio-02` y `test-ai-config` sin git | **CERRADA** — son proyectos locales de prueba; se dejan en disco, sin versionar |
-| **D9** | Fase 2: leer server name de `opencode.json` | **CERRADA** — fallback `brain-ai` (§8.2) |
-| **D10** | Fase 2: cambiar el prompt de D2 | **CERRADA** — es el único prompt que nombra una tool (§8.2) |
-| **D11** | Fase 2: `expected_tool` de D1-D3 a `brain-ai_*` | **CERRADA** — consistencia total con los `.ai/` |
+| **D9** | Fase 2: leer server name de `opencode.json` | **APLICADA** — `discover_server_name()` con fallback `brain-ai` (§8.2) |
+| **D10** | Fase 2: cambiar el prompt de D2 | **APLICADA** — `advanced_questions.json:147`; sin él volvía el 400 |
+| **D11** | Fase 2: `expected_tool` de D1-D3 a `brain-ai_*` | **APLICADA** — 8 ocurrencias, con `expected_behavior` y `description` |
+| **D12** | No tocar `_norm_tool_name` ni `MEMORY_TOOL_NAMES` | **APLICADA** — solo se actualizó el docstring que describía 3 grafías |
 
 ### 9.1 Decisiones ya tomadas que no están en debate
 

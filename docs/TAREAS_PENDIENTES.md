@@ -1,9 +1,11 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 28/09/2026 (noche) — tareas 1-16 cerradas salvo 16I
-(merge de estructura) y 16J (convencion de nombres de tools MCP: Fases 0, 1 y 3
-cerradas; Fase 2 disenada y pendiente de implementar), mas la verificacion
-end-to-end de 16G (proxima suite con cuota fresca). El fix de 16H quedo como
-parche: la causa raiz se documento en 16J con plan
+Ultima actualizacion: 28/09/2026 22:40 — tareas 1-16 cerradas salvo 16I
+(merge de estructura) y 16K (nuevo: `finish_reason` en GroqRunner, propuesto
+sin implementar). 16J (convencion de nombres de tools MCP) tiene las 5 fases
+cerradas: Fases 0, 1, 3, 2 y 4 ejecutadas, Fase 5 verificada en parte (unit +
+`--only D2` API + `--only D1,D2,D3` nativo). Sigue pendiente la verificacion
+end-to-end de 16G (suite completa con cuota fresca) y D3. El fix de 16H quedo
+como parche: la causa raiz se documento en 16J con plan
 `docs/PLAN_CONVENCION_TOOLS_MCP.md`. Suite post-fix 28/09: plan
 `docs/PLAN_SUITE_POSTFIX_20260926.md` 4/4, sesion `docs/tests/sesion_20260928.md`.
 Tareas 1-15 completadas el 25/09 (plan `docs/PLAN_SUITE_COMPLETA_20260926.md`,
@@ -416,6 +418,53 @@ ERROR (tool loop, 2 intentos).
       (4) B2: 10 comandos slash inventados borrados en este repo y
       `portfolio-02`, reemplazados por la tabla real de las 10 tools.
       Detalle en `PLAN_CONVENCION_TOOLS_MCP.md` §7A.9.
+      **Fases 2 y 4 EJECUTADAS 28/09 22:30** (sin commit, sin push):
+      `mcp_client.py` ahora tiene `discover_server_name()` (lee la clave del
+      server de `opencode.json`, fallback `brain-ai`) y
+      `mcp_tools_to_openai(mcp_tools, server_name=None)` publica **una** tool
+      por nombre real: 16 publicadas -> **10**, exactamente las del log
+      (`brain-ai_memory_search` ... `brain-ai_command_status`). Se elimino
+      `MEMORY_ALIAS_PREFIXES`. `advanced_questions.json`: 8 ocurrencias
+      `brain_ai_` -> `brain-ai_` (prompt D2 L147 — sin esto volvia el 400 —
+      `expected_tool` de D1/D2/D3 y los textos de `expected_behavior`/
+      `description`). Comentarios de `model_runner.py:49,426-429` actualizados
+      (el fix ya no son "los alias"). `test_tool_use_failed.py`: fixtures y
+      asserts a 1 nombre; `TestAliasToolsMemoria` -> `TestNombreUnicoPorTool`
+      (5 tests) + `TestDiscoverServerName` (6 tests). Solo se toco el
+      docstring de `_norm_tool_name`; `MEMORY_TOOL_NAMES` y
+      `test_ai_structure.py` intactos, como estaba previsto.
+      **Fase 5 PARCIAL, verificada:** unit `test_tool_use_failed.py` **18/18**
+      (era 10/10), `test_validators.py` 64/64, `test_opencode_events.py` 11/11,
+      `test_token_cap.py` 4/4, `test_rate_limit_tpd.py` 38/38,
+      `test_suite_timeouts.py` 5/5, `test_report_merge.py` 9/9. Live
+      `--only D2` (gpt-oss/API): 3 corridas, **2 PASS** con
+      `tool_calls=[brain-ai_memory_save]` ejecutada via MCP y **0 errores 400**
+      — eso confirma el riesgo 1 del §8.2 (Groq acepta guion en `name`).
+      Live `--only D1,D2,D3` (big-pickle/nativo): **3/3 PASS**, canal nativo
+      intacto. Live `--only D1,D2,D3` (gpt-oss/API, 22:51): D1 **PASS**
+      (`brain-ai_memory_search`), D2 **PASS** (`brain-ai_memory_save`), D3
+      **TIMEOUT por el tope de 16C** (18893 >= 15000) pero con 4 llamadas
+      ejecutadas y `memory_used: true` — mismo cuadro que la corrida de la
+      manana del 28/09, o sea que el nombre no es lo que frena a D3.
+      Cuota usada: ~56k tokens de la cuenta 1, sin 429 ni BLOCKED_TPD.
+      Detalle en `PLAN_CONVENCION_TOOLS_MCP.md` §8.5.1. **Falta la suite
+      completa** (cierra D3 y 16G): no se lanzo hoy a proposito porque el TPD
+      es 200k/cuenta y la avanzada completa son 122k (gpt-oss) / 191k (qwen);
+      el 25/09 ambas cuentas llegaron a 199k el mismo dia (§8.5.4).
+- [ ] 16K. `GroqRunner` no registra `finish_reason`: una tool call truncada se
+      pierde en silencio (nuevo, 28/09 22:35). 1 de 3 corridas de `--only D2`
+      dio FAIL sin 400 porque gpt-oss escribio la llamada
+      `commentary to=functions.brain-ai_memory_save <|constrain|>json<|message|>{...}`
+      en el **texto** y la generacion se corto antes del token `<|call|>` de
+      cierre (4805 tokens ~ 800 de salida = `PLAIN_ROUND_MAX_TOKENS`). Groq lo
+      devuelve como `content`, el runner lo toma como respuesta final
+      (`model_runner.py:487`) y el validador cuenta "tool no ejecutada". Mismo
+      phenomenon que el "D3 tope 16C" de la manana del 28/09, pero antes no se
+      podia separar del problema de nombres. Fixes candidatos: (1) registrar
+      `finish_reason` (diagnostico, como en 16C); (2) reintentar el round con
+      techo mayor si `finish_reason == "length"`; (3) subir
+      `PLAIN_ROUND_MAX_TOKENS` en rounds con tools. **No implementado:** requiere
+      acuerdo.
 - [x] Re-runs con cuota fresca (26/09, commit 94dd6cb) — evidencia sólida:
       gpt-oss C2 FAIL conductual (1994 chars, no declina), D2 FAIL (1268 chars,
       sin memory_save), T4 FAIL (2109 chars, sin keyword `qa`); qwen D8 ERROR

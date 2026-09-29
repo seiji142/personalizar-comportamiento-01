@@ -9,21 +9,32 @@ Causa raiz (reproducida 28/09 14:42): el bridge MCP expone memory_* pero
 los .ai/ le piden al modelo brain_ai_memory_* / brain-ai_memory_*. Groq
 rechaza el tool call cuando el modelo obedece el prompt.
 
+Tarea 16J: el fix definitivo no son alias, es publicar cada tool con el
+nombre que OpenCode registra (<server_name>_<tool_name>), leido de
+opencode.json. Ver mcp_client.discover_server_name.
+
 Comportamiento esperado:
-- mcp_tools_to_openai publica alias brain_ai_/brain-ai_ de cada tool de
-  memoria, todos apuntando al mismo tool MCP,
+- mcp_tools_to_openai publica una tool por nombre real (brain-ai_memory_save
+  -> memory_save en el bridge), sin duplicados,
 - el round usa el techo historico de 800,
 - "not in request.tools" -> error explicito con el nombre intentado, sin
   reintento inutil,
 - otro tool_use_failed -> un reintento con mas techo,
 - el fallback "modelo sin tools" sigue intacto.
 
+Los fixtures del 400 conservan el nombre con underscore a proposito: es lo
+que llamaria un modelo que copio la documentacion vieja, y ese es
+exactamente el escenario que debe reportar error explicito.
+
 Todo con fakes (sin API ni MCP). Ejecutar:
   python tests/scripts/test_tool_use_failed.py -v
 """
 
+import json
 import os
+import shutil
 import sys
+import tempfile
 import types
 import unittest
 
@@ -115,7 +126,11 @@ from model_runner import (  # noqa: E402
     _is_tool_use_failed,
     _tool_not_in_request,
 )
-from mcp_client import mcp_tools_to_openai  # noqa: E402
+from mcp_client import (  # noqa: E402
+    DEFAULT_SERVER_NAME,
+    discover_server_name,
+    mcp_tools_to_openai,
+)
 
 # Error 400 real del reporte 28/09. openai arma el mensaje como
 # "Error code: 400 - " + str(dict): se construye igual para que
@@ -151,8 +166,8 @@ def _make_runner(script, **kwargs):
     r._ensure_mcp = lambda: True
     r.mcp_available = True
     r.tools = [{"type": "function",
-                "function": {"name": "brain_ai_memory_save"}}]
-    r.name_map = {"brain_ai_memory_save": "memory_save"}
+                "function": {"name": "brain-ai_memory_save"}}]
+    r.name_map = {"brain-ai_memory_save": "memory_save"}
     r.mcp = FakeMCP()
     return r
 
@@ -161,36 +176,111 @@ def _calls():
     return FakeOpenAI.last_instance.chat.completions.calls
 
 
-class TestAliasToolsMemoria(unittest.TestCase):
-    """16H: alias brain_ai_/brain-ai_ para que el prompt y Groq coincidan."""
+class TestNombreUnicoPorTool(unittest.TestCase):
+    """16J: cada tool se publica con el nombre que OpenCode registra."""
 
-    def test_memory_save_se_publica_con_los_tres_nombres(self):
-        tools, name_map = mcp_tools_to_openai([
-            {"name": "memory_save", "description": "d",
-             "inputSchema": {"type": "object"}},
-        ])
-        names = [t["function"]["name"] for t in tools]
-        self.assertEqual(names, ["memory_save", "brain_ai_memory_save",
-                                 "brain-ai_memory_save"])
-        for alias in names:
-            self.assertEqual(name_map[alias], "memory_save")
+    MEMORY_SAVE = {"name": "memory_save", "description": "d",
+                   "inputSchema": {"type": "object"}}
 
-    def test_tools_sin_prefijo_memory_no_se_duplican(self):
-        tools, name_map = mcp_tools_to_openai([
-            {"name": "run_command", "description": "",
-             "inputSchema": {"type": "object"}},
-        ])
-        self.assertEqual(len(tools), 1)
-        self.assertEqual(list(name_map), ["run_command"])
+    def test_memory_save_se_publica_una_sola_vez_con_el_prefijo(self):
+        tools, name_map = mcp_tools_to_openai([self.MEMORY_SAVE],
+                                              server_name="brain-ai")
+        self.assertEqual([t["function"]["name"] for t in tools],
+                         ["brain-ai_memory_save"])
+        self.assertEqual(name_map, {"brain-ai_memory_save": "memory_save"})
 
-    def test_alias_conserva_descripcion_y_schema(self):
-        tools, _ = mcp_tools_to_openai([
-            {"name": "memory_search", "description": "busca",
-             "inputSchema": {"type": "object", "properties": {"q": {}}}},
-        ])
+    def test_todas_las_tools_se_prefijan_no_solo_las_de_memoria(self):
+        tools, name_map = mcp_tools_to_openai(
+            [self.MEMORY_SAVE,
+             {"name": "run_command", "description": "",
+              "inputSchema": {"type": "object"}},
+             {"name": "test_status", "description": "",
+              "inputSchema": {"type": "object"}}],
+            server_name="brain-ai")
+        self.assertEqual([t["function"]["name"] for t in tools],
+                         ["brain-ai_memory_save", "brain-ai_run_command",
+                          "brain-ai_test_status"])
+        self.assertEqual(name_map["brain-ai_run_command"], "run_command")
+        self.assertEqual(len(name_map), 3, "sin alias duplicados")
+
+    def test_server_name_explicito_cambia_el_prefijo(self):
+        tools, _ = mcp_tools_to_openai([self.MEMORY_SAVE],
+                                       server_name="otro-server")
+        self.assertEqual([t["function"]["name"] for t in tools],
+                         ["otro-server_memory_save"])
+
+    def test_nombre_registrado_por_el_servidor_se_conserva(self):
+        tools, _ = mcp_tools_to_openai(
+            [{"name": "resolver_referencia", "description": "d",
+              "inputSchema": {"type": "object"}}],
+            server_name="brain-ai")
+        self.assertEqual([t["function"]["name"] for t in tools],
+                         ["brain-ai_resolver_referencia"])
+
+    def test_conserva_descripcion_y_schema(self):
+        tools, _ = mcp_tools_to_openai(
+            [{"name": "memory_search", "description": "busca",
+              "inputSchema": {"type": "object", "properties": {"q": {}}}}],
+            server_name="brain-ai")
         for tool in tools:
             self.assertEqual(tool["function"]["description"], "busca")
             self.assertIn("properties", tool["function"]["parameters"])
+
+
+class TestDiscoverServerName(unittest.TestCase):
+    """16J: el server name sale de opencode.json, no esta hardcodeado."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+
+    def _write(self, root, config):
+        os.makedirs(root, exist_ok=True)
+        with open(os.path.join(root, "opencode.json"), "w",
+                  encoding="utf-8") as fh:
+            json.dump(config, fh)
+        return root
+
+    def test_lee_el_server_que_apunta_al_bridge(self):
+        root = self._write(self.tmp, {"mcp": {
+            "git_publisher": {"command": ["python", "git_tool.py"]},
+            "brain-ai": {"command": ["python", "brain-ai-01/mcp_bridge.py"]},
+        }})
+        self.assertEqual(discover_server_name(root, root), "brain-ai")
+
+    def test_el_test_project_tiene_prioridad_sobre_el_project_root(self):
+        test_project = self._write(os.path.join(self.tmp, "test"), {"mcp": {
+            "brain-ai": {"command": ["python", "mcp_bridge.py"]}}})
+        project_root = self._write(os.path.join(self.tmp, "root"), {"mcp": {
+            "otro": {"command": ["python", "mcp_bridge.py"]}}})
+        self.assertEqual(discover_server_name(test_project, project_root),
+                         "brain-ai")
+
+    def test_fallback_si_no_hay_config(self):
+        vacio = os.path.join(self.tmp, "vacio")
+        os.makedirs(vacio)
+        self.assertEqual(discover_server_name(vacio, vacio),
+                         DEFAULT_SERVER_NAME)
+
+    def test_config_invalido_o_sin_seccion_mcp_no_revienta(self):
+        for config in ("{no es json", {"model": "x"}, {"mcp": {}},
+                       {"mcp": {"a": {"command": ["otro.py"]},
+                                "b": {"command": ["otro2.py"]}}}):
+            root = os.path.join(self.tmp, f"caso{abs(hash(str(config)))}")
+            os.makedirs(root, exist_ok=True)
+            with open(os.path.join(root, "opencode.json"), "w",
+                      encoding="utf-8") as fh:
+                fh.write(config if isinstance(config, str) else json.dumps(config))
+            self.assertEqual(discover_server_name(root, root),
+                             DEFAULT_SERVER_NAME, config)
+
+    def test_un_solo_server_se_acepta_sin_reconocer_el_bridge(self):
+        root = self._write(os.path.join(self.tmp, "solo"), {"mcp": {
+            "memoria": {"command": ["python", "otro_servidor.py"]}}})
+        self.assertEqual(discover_server_name(root, root), "memoria")
+
+    def test_el_proyecto_real_declara_brain_ai(self):
+        self.assertEqual(discover_server_name(), "brain-ai")
 
 
 class TestToolUseFailed(unittest.TestCase):
@@ -210,7 +300,7 @@ class TestToolUseFailed(unittest.TestCase):
     def test_tool_use_failed_generico_reintenta_con_mas_techo(self):
         r = _make_runner([
             ("raise", TRUNCATED_400),
-            ("tool", ["brain_ai_memory_save"]),
+            ("tool", ["brain-ai_memory_save"]),
             ("text", "Decision guardada."),
         ])
         res = r._execute_query("implementa y guarda")

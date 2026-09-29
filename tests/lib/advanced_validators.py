@@ -364,10 +364,12 @@ def validate_role(reply, test):
 def _norm_tool_name(name):
     """Normaliza nombres de tools MCP para matchear entre runners.
 
-    Tres grafias reales para la misma tool:
-    - expected_tool en questions: brain_ai_memory_search (guion bajo)
-    - OpenCode nativo:            brain-ai_memory_search (guion)
-    - GroqRunner API:             memory_search (sin prefijo)
+    Dos grafias reales para la misma tool (tarea 16J):
+    - expected_tool en questions y OpenCode nativo: brain-ai_memory_search
+    - el nombre interno del bridge MCP:            memory_search
+
+    El guion bajo (brain_ai_) se sigue aceptando: fixtures historicos y
+    documentacion vieja pueden traerla.
     """
     n = (name or "").lower().replace("-", "_")
     if n.startswith("brain_ai_"):

@@ -46,7 +46,7 @@ MAX_TOKENS_PER_TEST = 15000
 # TOOL_USE_FAILED_RETRY_MAX_TOKENS: cubre el caso de `arguments` largos
 # (evidence con codigo). El 400 "not in request.tools" NO se reintenta
 # porque mas techo no lo arregla: ahi el problema es el nombre de la tool
-# (fix de alias en mcp_client.mcp_tools_to_openai).
+# (tarea 16J: mcp_client publica <server_name>_<tool_name>, sin alias).
 PLAIN_ROUND_MAX_TOKENS = 800
 TOOL_USE_FAILED_RETRY_MAX_TOKENS = 4000
 
@@ -423,10 +423,11 @@ class GroqRunner(ModelRunner):
                         # generacion. Quitar las tools aqui empeora: el modelo
                         # vuelve a llamar y Groq responde otro 400.
                         if _tool_not_in_request(error_str):
-                            # Causa raiz 16H: el MCP expone memory_* y los
-                            # .ai/ piden brain_ai_memory_* / brain-ai_memory_*.
-                            # Subir el techo no lo arregla: el fix son los
-                            # alias de mcp_client.mcp_tools_to_openai.
+                            # Causa raiz 16H: el bridge expone memory_* y el
+                            # modelo llama brain-ai_memory_* (tarea 16J).
+                            # Subir el techo no lo arregla: el fix es publicar
+                            # cada tool con su nombre real de OpenCode en
+                            # mcp_client.mcp_tools_to_openai.
                             attempted = _attempted_tool_name(error_str) or "?"
                             sent = ", ".join(sorted(self.name_map))[:300]
                             return {"text": "", "tool_calls": all_tool_calls,
