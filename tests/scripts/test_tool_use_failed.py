@@ -58,15 +58,17 @@ class FakeMessage:
 
 
 class FakeResponse:
-    def __init__(self, tool_names=None, content="done", total_tokens=100):
+    def __init__(self, tool_names=None, content="done", total_tokens=100,
+                 finish_reason="stop"):
         self.choices = [types.SimpleNamespace(
             message=FakeMessage(tool_names, content),
-            finish_reason="stop")]
+            finish_reason=finish_reason)]
         self.usage = types.SimpleNamespace(total_tokens=total_tokens)
 
 
 class ScriptedCompletions:
-    """Pasos: ("raise", msg) | ("tool", [names]) | ("text", content)."""
+    """Pasos: ("raise", msg) | ("tool", [names]) | ("text", content)
+    | ("text-length", content): texto cortado por max_tokens (16K)."""
 
     def __init__(self, script):
         self.script = list(script)
@@ -81,6 +83,8 @@ class ScriptedCompletions:
             raise Exception(step[1])
         if step[0] == "tool":
             return FakeResponse(step[1], "")
+        if step[0] == "text-length":
+            return FakeResponse(None, step[1], finish_reason="length")
         return FakeResponse(None, step[1])
 
 
@@ -124,6 +128,7 @@ from model_runner import (  # noqa: E402
     _attempted_tool_name,
     _failed_generation_len,
     _is_tool_use_failed,
+    _looks_like_partial_tool_call,
     _tool_not_in_request,
 )
 from mcp_client import (  # noqa: E402
@@ -343,6 +348,62 @@ class TestToolUseFailed(unittest.TestCase):
                          len(FAILED_GENERATION))
         self.assertEqual(_attempted_tool_name(NO_TOOLS_400), "")
         self.assertEqual(_failed_generation_len(NO_TOOLS_400), -1)
+
+
+PARTIAL_CALL = ('commentary to=functions.brain-ai_memory_save '
+                '<|constrain|>json<|message|>{"project": "test-ai-config"')
+
+
+class TestTruncadoSilencioso16K(unittest.TestCase):
+    """16K: finish_reason=length con tool call parcial no pasa en silencio."""
+
+    def test_detecta_llamada_parcial(self):
+        self.assertTrue(_looks_like_partial_tool_call(PARTIAL_CALL))
+        self.assertTrue(_looks_like_partial_tool_call(
+            "texto <|constrain|>json sin cierre"))
+        self.assertFalse(_looks_like_partial_tool_call("respuesta normal"))
+        self.assertFalse(_looks_like_partial_tool_call(
+            "to=functions.x <|call|>cerrado"))
+        self.assertFalse(_looks_like_partial_tool_call(""))
+        self.assertFalse(_looks_like_partial_tool_call(None))
+
+    def test_length_con_parcial_reintenta_con_mas_techo(self):
+        r = _make_runner([
+            ("text-length", PARTIAL_CALL),
+            ("tool", ["brain-ai_memory_save"]),
+            ("text", "Decision guardada."),
+        ])
+        res = r._execute_query("implementa y guarda")
+        self.assertIsNone(res["error"])
+        self.assertEqual(len(res["tool_calls"]), 1)
+        calls = _calls()
+        self.assertEqual(calls[0]["max_tokens"], PLAIN_ROUND_MAX_TOKENS)
+        self.assertEqual(calls[1]["max_tokens"],
+                         TOOL_USE_FAILED_RETRY_MAX_TOKENS)
+        self.assertIn("tools", calls[1])
+
+    def test_length_sin_parcial_no_reintenta(self):
+        r = _make_runner([("text-length", "respuesta larga cortada")])
+        res = r._execute_query("p")
+        self.assertIsNone(res["error"])
+        self.assertEqual(res["text"], "respuesta larga cortada")
+        self.assertEqual(res["finish_reason"], "length")
+        self.assertEqual(len(_calls()), 1, "sin marcador no hay retry")
+
+    def test_stop_normal_registra_finish_reason(self):
+        r = _make_runner([("text", "hola")])
+        res = r._execute_query("p")
+        self.assertEqual(res["finish_reason"], "stop")
+        self.assertEqual(len(_calls()), 1)
+
+    def test_un_solo_reintento_por_truncado(self):
+        r = _make_runner([
+            ("text-length", PARTIAL_CALL),
+            ("text-length", PARTIAL_CALL),
+        ])
+        res = r._execute_query("p")
+        self.assertEqual(len(_calls()), 2, "unico retry")
+        self.assertEqual(res["finish_reason"], "length")
 
 
 if __name__ == "__main__":

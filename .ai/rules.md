@@ -118,6 +118,14 @@ Si una tool MCP no está en el esquema de la sesión:
    el proceso de larga duración no reconecta. La señal de que volvió es
    que la tool aparezca en el esquema, no que el servidor responda al health.
 
+### 8.6 Límite entre proyectos (29/09/2026)
+
+Desde este proyecto está prohibido modificar archivos, procesos o
+servicios de otro proyecto — en especial del proyecto MCP (brain-ai-01).
+Del MCP solo se consumen sus tools. Diagnóstico, código, reinicios y
+commits del otro proyecto se hacen en su propia sesión. Regla espejo
+acordada con brain-ai-01 tras el incidente C1/servidor del 29/09.
+
 ## 9. PROCEDENCIA Y REFERENCIAS
 
 ### 6.5 Referencias no resueltas

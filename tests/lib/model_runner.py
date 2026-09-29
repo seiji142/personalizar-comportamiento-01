@@ -93,6 +93,18 @@ def _failed_generation_len(error_str):
     return len(generation) if generation else -1
 
 
+def _looks_like_partial_tool_call(text):
+    """True si el texto parece una tool call cortada por max_tokens (16K).
+
+    Caso real 28/09: `commentary to=functions.brain-ai_memory_save
+    <|constrain|>json<|message|>{...}` sin el `<|call|>` de cierre
+    (4805 tokens de entrada ~ 800 de salida = PLAIN_ROUND_MAX_TOKENS).
+    """
+    t = text or ""
+    return ("to=functions." in t or "<|constrain|>" in t) \
+        and "<|call|>" not in t
+
+
 def _attempted_tool_name(error_str):
     """Tool que el modelo intento llamar, o '' si no se puede leer.
 
@@ -358,6 +370,7 @@ class GroqRunner(ModelRunner):
         use_tools = bool(mcp_available and self.tools)
         round_max_tokens = PLAIN_ROUND_MAX_TOKENS
         retried_tool_use = False
+        retried_truncated = False
 
         for round_num in range(self.max_tool_rounds):
             # Tope de tokens por test (tarea 16C): abortar loops improductivos
@@ -486,11 +499,27 @@ class GroqRunner(ModelRunner):
             # Si no hay tool_calls, retornar respuesta final
             if not message.tool_calls:
                 text = message.content or ""
+                finish_reason = getattr(response.choices[0],
+                                        "finish_reason", None)
+                # 16K: truncado silencioso. La generacion se corto (length)
+                # dejando una tool call parcial en el texto; sin esto el
+                # validador cuenta "tool no ejecutada" sin evidencia del
+                # corte. Un reintento con mas techo, como en 16H.
+                if (finish_reason == "length"
+                        and not retried_truncated
+                        and _looks_like_partial_tool_call(text)):
+                    retried_truncated = True
+                    round_max_tokens = TOOL_USE_FAILED_RETRY_MAX_TOKENS
+                    print(f"[TRUNCADO] finish_reason=length con posible tool "
+                          f"call parcial ({len(text)} chars): reintento con "
+                          f"max_tokens={round_max_tokens}")
+                    continue
                 tokens_estimated = len(text) // 4
                 return {"text": text,
                         "tool_calls": all_tool_calls,
                         "memory_used": memory_used,
                         "tokens_used": tokens_from_api or tokens_estimated,
+                        "finish_reason": finish_reason,
                         "error": None}
 
             # Procesar tool_calls

@@ -6,8 +6,9 @@ en `brain-ai-01/main-clean`, **pusheado 29/09** dentro de `f56b12f`; 6/6 tests
 nuevos) y **16M: C3 aplicado** (`.ai/MEMORY.md` de este repo documenta que el
 tool MCP busca solo `semantic`; **C1 queda pendiente, después de la suite
 completa**).
-Abiertas sin decisión: 16K (`finish_reason` en `GroqRunner`), 16O
-(`toolCount` desactualizado en `PLANTILLA_MCP.md`). Sigue pendiente la
+Abiertas sin decisión: ninguna — 16K y 16O cerradas 29/09;
+C1 aplicado en brain-ai-01 (`099d053`, suite local 74/74) pendiente de
+verificación en la suite completa del mismo día. Sigue pendiente la
 verificacion end-to-end de 16G (suite completa
 con dia dedicado de cuota) y D3. El fix de 16H quedo como parche: la causa raiz
 se documento en 16J con plan
@@ -475,6 +476,13 @@ ERROR (tool loop, 2 intentos).
       techo mayor si `finish_reason == "length"`; (3) subir
       `PLAIN_ROUND_MAX_TOKENS` en rounds con tools. **No implementado:** requiere
       acuerdo.
+      **RESUELTO 29/09 (fix 1+2):** `GroqRunner` registra `finish_reason` en el
+      resultado y ante `length` con marcador parcial (`to=functions.` o
+      `<|constrain|>` sin `<|call|>` de cierre, helper
+      `_looks_like_partial_tool_call`) reintenta UNA vez con 4000 tokens
+      (constante 16H existente, protegido por tope 16C y `max_tool_rounds`).
+      `test_tool_use_failed.py` 23/23 (5 nuevos `TestTruncadoSilencioso16K`).
+      Validacion end-to-end en la suite D3/16G del mismo dia.
 - [x] 16L. Bridge: **no guardar un episodio sin `project`** — **IMPLEMENTADA
       28/09 23:50**, commit `4eca553` en `brain-ai-01/main-clean` (solo local,
       **sin push**). Diagnostico y propuesta en
@@ -558,9 +566,11 @@ ERROR (tool loop, 2 intentos).
       `brain-ai -> VIVO`. **Descartado:** poner el path absoluto de
       `python` en el `opencode.json` (contradice §9.1 del plan 16J y la
       evidencia no lo sostiene). Detalle en el plan §2.
-- [ ] 16O. `~/.config/opencode/PLANTILLA_MCP.md:44` dice `toolCount=8` y el
+- [x] 16O. `~/.config/opencode/PLANTILLA_MCP.md:44` dice `toolCount=8` y el
       bridge expone **10** (deuda de `PLAN_CONVENCION_TOOLS_MCP.md` §7.5). Es
       config global, fuera de este repo: requiere OK explicito.
+      **RESUELTO 29/09** (lineas 7 y 44 a `toolCount=10`, verificado contra
+      las 10 tools reales; sin commit posible, fuera del repo).
 - [x] Re-runs con cuota fresca (26/09, commit 94dd6cb) — evidencia sólida:
       gpt-oss C2 FAIL conductual (1994 chars, no declina), D2 FAIL (1268 chars,
       sin memory_save), T4 FAIL (2109 chars, sin keyword `qa`); qwen D8 ERROR
