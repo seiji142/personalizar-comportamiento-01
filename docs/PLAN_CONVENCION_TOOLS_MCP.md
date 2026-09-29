@@ -341,6 +341,11 @@ Hoy no existe criterio escrito. La única guía está en
    `GET /health` (regla 8.4 de `.ai/rules.md` ya lo exige para servicios).
 3. Ante `unavailable tool` o `not in request.tools`: **no reintentar a ciegas**. Registrar el
    nombre intentado y el canal. Ese es el patrón quecheckmark con 16H.
+4. **(16N, 29/09/2026)** Ante tool MCP ausente del esquema: no asumir caída —
+   verificar `GET /health`, buscar `MCP connection closed server=<nombre>` en
+   `~/.local/share/opencode/log/opencode.log` (o correr
+   `tests/scripts/verificar_mcp_esquema.py`); si murió sin uso posterior,
+   reiniciar OpenCode. Criterio completo en `.ai/rules.md` 8.5.
 
 ### 7.5 Corrección secundaria
 

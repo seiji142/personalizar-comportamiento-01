@@ -105,6 +105,19 @@ ANTES de concluir que un servicio, servidor o herramienta MCP está caído o no 
 
 *Ejemplo: Si `brain-ai_memory_save` falla, re-intenta `brain-ai_memory_search` antes de concluir que brain-ai-01 está muerto.*
 
+### 8.5 MCP ausente del esquema ≠ servicio caído (16N)
+
+Si una tool MCP no está en el esquema de la sesión:
+
+1. **No asumas caída del servicio** — verifica `GET /health` del backend.
+2. Busca en `~/.local/share/opencode/log/opencode.log` las líneas
+   `MCP connection closed server=<nombre>` y
+   `server unavailable key=<nombre>` (o corre
+   `tests/scripts/verificar_mcp_esquema.py`).
+3. Si la última conexión murió y no hay uso posterior, **reinicia OpenCode**:
+   el proceso de larga duración no reconecta. La señal de que volvió es
+   que la tool aparezca en el esquema, no que el servidor responda al health.
+
 ## 9. PROCEDENCIA Y REFERENCIAS
 
 ### 6.5 Referencias no resueltas

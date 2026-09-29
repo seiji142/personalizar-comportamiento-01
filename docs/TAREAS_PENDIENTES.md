@@ -1,12 +1,12 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 28/09/2026 23:55 — 16J cerrada (Fases 0-5, commit `fe4648a`
-en `develop`, pusheado). De la sesión del 28/09 23:00 (plan
+Ultima actualizacion: 29/09/2026 — **16I y 16N cerradas** (ver detalle en sus
+items; commits en `develop`). De la sesión del 28/09 23:00 (plan
 `docs/PLAN_MCP_BRIDGE_Y_RETRIEVAL.md`): **16L IMPLEMENTADA** (commit `4eca553`
-en `brain-ai-01/main-clean`, **solo local, sin push**; 6/6 tests nuevos) y
-**16M: C3 aplicado** (`.ai/MEMORY.md` de este repo documenta que el tool MCP
-busca solo `semantic`; **C1 queda pendiente, después de la suite completa**).
-Abiertas sin decisión: 16I (merge de estructura), 16K (`finish_reason` en
-`GroqRunner`), 16N (documentar MCP ausente del esquema + script), 16O
+en `brain-ai-01/main-clean`, **pusheado 29/09** dentro de `f56b12f`; 6/6 tests
+nuevos) y **16M: C3 aplicado** (`.ai/MEMORY.md` de este repo documenta que el
+tool MCP busca solo `semantic`; **C1 queda pendiente, después de la suite
+completa**).
+Abiertas sin decisión: 16K (`finish_reason` en `GroqRunner`), 16O
 (`toolCount` desactualizado en `PLANTILLA_MCP.md`). Sigue pendiente la
 verificacion end-to-end de 16G (suite completa
 con dia dedicado de cuota) y D3. El fix de 16H quedo como parche: la causa raiz
@@ -369,11 +369,16 @@ ERROR (tool loop, 2 intentos).
       el tool_use_failed generico. Tests: `test_tool_use_failed.py` 10/10.
       Verificado en vivo: **D2 PASS (14:50)** con
       `tool_calls=[brain_ai_memory_save]` ejecutada via MCP.
-- [ ] 16I. `test_ai_structure.py --only-failures` destruye el bloque del
+- [x] 16I. `test_ai_structure.py --only-failures` destruye el bloque del
       modelo: `generate_report` reemplaza `report["models"][label]` entero
       con solo los re-ejecutados, y el gate `estructura_4x5` exige n=5
       (hallazgo 28/09; la avanzada si mergea por ID). Merge por ID antes de
       usarlo para reparacion selectiva.
+      **RESUELTO 29/09:** `merge_structure_results()` en
+      `test_ai_structure.py` (merge por ID para listas [{id,...}];
+      `generate_report` lo usa; `--fresh` intacto porque parte de vacio) +
+      `tests/scripts/test_structure_merge.py` 6/6 (mas `test_report_merge.py`
+      9/9 intacto). Sin cambios de schema/prompts: no obliga a re-correr.
 - [ ] 16J. Convencion de nombres de tools MCP — el fix 16H fue un parche
       (28/09). **Causa raiz:** 3 convenciones conviviendo en los `.ai/`. El
       bridge expone `memory_search`/`memory_save`; OpenCode registra las tools
@@ -544,7 +549,13 @@ ERROR (tool loop, 2 intentos).
       `PLAN_CONVENCION_TOOLS_MCP.md` §7.4 caso 3 (hoy solo cubre `unavailable
       tool` y `not in request.tools`); (A2)
       `tests/scripts/verificar_mcp_esquema.py` que lea el log y diga que server
-      esta vivo y cuando murio. **Descartado:** poner el path absoluto de
+      esta vivo y cuando murio.
+      **RESUELTO 29/09 (log-only):** (A1) criterio agregado como `.ai/rules.md`
+      8.5 + caso 4 en `PLAN_CONVENCION_TOOLS_MCP.md` §7.4; (A2)
+      `tests/scripts/verificar_mcp_esquema.py` (parsea timestamp/run/message/
+      server/unavailable/permission; veredicto VIVO vs MUERTO por cierre sin
+      uso posterior) + `test_verificar_mcp.py` 7/7; corrida real:
+      `brain-ai -> VIVO`. **Descartado:** poner el path absoluto de
       `python` en el `opencode.json` (contradice §9.1 del plan 16J y la
       evidencia no lo sostiene). Detalle en el plan §2.
 - [ ] 16O. `~/.config/opencode/PLANTILLA_MCP.md:44` dice `toolCount=8` y el
