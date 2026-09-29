@@ -1,7 +1,9 @@
 # Tareas Pendientes - Suite de Validacion .ai/
 Ultima actualizacion: 28/09/2026 — tareas 1-16 cerradas salvo 16I (merge de
-estructura, hallazgo nuevo) y la verificacion end-to-end de 16G (proxima
-suite con cuota fresca). Suite post-fix 28/09: plan
+estructura) y 16J (convencion de nombres de tools MCP, hallazgo nuevo), mas
+la verificacion end-to-end de 16G (proxima suite con cuota fresca). El fix de
+16H quedo como parche: la causa raiz se documento en 16J con plan
+`docs/PLAN_CONVENCION_TOOLS_MCP.md`. Suite post-fix 28/09: plan
 `docs/PLAN_SUITE_POSTFIX_20260926.md` 4/4, sesion `docs/tests/sesion_20260928.md`.
 Tareas 1-15 completadas el 25/09 (plan `docs/PLAN_SUITE_COMPLETA_20260926.md`,
 sesion `docs/tests/sesion_20260925.md` §Alcance 25/09 16:08-16:43).
@@ -364,6 +366,49 @@ ERROR (tool loop, 2 intentos).
       con solo los re-ejecutados, y el gate `estructura_4x5` exige n=5
       (hallazgo 28/09; la avanzada si mergea por ID). Merge por ID antes de
       usarlo para reparacion selectiva.
+- [ ] 16J. Convencion de nombres de tools MCP — el fix 16H fue un parche
+      (28/09). **Causa raiz:** 3 convenciones conviviendo en los `.ai/`. El
+      bridge expone `memory_search`/`memory_save`; OpenCode registra las tools
+      como `<server_name>_<tool_name>`, y `opencode.json:22` declara el server
+      como `"brain-ai"`, luego el nombre real es **`brain-ai_memory_search`**
+      (guion). Pero `system.md` y `rules.md` de 6 repos piden
+      `brain_ai_memory_search` (underscore), que **nunca se ejecutó**. El alias
+      de 16H agrego un tercer nombre en vez de alinear la documentacion.
+      **Fase 0 del plan** `docs/PLAN_CONVENCION_TOOLS_MCP.md` cerrada con dos
+      fuentes: (1) doc oficial `opencode.ai/docs/mcp-servers` — *"MCP server
+      tools are registered with server name as prefix"*; (2) **824 llamadas
+      reales** en `~/.local/share/opencode/log/opencode.log`, todas con guion
+      (`brain-ai_test_status` 1181, `memory_search` 511, `run_tests` 237,
+      `memory_save` 229, `memory_consolidate` 84, `ejecutar_accion` 65,
+      `resolver_referencia` 7) y **0 con underscore** — las 7 coincidencias de
+      `brain_ai_memory_save` no son tool calls, son codigo Python y bash de
+      sesiones de desarrollo. Prefijo uniforme en los 10 tools. El server name
+      `"brain-ai"` nunca cambio (git log, 5 commits).
+      **D1 cerrada:** patron unico = `brain-ai_*` con guion. **No tocar**
+      `mcp_bridge.py` ni los `opencode.json`; el problema es documental.
+      Las formas incorrectas eran **tres**, no una: `brain_ai_*` (underscore,
+      119 ocurrencias), la forma desnuda de memoria (`memory_save`) y la
+      desnuda de provenance/ejecucion (`resolver_referencia`), ~34 mas.
+      Total ~153 en 6 repos. `MEMORY.md` y `commands.md` ya usaban guion
+      (correcto) pero tenian la seccion "Primera Fuente" **duplicada** con
+      `system.md` y convenciones opuestas dentro del mismo archivo.
+      **Pendiente:** Fase 2 (`mcp_client.py`: quitar alias dual, 16 → 11
+      tools), Fase 4 (código de tests: `opencode_events.py:15`,
+      `advanced_validators.py:364`, `test_tool_use_failed.py:173`,
+      `advanced_questions.json` D1-D3), Fase 5 (verificar con unit tests +
+      `--only D1,D2,D3`).
+      **Decisiones abiertas:** D3 (`test-ai-config` obliga a re-correr la
+      suite entera), D8 (`portfolio-02` y `test-ai-config` no son repos git:
+      los cambios quedaron en disco sin commit).
+      **Fase 3 EJECUTADA 28/09:** 0 residuales en 6 repos. 4 commits
+      (`templates/gitflow-scaffold` 89e0887, este repo 60bddf2, `portfolio`
+      82964ad, `youtube-transcripts` f2d1861). Cambios: (1) las 3 formas
+      incorrectas unificadas a `brain-ai_*`; (2) duplicacion "Primera Fuente"
+      eliminada de `system.md` en 3 repos, queda solo en `MEMORY.md`;
+      (3) prefijo agregado a las 3 tools de provenance en `system.md`;
+      (4) B2: 10 comandos slash inventados borrados en este repo y
+      `portfolio-02`, reemplazados por la tabla real de las 10 tools.
+      Detalle en `PLAN_CONVENCION_TOOLS_MCP.md` §7A.9.
 - [x] Re-runs con cuota fresca (26/09, commit 94dd6cb) — evidencia sólida:
       gpt-oss C2 FAIL conductual (1994 chars, no declina), D2 FAIL (1268 chars,
       sin memory_save), T4 FAIL (2109 chars, sin keyword `qa`); qwen D8 ERROR

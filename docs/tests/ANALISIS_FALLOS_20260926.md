@@ -171,3 +171,140 @@ destruye el bloque del modelo: `generate_report` reemplaza
 14:42 ERROR 400 (reproducido, mensaje completo) → 14:50 PASS con alias.
 El 400 depende de qué nombre elija el modelo: con los tres nombres publicados
 las dos variantes resuelven.
+
+---
+
+## 8. Convención de nombres de tools MCP (16J) — el fix de 16H fue un parche
+
+Plan completo: `docs/PLAN_CONVENCION_TOOLS_MCP.md`.
+
+### 8.1 Qué se diagnosticó mal en 16H
+
+16H se cerró con un alias: publicar cada tool de memoria con 3 nombres
+(`memory_save`, `brain_ai_memory_save`, `brain-ai_memory_save`). Eso eliminó el
+400, pero **añadió una cuarta convención en vez de alinear las existentes**.
+
+La causa raíz no era un problema del harness ni del bridge: era que los `.ai/`
+piden un nombre que OpenCode nunca registró.
+
+### 8.2 Las tres convenciones
+
+| Convención | Dónde vive | ¿Existe como tool real? |
+|---|---|---|
+| `memory_save` | `mcp_bridge.py:184` | Sí — nombre interno del bridge |
+| `brain-ai_memory_save` | `MEMORY.md`, `commands.md` (5 repos) | **Sí — el nombre real** |
+| `brain_ai_memory_save` | `system.md`, `rules.md` (6 repos) | **No. 0 ejecuciones.** Solo el alias de 16H |
+
+### 8.3 El nombre real: `<server_name>` + `_` + `<tool_name>`
+
+`opencode.json:22` declara el servidor MCP como `"brain-ai"`. OpenCode le
+antepone ese nombre a cada tool. De ahí `brain-ai_memory_search`.
+
+**Fuente oficial** (`opencode.ai/docs/mcp-servers`, sección "Glob patterns"):
+
+> *"MCP server tools are registered with server name as prefix, so to disable all
+> tools for a server simply use: `"mymcpservername_*": false`"*
+
+El ejemplo de esa página: el glob `"my-mcp*"` desactiva `my-mcp_search` y
+`my-mcp_list`.
+
+Consecuencia: **`memory_search` a secas nunca funciona.** El nombre sin prefijo
+solo existe dentro del bridge; el modelo solo ve el nombre namespaced.
+
+Comparación con el caso que ya funciona: `"git_publisher"` + `git_ver_estado` =
+`git_publisher_git_ver_estado`. Mismo mecanismo.
+
+### 8.4 Evidencia empírica: 824 llamadas reales
+
+Fuente: `~/.local/share/opencode/log/opencode.log` (78 MB).
+
+| Tool | Ocurrencias |
+|---|---|
+| `brain-ai_test_status` | 1181 |
+| `brain-ai_memory_search` | 511 |
+| `brain-ai_run_tests` | 237 |
+| `brain-ai_memory_save` | 229 |
+| `brain-ai_memory_consolidate` | 84 |
+| `brain-ai_ejecutar_accion` | 65 |
+| `brain-ai_resolver_referencia` | 7 |
+| **Total con guion** | **824** |
+| `brain_ai_memory_save` (underscore) | **0 como tool call** |
+
+El prefijo es **uniforme** en los 10 tools del bridge, incluidos los de
+provenance y los de ejecución.
+
+**Las 7 coincidencias de underscore no son tool calls.** Al inspeccionar el
+contexto: 4 son código Python de sesiones de desarrollo (la constante
+`MEMORY_ALIAS_PREFIXES` y scripts que importan `mcp_client`), 3 son comandos
+bash llamando a `clients/memoria.py`. Eso explica por qué el conteo no es
+exactamente cero **sin invalidar** la conclusión.
+
+`git log -p --follow -- opencode.json` muestra un único cambio del server name:
+siempre fue `"brain-ai"`. No es una regresión reciente.
+
+### 8.5 La trampa que produjo el error
+
+En la sesión interactiva, la lista de tools puede mostrar
+`brain_ai_memory_search` con underscore, aunque OpenCode registre
+`brain-ai_memory_search`. Motivo: la capa que expone el schema al modelo
+normaliza guiones a guiones bajos en su convención propia.
+
+**Si alguien copia un nombre de esa lista a un `.ai/`, escribe underscore.** Eso
+es exactamente lo que pasó con `system.md` y `rules.md`.
+
+Regla para evitarlo: copiar siempre del log de OpenCode o del NDJSON de
+`opencode run --format json`, nunca de la lista de la sesión.
+
+### 8.6 Distribución del problema
+
+119 ocurrencias con underscore en 7 repos:
+
+| Repositorio | `system.md` | `rules.md` | `MEMORY.md` | `commands.md` | Total |
+|---|---|---|---|---|---|
+| `personalizar-comportamiento-01` | 14 | 6 | 8 | — | 28 |
+| `portfolio` | 14 | 7 | 8 | 3 (guion) | 29 |
+| `portfolio-02` | 14 | 6 | 8 | — | 28 |
+| `youtube-transcripts` | 10 | 4 | 7 (guion) | 3 (guion) | 14 |
+| `test-ai-config` | 6 | — | 8 (guion) | — | 6 |
+| `templates/gitflow-scaffold` | 10 | 3 | 15 (guion) | — | 13 |
+| `brain-ai-01` | — | — | — | 1 (`README.md:85`) | 1 |
+
+### 8.7 Contradicción interna: `MEMORY.md` duplicado
+
+`personalizar-comportamiento-01/.ai/MEMORY.md` contiene **la misma tabla de
+herramientas dos veces**, con convenciones opuestas:
+
+- **L12-65** — guion (`brain-ai_memory_search`, correcto)
+- **L75-104** — underscore (`brain_ai_memory_search`, incorrecto)
+
+Además, la sección `## brain-ai-01: Primera Fuente` está replicada entre
+`system.md:99-136` y `MEMORY.md:67-104`, ambas con underscore. Un archivo
+contradice al otro, y el modelo no puede inferir cuál obedecer cuando las dos
+están en su contexto.
+
+### 8.8 El bug ya había ocurrido en otro proyecto
+
+`../youtube-transcripts/docs/LECCIONES.md:213-221` documenta el 23/09:
+
+```
+Model tried to call unavailable tool 'brain-ai_memory_save'
+```
+
+**Causa raíz registrada:** el puente MCP no estaba conectado en esa sesión; sus
+tools no aparecían en el esquema. **Fix aplicado:** reiniciar opencode.
+
+**No se documentó la causa de fondo en los `.ai/`.** Por eso el mismo problema
+reapareció aquí como 16H, en otro proyecto, con otro síntoma.
+
+### 8.9 Conclusión y alcance del fix
+
+| Decisión | Estado |
+|---|---|
+| Patrón único | **`brain-ai_*` con guion** |
+| Tocar `mcp_bridge.py` | **No** — lo consumen `proyecto-web`, `sistema-ventas`, `juego-rpg` |
+| Tocar los `opencode.json` | **No** — el server name ya produce el prefijo correcto |
+| Renombrar el server a `brain_ai`/`memory` | **No** — el guion funciona |
+| Naturaleza del problema | **100 % documental** |
+
+**Fases pendientes:** 2 (`mcp_client.py`: 16 → 11 tools), 3 (alinear 6 repos +
+resolver duplicación), 4 (código de tests), 5 (verificar con `--only D1,D2,D3`).
