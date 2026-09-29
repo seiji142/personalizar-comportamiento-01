@@ -513,9 +513,9 @@ nombres de tool invocables.
 |---|---|---|
 | **0. Verificación empírica** | Determinar el nombre canónico | **COMPLETADA** (§2) |
 | **1. Documentar** | Este doc + 16J + §8 de ANALISIS_FALLOS | **COMPLETADA** |
-| **2. `mcp_client.py`** | Quitar el alias dual. Un solo nombre por tool. 16 → 11 tools | Pendiente |
+| **2. `mcp_client.py`** | Quitar el alias dual. Un solo nombre por tool. 16 → 10 tools | **DISEÑADA** (§8.2) |
 | **3. Unificar `.ai/`** | 6 repos, ~153 ocurrencias, 3 formas | **COMPLETADA** (§7A.9) |
-| **4. Código de tests** | Ver nota 8.3 | Pendiente |
+| **4. Código de tests** | Ver nota 8.3 | **DISEÑADA** (§8.3) |
 | **5. Verificar** | Unit tests. Re-run `--only D1,D2,D3`. Suite completa si cambia `test-ai-config` | Pendiente |
 
 **La Fase 0 confirmó que no hace falta tocar el bridge ni ningún `opencode.json`.** El trabajo
@@ -542,40 +542,172 @@ Documentación del diagnóstico en 3 archivos de este repo:
 Decisiones del usuario: **no** crear `docs/LECCIONES.md`; **no** tocar
 `brain-ai-01/CHANGELOG.md`; **no** corregir los `docs/` históricos de los otros repos.
 
-### 8.2 Fase 2 — detalle
+### 8.2 Fase 2 — diseño cerrado (pendiente de implementar)
 
-`tests/lib/mcp_client.py:171` define `MEMORY_ALIAS_PREFIXES = ("brain_ai_", "brain-ai_")` y
-agrega las variantes en `mcp_tools_to_openai` (líneas 201-205). Al quedar validado el patrón,
-corresponde publicar **un solo nombre por tool**, con guion, para los 10 tools
-(16 publicadas → 11).
+**Objetivo:** que el canal API (`GroqRunner`) publique el mismo nombre que OpenCode, para que el
+system prompt (`.ai/`, ahora con `brain-ai_*`) coincida con la lista de tools.
 
-Archivos a tocar:
+#### El problema actual
+
+`tests/lib/mcp_client.py:171` define `MEMORY_ALIAS_PREFIXES = ("brain_ai_", "brain-ai_")` y en
+`mcp_tools_to_openai` (líneas 201-205) publica cada tool de memoria **3 veces**.
+
+Conteo real: 10 tools del bridge; 3 son `memory_*` × 3 nombres = 9, + 7 no-memoria = **16
+publicadas**. Tras la Fase 2: **10 publicadas** (una por tool).
+
+#### Diseño decidido
+
+**1. Prefijo único, leído de `opencode.json`** (decisión del usuario: no hardcodear).
+
+```python
+def discover_server_name():
+    """Devuelve la clave del server MCP desde opencode.json.
+
+    Orden: <TEST_PROJECT>/opencode.json -> <PROJECT_ROOT>/opencode.json
+           -> "brain-ai" (fallback).
+    """
+```
+
+Firma nueva: `mcp_tools_to_openai(mcp_tools, server_name=None)`. Si es `None`, resuelve con el
+helper; así los unit tests pasan un nombre explícito y no tocan el filesystem.
+
+Resultado: `sanitize_tool_name("brain-ai" + "_" + "memory_search")` = `brain-ai_memory_search`.
+
+**2. El prompt de D2 hay que cambiarlo** (crítico).
+
+`tests/questions/advanced_questions.json:147` es el **único prompt enviado al modelo que nombra
+una tool**. Verificado: D1 y D3 mencionan "memoria" como concepto, no como tool.
+
+```
+"Implementa una función... usa la herramienta brain_ai_memory_save..."   <- actual
+"Implementa una función... usa la herramienta brain-ai_memory_save..."   <- corregido
+```
+
+Sin este cambio, el modelo lee el prompt, llama `brain_ai_memory_save` y vuelve el 400 de 16H.
+
+**3. `expected_tool` de D1-D3 a `brain-ai_*`** (decisión del usuario: consistencia total).
+
+`_norm_tool_name` normaliza ambos, así que no es obligatorio, pero deja el JSON sin el nombre
+incorrecto.
+
+#### Archivos a tocar
 
 | Archivo | Cambio |
 |---|---|
-| `tests/lib/mcp_client.py:166-205` | Reemplazar el alias dual por prefijo único |
-| `tests/lib/model_runner.py:426-429` | Comentario que dice "el fix son los alias" |
-| `tests/scripts/test_tool_use_failed.py:153-155, 167-176` | Fixtures y assert de 3 nombres |
+| `tests/lib/mcp_client.py:166-207` | Quitar `MEMORY_ALIAS_PREFIXES`; agregar `discover_server_name()`; prefijar las 10 tools |
+| `tests/questions/advanced_questions.json:147` | Prompt D2 → `brain-ai_memory_save` |
+| `tests/questions/advanced_questions.json:136,149,164` | `expected_tool` → `brain-ai_*` |
+| `tests/lib/model_runner.py:49,426-429` | Comentarios que dicen "el fix son los alias" |
+| `tests/scripts/test_tool_use_failed.py:13,153-155,167-176` | Fixture `r.tools`/`r.name_map`; assert de 3 nombres → 1; docstring |
 
-### 8.3 Fase 4 — detalle
+#### Lo que NO se toca (verificado)
 
-| Archivo | Línea | Qué asume |
-|---|---|---|
-| `tests/lib/opencode_events.py` | 15-17 | `MEMORY_TOOL_NAMES` con ambas variantes |
-| `tests/lib/advanced_validators.py` | 364 | `_norm_tool_name` normaliza guion/underscore |
-| `tests/scripts/test_tool_use_failed.py` | 173-174 | Assert de 3 nombres publicados |
-| `tests/test_opencode_events.py` | 61, 68, 74 | Fixtures NDJSON |
-| `tests/questions/advanced_questions.json` | D1, D2, D3 | `expected_tool` con underscore |
+| Archivo | Por qué |
+|---|---|
+| `tests/lib/advanced_validators.py` `_norm_tool_name` | `replace("-","_")` + strip `brain_ai_` normaliza ambos |
+| `tests/lib/opencode_events.py` `MEMORY_TOOL_NAMES` | Normaliza guion en línea 61; el set sigue válido |
+| `tests/test_opencode_events.py` | Fixtures siguen válidos |
+| `tests/scripts/test_validators.py` | Sus fixtures validan la normalización |
+| `tests/scripts/test_ai_structure.py` | `query_api` no envía tools (sin parámetro `tools=`) |
+
+#### Los fixtures del error 16H se mantienen
+
+`test_tool_use_failed.py:123,138` simulan que el modelo llama `brain_ai_memory_save`. Sigue siendo
+un escenario realista: un modelo que copie documentación vieja llamaría el underscore y dispararía
+ese path de error explícito.
+
+#### Riesgos
+
+1. **¿Groq acepta guion en `name`?** Evidencia indirecta a favor: el harness **ya publica**
+   `brain-ai_memory_save` (un alias) y D2 pasó el 28/09; si Groq rechazara el guion, la request
+   entera habría fallado. Confirmar con 1 llamada (`--only D2`).
+2. **Regresión D2** si se olvida el prompt → se cambia en el mismo commit.
+
+### 8.3 Fase 4 — diseño cerrado
+
+| Archivo | Línea | Qué asume | Acción |
+|---|---|---|---|
+| `tests/lib/opencode_events.py` | 15-17 | `MEMORY_TOOL_NAMES` con ambas variantes | Sin cambio (normaliza) |
+| `tests/lib/advanced_validators.py` | 364 | `_norm_tool_name` normaliza guion/underscore | Sin cambio (normaliza) |
+| `tests/scripts/test_tool_use_failed.py` | 153-155, 167-176 | Fixtures y assert de 3 nombres | Cambiar a 1 nombre |
+| `tests/test_opencode_events.py` | 61, 68, 74 | Fixtures NDJSON | Sin cambio |
+| `tests/questions/advanced_questions.json` | 147 | Prompt D2 con `brain_ai_memory_save` | Cambiar a `brain-ai_` |
+| `tests/questions/advanced_questions.json` | 136, 149, 164 | `expected_tool` con underscore | Cambiar a `brain-ai_` |
 
 Nota: `opencode_events.memory_used` normaliza guion a underscore en línea 61 porque el fixture
-histórico mezclaba variantes. Con el patrón único, la normalización puede simplificar, pero
-conviene conservarla: el NDJSON puede venir de versiones distintas de OpenCode.
+histórico mezclaba variantes. Se conserva: el NDJSON puede venir de versiones distintas de OpenCode.
 
 ### 8.4 Riesgo de la fase 3
 
 Cambiar los `.ai/` de `test-ai-config` modifica el **sujeto del experimento**. Los tests D1-D3
 evalúan si el modelo usa memoria; si el prompt cambia, los resultados anteriores dejan de ser
 comparables y hay que re-correr la suite completa.
+
+### 8.5 Estado de la sesión (28/09/2026) y handoff
+
+**Cerrado y verificado:** Fases 0, 1 y 3. Nada de esto hay que re-investigar.
+
+**Repos — todos en `develop`, worktrees limpios, 0 residuales en `.ai/`:**
+
+| Repo | Commits | Git |
+|---|---|---|
+| `templates/gitflow-scaffold` | `89e0887`, `c10ed5d` | sí |
+| `personalizar-comportamiento-01` | `60bddf2` (fix `.ai/`), `41f7f97` (docs) | sí |
+| `portfolio` | `82964ad` | sí |
+| `youtube-transcripts` | `f2d1861` | sí |
+| `portfolio-02` | — (en disco, D8) | no |
+| `test-ai-config` | — (en disco, D8) | no |
+
+**Nada fue pusheado.** Los commits son locales.
+
+**Memoria:** episodios `ep_7ab6c3cc0308414faf502ca227ba45b0` (diagnóstico + Fase 3) y
+`ep_d92dc63846d54e9f98ab5566c2b2537b` (handoff Fase 2).
+
+**Pendiente, en orden:**
+
+1. **Fase 2** — implementar según §8.2 (no está hecha; solo diseñada).
+   - `mcp_client.py`: `discover_server_name()` + prefijo único.
+   - `advanced_questions.json:147`: prompt D2 → `brain-ai_memory_save`.
+   - `advanced_questions.json:136,149,164`: `expected_tool` → `brain-ai_*`.
+   - `model_runner.py:49,426-429`: comentarios.
+   - `test_tool_use_failed.py`: fixtures y assert.
+2. **Fase 4** — ver §8.3 (la mayor parte se resuelve junto a la Fase 2).
+3. **Fase 5** — verificación (abajo).
+4. **D3 / 16G** — re-correr la suite completa con cuota fresca. Cierra también 16G y regenera
+   `suite_verification.json`.
+5. **16I** — sigue abierto, independiente de este plan: `test_ai_structure.py --only-failures`
+   destruye el bloque del modelo en el reporte.
+
+**Prompt sugerido para retomar:**
+
+> Continuamos con la Fase 2 del plan `docs/PLAN_CONVENCION_TOOLS_MCP.md` (§8.2). El contexto está
+> en ese documento, `docs/TAREAS_PENDIENTES.md` ítem 16J y `docs/tests/ANALISIS_FALLOS_20260926.md`
+> §8. Implementar el diseño de §8.2, verificar con unit tests + `--only D2`, y no pushear sin pedirlo.
+
+#### Verificación de Fase 5 (plan)
+
+1. **Unit tests offline:**
+   `python tests/scripts/test_tool_use_failed.py`,
+   `python tests/scripts/test_validators.py`,
+   `python tests/test_opencode_events.py`,
+   `python tests/scripts/test_token_cap.py`.
+2. **Live `--only D2`** con gpt-oss (canal API): confirmar `tool_calls=[brain-ai_memory_save]` y
+   ausencia del 400.
+3. **Live `--only D1,D2,D3`** con un modelo nativo (big-pickle): confirmar que no se rompió el
+   canal nativo.
+4. **Suite completa** con cuota fresca: cierra D3/16G.
+
+#### Datos para no re-investigar
+
+- **Patrón real:** `<server_name>_<tool_name>`. Server = `brain-ai` (en `opencode.json` de ambos
+  proyectos). Nombre real = `brain-ai_memory_search` (guion).
+- **Evidencia:** doc oficial `opencode.ai/docs/mcp-servers` + 824 llamadas en
+  `~/.local/share/opencode/log/opencode.log`, 0 con underscore.
+- **Trampa:** la lista de tools de la sesión interactiva muestra underscore; no copiar de ahí.
+- **Único prompt que nombra una tool:** D2 (D1/D3 mencionan "memoria" como concepto).
+- **`mcp_tools_to_openai` se usa solo en** `model_runner.py:260` (`GroqRunner`). El
+  `OpenCodeRunner` no lo usa.
+- **`test_ai_structure.py` no envía tools** (sin parámetro `tools=`), no le afecta la Fase 2.
 
 ---
 
@@ -584,13 +716,16 @@ comparables y hay que re-correr la suite completa.
 | # | Decisión | Estado |
 |---|---|---|
 | **D1** | Nombre canónico = `brain-ai_*` con guion | **CERRADA** — doc oficial + 824 llamadas (§2) |
-| **D2** | Alcance: un commit por repo | **APLICADA** — 4 commits hechos; 2 repos sin git (§7A.9) |
+| **D2** | Alcance: un commit por repo | **APLICADA** — 5 commits en 4 repos con git; 2 repos sin git (§7A.9) |
 | **D3** | `test-ai-config` obliga a re-correr la suite entera | **PENDIENTE** — falta la re-corrida |
-| **D4** | `templates/gitflow-scaffold` es prioridad | **APLICADA** — commit `89e0887` |
+| **D4** | `templates/gitflow-scaffold` es prioridad | **APLICADA** — commits `89e0887`, `c10ed5d` |
 | **D5** | Duplicación "Primera Fuente" | **APLICADA** — queda solo en `MEMORY.md` |
 | **D6** | Eliminar `brain_ai_*` de la documentación | **APLICADA** — 0 residuales |
 | **D7** | Comandos slash inexistentes | **APLICADA** — B2, borrados y reemplazados por tabla de tools |
-| **D8** | `portfolio-02` y `test-ai-config` sin git | **ABIERTA** — decidir si se inicializa git |
+| **D8** | `portfolio-02` y `test-ai-config` sin git | **CERRADA** — son proyectos locales de prueba; se dejan en disco, sin versionar |
+| **D9** | Fase 2: leer server name de `opencode.json` | **CERRADA** — fallback `brain-ai` (§8.2) |
+| **D10** | Fase 2: cambiar el prompt de D2 | **CERRADA** — es el único prompt que nombra una tool (§8.2) |
+| **D11** | Fase 2: `expected_tool` de D1-D3 a `brain-ai_*` | **CERRADA** — consistencia total con los `.ai/` |
 
 ### 9.1 Decisiones ya tomadas que no están en debate
 

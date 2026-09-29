@@ -1,8 +1,9 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 28/09/2026 — tareas 1-16 cerradas salvo 16I (merge de
-estructura) y 16J (convencion de nombres de tools MCP, hallazgo nuevo), mas
-la verificacion end-to-end de 16G (proxima suite con cuota fresca). El fix de
-16H quedo como parche: la causa raiz se documento en 16J con plan
+Ultima actualizacion: 28/09/2026 (noche) — tareas 1-16 cerradas salvo 16I
+(merge de estructura) y 16J (convencion de nombres de tools MCP: Fases 0, 1 y 3
+cerradas; Fase 2 disenada y pendiente de implementar), mas la verificacion
+end-to-end de 16G (proxima suite con cuota fresca). El fix de 16H quedo como
+parche: la causa raiz se documento en 16J con plan
 `docs/PLAN_CONVENCION_TOOLS_MCP.md`. Suite post-fix 28/09: plan
 `docs/PLAN_SUITE_POSTFIX_20260926.md` 4/4, sesion `docs/tests/sesion_20260928.md`.
 Tareas 1-15 completadas el 25/09 (plan `docs/PLAN_SUITE_COMPLETA_20260926.md`,
@@ -392,17 +393,23 @@ ERROR (tool loop, 2 intentos).
       Total ~153 en 6 repos. `MEMORY.md` y `commands.md` ya usaban guion
       (correcto) pero tenian la seccion "Primera Fuente" **duplicada** con
       `system.md` y convenciones opuestas dentro del mismo archivo.
-      **Pendiente:** Fase 2 (`mcp_client.py`: quitar alias dual, 16 → 11
+      **Pendiente:** Fase 2 (`mcp_client.py`: quitar alias dual, 16 → 10
       tools), Fase 4 (código de tests: `opencode_events.py:15`,
       `advanced_validators.py:364`, `test_tool_use_failed.py:173`,
       `advanced_questions.json` D1-D3), Fase 5 (verificar con unit tests +
       `--only D1,D2,D3`).
-      **Decisiones abiertas:** D3 (`test-ai-config` obliga a re-correr la
-      suite entera), D8 (`portfolio-02` y `test-ai-config` no son repos git:
-      los cambios quedaron en disco sin commit).
-      **Fase 3 EJECUTADA 28/09:** 0 residuales en 6 repos. 4 commits
-      (`templates/gitflow-scaffold` 89e0887, este repo 60bddf2, `portfolio`
-      82964ad, `youtube-transcripts` f2d1861). Cambios: (1) las 3 formas
+      **Fase 2 DISEÑADA (falta implementar),** ver `PLAN_CONVENCION_TOOLS_MCP.md`
+      §8.2: (1) leer el server name de `opencode.json` con fallback `brain-ai`
+      (no hardcodear); (2) publicar un solo nombre por tool; (3) cambiar el
+      prompt de D2 en `advanced_questions.json:147` (es el UNICO prompt que
+      nombra una tool; sin ese cambio vuelve el 400); (4) `expected_tool` de
+      D1-D3 a `brain-ai_*`. No se tocan `_norm_tool_name`, `MEMORY_TOOL_NAMES`
+      ni `test_ai_structure.py` (no envia tools / normaliza).
+      **Decisiones cerradas:** D8 (los 2 repos sin git son locales de prueba:
+      se dejan en disco). Quedan abiertas D3 y la verificacion de Fase 5.
+      **Fase 3 EJECUTADA 28/09:** 0 residuales en 6 repos. 5 commits en 4 repos
+      (`templates/gitflow-scaffold` 89e0887 + c10ed5d, este repo 60bddf2,
+      `portfolio` 82964ad, `youtube-transcripts` f2d1861). Cambios: (1) las 3 formas
       incorrectas unificadas a `brain-ai_*`; (2) duplicacion "Primera Fuente"
       eliminada de `system.md` en 3 repos, queda solo en `MEMORY.md`;
       (3) prefijo agregado a las 3 tools de provenance en `system.md`;
