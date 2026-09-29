@@ -276,6 +276,29 @@ def load_existing_report(report_path, fresh=False):
     return existing
 
 
+def merge_structure_results(existing_results, new_results):
+    """Fusiona resultados nuevos en la lista previa por test ID (tarea 16I).
+
+    La avanzada guarda dict {id: caso} (`merge_models_report`); estructura
+    guarda lista [{id, ...}]. Con `--only-failures` (corrida parcial) conserva
+    los tests NO re-ejecutados y pisa los re-ejecutados. Sin este merge,
+    `generate_report` reemplazaba `report["models"][label]` entero y el gate
+    `estructura_4x5` (exige n=5) quedaba roto.
+    """
+    merged = {}
+    for r in (existing_results or []):
+        if isinstance(r, dict) and r.get("id"):
+            merged[r["id"]] = dict(r)
+    for r in (new_results or []):
+        if isinstance(r, dict) and r.get("id"):
+            merged[r["id"]] = dict(r)
+    order = [r["id"] for r in (existing_results or [])
+             if isinstance(r, dict) and r.get("id")]
+    order += [r["id"] for r in (new_results or [])
+              if isinstance(r, dict) and r.get("id") and r["id"] not in order]
+    return [merged[i] for i in order]
+
+
 def generate_report(results, mode_label="api", fresh=False):
     print("\n" + "=" * 60)
     print(f"REPORTE DE VALIDACION .ai/ ({mode_label}) |", datetime.now().strftime("%Y-%m-%d %H:%M"))
@@ -310,9 +333,10 @@ def generate_report(results, mode_label="api", fresh=False):
     report_path = os.path.join(TESTS_DIR, "answers", "ai_validation_report.json")
     report = load_existing_report(report_path, fresh=fresh)
 
+    prev_results = report["models"].get(mode_label, {}).get("results", [])
     report["models"][mode_label] = {
         "timestamp": datetime.now().isoformat(),
-        "results": results,
+        "results": merge_structure_results(prev_results, results),
     }
     report["timestamp"] = datetime.now().isoformat()
 
