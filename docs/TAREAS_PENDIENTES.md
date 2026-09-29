@@ -1,13 +1,14 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 28/09/2026 23:25 — 16J cerrada (Fases 0-5, commit `fe4648a`
-en `develop`, pusheado). Abiertas: 16I (merge de estructura), 16K
-(`finish_reason` en `GroqRunner`), y **4 nuevas de la sesion del 28/09 23:00**:
-16L (no guardar sin `project`), 16M (`memory_search` solo busca en
-`semantic`), 16N (documentar MCP ausente del esquema + script), 16O
-(`toolCount` desactualizado en `PLANTILLA_MCP.md`). Diagnostico completo,
-evidencia y propuestas de las 4 en
-`docs/PLAN_MCP_BRIDGE_Y_RETRIEVAL.md`; **nada implementado, esperando
-decision**. Sigue pendiente la verificacion end-to-end de 16G (suite completa
+Ultima actualizacion: 28/09/2026 23:55 — 16J cerrada (Fases 0-5, commit `fe4648a`
+en `develop`, pusheado). De la sesión del 28/09 23:00 (plan
+`docs/PLAN_MCP_BRIDGE_Y_RETRIEVAL.md`): **16L IMPLEMENTADA** (commit `4eca553`
+en `brain-ai-01/main-clean`, **solo local, sin push**; 6/6 tests nuevos) y
+**16M: C3 aplicado** (`.ai/MEMORY.md` de este repo documenta que el tool MCP
+busca solo `semantic`; **C1 queda pendiente, después de la suite completa**).
+Abiertas sin decisión: 16I (merge de estructura), 16K (`finish_reason` en
+`GroqRunner`), 16N (documentar MCP ausente del esquema + script), 16O
+(`toolCount` desactualizado en `PLANTILLA_MCP.md`). Sigue pendiente la
+verificacion end-to-end de 16G (suite completa
 con dia dedicado de cuota) y D3. El fix de 16H quedo como parche: la causa raiz
 se documento en 16J con plan
 `docs/PLAN_CONVENCION_TOOLS_MCP.md`. Suite post-fix 28/09: plan
@@ -469,29 +470,32 @@ ERROR (tool loop, 2 intentos).
       techo mayor si `finish_reason == "length"`; (3) subir
       `PLAIN_ROUND_MAX_TOKENS` en rounds con tools. **No implementado:** requiere
       acuerdo.
-- [ ] 16L. Bridge: **no guardar un episodio sin `project`** (nuevo, 28/09 23:10,
-      pedido explícito del usuario). Diagnóstico completo, evidencia y propuesta
-      en `docs/PLAN_MCP_BRIDGE_Y_RETRIEVAL.md` §3.
+- [x] 16L. Bridge: **no guardar un episodio sin `project`** — **IMPLEMENTADA
+      28/09 23:50**, commit `4eca553` en `brain-ai-01/main-clean` (solo local,
+      **sin push**). Diagnostico y propuesta en
+      `docs/PLAN_MCP_BRIDGE_Y_RETRIEVAL.md` §3.
       **El servidor YA valida:** `brain-ai-01/ai_architect/pipelines/ingest.py:9`
       tiene `REQUIRED = ["project", ...]` y `validate_episode` (L11-14) rechaza
       `None`/`""` con `Missing required field: project` -> HTTP 400. O sea que
-      hoy **no se guarda nada sin proyecto**; el defecto es de mensaje.
-      **Los 2 defectos estan en el bridge** (`mcp_bridge.py:456-476`):
-      (1) sin la key `project` -> `args["project"]` lanza `KeyError` (L460) y el
-      modelo recibe `Error ejecutando memory_save: 'project'`;
-      (2) `project: ""` o `null` -> 400 con `{"detail": {...}}` y la L474 lee
-      `result.get("error")` en el nivel equivocado -> el modelo recibe
-      **`Error al guardar: Unknown error`** y el motivo real queda enterrado.
-      **Propuesta:** validar `project` y `decision` antes del request (sin HTTP
-      en el error) y desenvolver `detail` para que el error real llegue al
-      modelo. Codigo exacto en el plan §3.4. Incluye `ValueError` temprano en
-      `clients/memoria.py:99` (hoy `None`/`""` se van al 400 en silencio) y
-      `tests/test_mcp_bridge_validacion.py` con 6 casos sin HTTP (§3.6).
-      **Decisiones pendientes:** (a) si se toca la `description` de
-      `memory_save` (viaja en el schema que ve Groq en D1-D3, asi que obliga a
-      re-correr la suite; se recomienda NO); (b) `brain-ai-01` esta en
-      `main-clean`, no en `develop`, y es otro repo: solo en disco o commiteado
-      alla. **Nada implementado.**
+      **no se guardaba nada sin proyecto**; el defecto era de mensaje.
+      **Los 2 defectos del bridge** (`mcp_bridge.py` `handle_memory_save`):
+      (1) sin la key `project` -> `KeyError` crudo;
+      (2) `project: ""`/`null` -> 400 con `{"detail": {...}}` leido en el nivel
+      equivocado -> **`Error al guardar: Unknown error`**.
+      **Aplicado:** validacion de `project` y `decision` con `.strip()` antes
+      del request (0 HTTP en el error previsible) + desenvolvimiento de `detail`;
+      `ValueError` temprano en `clients/memoria.guardar`; nuevo
+      `tests/test_mcp_bridge_validacion.py` (6 casos sin HTTP).
+      **Decisiones tomadas:** (a) la `description` de `memory_save` **NO se
+      toco** (el `inputSchema` ya declaraba `required`), asi que el `TOOLS` no
+      cambio y **no obliga a re-correr la suite**; (b) commiteado en
+      `main-clean`, sin push.
+      **Verificacion:** `python -m py_compile` OK; `pytest tests/` = 6/6 pass en
+      el archivo nuevo. Pre-existentes (NO causados por 16L, verificados con
+      `git stash` sobre HEAD limpio): 3 fail — `test_memory::test_redact_text`,
+      `test_memory::test_redact_episode_removes_pii`,
+      `test_calidad_contradicciones::test_confidence_aumenta_con_evidencia_repetida`.
+      Diff limitado a `handle_memory_save` (+ `memoria.py` y CHANGELOG).
 - [ ] 16M. `memory_search` solo busca en `semantic` por defecto
       (`mcp_bridge.py:433` y schema L168-173), pero `.ai/MEMORY.md` (este repo y
       5 mas) promete "combina busqueda episodica + semantica" y
@@ -506,8 +510,21 @@ ERROR (tool loop, 2 intentos).
       la documentacion en 6 repos / C3 solo documentar el criterio) en el plan
       §4.6. **Causa raiz del caso concreto NO confirmada**: ni siquiera la
       busqueda explicita en `episodic` lo trajo, asi que hay un segundo factor
-      (indexado o ranking) que no se investigo. Recomendacion: C3 ahora, C1
-      despues de la suite completa. **Nada implementado.**
+      (indexado o ranking) que no se investigo.
+      **DECISION 28/09 23:40 — C3 aplicado, C1 pendiente:**
+      (a) **C3 HECHO:** `.ai/MEMORY.md` de ESTE repo, §Retrieval, ahora
+      documenta que el cliente Python combina ambas colecciones pero el tool
+      MCP busca solo `semantic`, y que para algo recien guardado hay que pasar
+      `collection="episodic"`. No se toco ningun codigo ni el schema del tool.
+      (b) **C1 queda pendiente** (cambiar el default a "ambas") y corres
+      **despues de la suite completa**, para no mezclar un cambio de
+      comportamiento en la busqueda con el re-run pendiente. C1 SI obligara a
+      re-correr la suite.
+      (c) **C2 descartada** (dejaria la trampa instalada en los otros 5 repos);
+      esos 5 `.ai/MEMORY.md` todavia prometen busqueda combinada.
+      Nota: el `.ai/` de este repo no entra en el prompt de la suite
+      (`debug_test_flow.py:76` verifica que NO se lee), asi que este cambio de
+      documentacion **no obliga a re-correr nada**.
 - [ ] 16N. Documentar "MCP ausente del esquema != servicio caido" + script de
       diagnostico (nuevo, 28/09 23:05). La conexion MCP `brain-ai` del proceso
       OpenCode de larga duracion (`run=d5c3b641`, arrancado el 26/09 10:55)

@@ -132,7 +132,11 @@ consolidar()
 
 ## Retrieval
 - Usar `brain-ai_memory_search(query, project="personalizar-comportamiento-01")`
-- Combina búsqueda episódica + semántica
+- **El cliente Python** (`memoria.buscar`) combina búsqueda episódica + semántica;
+  **el tool MCP por defecto busca solo `semantic`** (task 16M/C3, 28/09/2026).
+  Un episodio recién guardado vive en `episodic` hasta la consolidación: para
+  encontrar algo recién guardado pasar `collection="episodic"`.
+  C1 (unificar el default a "ambas") queda pendiente, después de la suite completa.
 - Score híbrido: BM25 + vectorial + recencia + evidencia + confianza
 - **Filtrado estricto por proyecto (21/09/2026):** si pasas `project`,
   solo se devuelven items de ESE proyecto. El fallback cross-project

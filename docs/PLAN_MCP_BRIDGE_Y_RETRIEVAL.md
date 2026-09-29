@@ -1,14 +1,16 @@
 # Diagnóstico: MCP desconectado, guardado sin proyecto y episodio invisible
 
 **Creado:** 2026-09-28 23:20 (local, UTC-3)
-**Estado:** INVESTIGACIÓN CERRADA. **Nada implementado.** 3 propuestas esperando decisión.
+**Actualizado:** 2026-09-28 23:55 (decisiones aplicadas, §6)
+**Estado:** INVESTIGACIÓN CERRADA. **Decisiones tomadas 28/09:** 16L implementada en
+`brain-ai-01` (`4eca553`, local); 16M = C3 aplicado / C1 pendiente. 16N, 16O siguen sin decisión.
 **Alcance:** `../brain-ai-01` (bridge + cliente) y este repo (documentación).
 **Relacionado:** `docs/PLAN_CONVENCION_TOOLS_MCP.md` (16J, cerrado), ítems 16I y 16K de
 `docs/TAREAS_PENDIENTES.md`.
 
 > Este documento es para leer y decidir. Cada hallazgo tiene: qué se investigó, con qué
 > evidencia, **qué NO se sabe**, y la propuesta con sus alternativas y consecuencias.
-> Ninguna de las 3 propuestas se aplicó: eso quedó pendiente de tu respuesta.
+> Las 3 decisiones de §6 fueron tomadas el 28/09 23:40 y ya están aplicadas (ver §5).
 
 ---
 
@@ -375,19 +377,20 @@ deja la trampa instalada en 6 repos.
 
 | # | Tarea | Repo | Prioridad | Estado | Depende de |
 |---|---|---|---|---|---|
-| **16L** | Bridge: no guardar sin `project` (validar `project` y `decision` + desenvolver `detail`) | `brain-ai-01` | **Alta** — pedido explícito | Propuesta, sin implementar (§3) | Decisión 3.7.1 y 3.7.2 |
-| **16L.b** | Cliente `memoria.guardar`: `ValueError` si `proyecto` vacío | `brain-ai-01` | Media | Propuesta (§3.5) | Junto con 16L |
-| **16L.c** | `tests/test_mcp_bridge_validacion.py` (6 casos) | `brain-ai-01` | Media | Propuesta (§3.6) | Junto con 16L |
-| **16M** | `memory_search`: default `semantic` vs documentado "combina ambas" | `brain-ai-01` + 6 `.ai/` | Media | 3 opciones (§4.6), **sin elegir** | Tu decisión: C1 / C2 / C3 |
-| **16N** | Documentar el criterio "MCP ausente del esquema ≠ servicio caído" + script de diagnóstico | este repo | Media | Propuesta (§2.8) | — |
+| **16L** | Bridge: no guardar sin `project` (validar `project` y `decision` + desenvolver `detail`) | `brain-ai-01` | **Alta** — pedido explícito | **HECHA 28/09**, commit `4eca553` en `main-clean` (local) (§3) | — |
+| **16L.b** | Cliente `memoria.guardar`: `ValueError` si `proyecto` vacío | `brain-ai-01` | Media | **HECHA** (mismo commit) | — |
+| **16L.c** | `tests/test_mcp_bridge_validacion.py` (6 casos) | `brain-ai-01` | Media | **HECHA — 6/6 pass** (mismo commit) | — |
+| **16M** | `memory_search`: default `semantic` vs documentado "combina ambas" | `brain-ai-01` + 6 `.ai/` | Media | **C3 aplicado** (`.ai/MEMORY.md` de este repo); **C1 pendiente** (§4.6) | C1: después de la suite |
+| **16N** | Documentar el criterio "MCP ausente del esquema ≠ servicio caído" + script de diagnóstico | este repo | Media | Propuesta (§2.8), **sin decisión** | — |
 | **16O** | `PLANTILLA_MCP.md:44` dice `toolCount=8`, son 10 | config global | Baja | Señalado, sin tocar | Tu OK (fuera del repo) |
 | **16K** | `finish_reason` en `GroqRunner` (de `PLAN_CONVENCION_TOOLS_MCP.md` §8.5.2) | este repo | Media | Propuesta, sin implementar | — |
 | **16I** | `test_ai_structure.py --only-failures` destruye el bloque del modelo | este repo | Media | Abierta, independiente | — |
-| **D3** | Re-correr la suite completa con día dedicado de cuota | este repo | Alta | Pendiente | Conviene **después** de 16L y 16M si se cambian schemas |
+| **D3** | Re-correr la suite completa con día dedicado de cuota | este repo | Alta | Pendiente | Ninguna de las 3 decisiones exige re-run; **C1 (16M) sí**, hacerla antes del re-run o incluirla |
 
-**Nota sobre el orden:** si elegís C1 (16M) y aplicás 16L, ambos tocan el schema de tools que ve
-el modelo. Conviene hacerlos juntos y re-correr la suite **una sola vez** al final, en vez de
-dos veces.
+**Nota sobre el orden (actualizada 28/09):** 16L se aplicó **sin** tocar el schema, así que no
+sumó nada al re-run pendiente. La única que obligará a re-correr la suite es **C1 (16M)**, que
+queda para después del re-run actual — o para incluirse en él si querés aprovechar la misma
+corrida. Si se hace, C1 + cualquier otro cambio de schema van juntos, **una sola corrida**.
 
 ---
 
@@ -451,7 +454,8 @@ Select-String ".ai\MEMORY.md" -Pattern "Combina búsqueda|episodic"
 - **`mcp_bridge.py`**: no se renombra ninguna tool. El patrón `<server_name>_<tool_name>` de
   16J sigue intacto y correcto.
 - **Ningún `opencode.json`**: el server `brain-ai` ya produce el prefijo correcto.
-- **La implementación de los 3 hallazgos**: nada aplicado hasta que decidas.
+- **La implementación de los 3 hallazgos**: 16L aplicada en `brain-ai-01`; 16M solo a nivel de
+  documentación (C3); 16N sigue sin decidir.
 - **`ai_architect/`**: la validación del servidor ya está; no se toca.
 - **Los repos hermanos** (`.ai/` de `portfolio`, `portfolio-02`, `youtube-transcripts`,
   `test-ai-config`, `templates/gitflow-scaffold`): solo se tocarían si elegís C2 en 16M.
