@@ -1,19 +1,15 @@
 # Tareas Pendientes - Suite de Validacion .ai/
-Ultima actualizacion: 29/09/2026 — **16I y 16N cerradas** (ver detalle en sus
-items; commits en `develop`). De la sesión del 28/09 23:00 (plan
-`docs/PLAN_MCP_BRIDGE_Y_RETRIEVAL.md`): **16L IMPLEMENTADA** (commit `4eca553`
-en `brain-ai-01/main-clean`, **pusheado 29/09** dentro de `f56b12f`; 6/6 tests
-nuevos) y **16M: C3 aplicado** (`.ai/MEMORY.md` de este repo documenta que el
-tool MCP busca solo `semantic`; **C1 queda pendiente, después de la suite
-completa**).
-Abiertas sin decisión: ninguna — 16K y 16O cerradas 29/09;
-C1 aplicado en brain-ai-01 (`099d053`, suite local 74/74) pendiente de
-verificación en la suite completa del mismo día. Sigue pendiente la
-verificacion end-to-end de 16G (suite completa
-con dia dedicado de cuota) y D3. El fix de 16H quedo como parche: la causa raiz
-se documento en 16J con plan
-`docs/PLAN_CONVENCION_TOOLS_MCP.md`. Suite post-fix 28/09: plan
-`docs/PLAN_SUITE_POSTFIX_20260926.md` 4/4, sesion `docs/tests/sesion_20260928.md`.
+Ultima actualizacion: 29/09/2026 19:10 — **16I, 16K, 16N, 16O y 16M/C1
+cerradas + suite completa D3/16G cerrada** (ver detalle en sus items y
+`docs/tests/sesion_20260929.md`; commits en `develop`). De la sesión del
+28/09 23:00 (plan `docs/PLAN_MCP_BRIDGE_Y_RETRIEVAL.md`): **16L
+IMPLEMENTADA** (commit `4eca553` en `brain-ai-01/main-clean`, **pusheado
+29/09**; 6/6 tests nuevos) y **16M: C1 aplicado** (default `both`,
+commit brain-ai-01 `099d053`, validado en vivo por la sesión dueña).
+Abiertas sin decisión: ninguna. El fix de 16H quedo como parche: la causa
+raiz se documento en 16J con plan `docs/PLAN_CONVENCION_TOOLS_MCP.md`.
+Suite post-fix 28/09: plan `docs/PLAN_SUITE_POSTFIX_20260926.md` 4/4,
+sesion `docs/tests/sesion_20260928.md`.
 Tareas 1-15 completadas el 25/09 (plan `docs/PLAN_SUITE_COMPLETA_20260926.md`,
 sesion `docs/tests/sesion_20260925.md` §Alcance 25/09 16:08-16:43).
 **Tarea 15 (429 TPD) RESUELTA 25/09** — plan y evidencia en
@@ -462,7 +458,7 @@ ERROR (tool loop, 2 intentos).
       completa** (cierra D3 y 16G): no se lanzo hoy a proposito porque el TPD
       es 200k/cuenta y la avanzada completa son 122k (gpt-oss) / 191k (qwen);
       el 25/09 ambas cuentas llegaron a 199k el mismo dia (§8.5.4).
-- [ ] 16K. `GroqRunner` no registra `finish_reason`: una tool call truncada se
+- [x] 16K. `GroqRunner` no registra `finish_reason`: una tool call truncada se
       pierde en silencio (nuevo, 28/09 22:35). 1 de 3 corridas de `--only D2`
       dio FAIL sin 400 porque gpt-oss escribio la llamada
       `commentary to=functions.brain-ai_memory_save <|constrain|>json<|message|>{...}`
@@ -509,7 +505,7 @@ ERROR (tool loop, 2 intentos).
       `test_memory::test_redact_episode_removes_pii`,
       `test_calidad_contradicciones::test_confidence_aumenta_con_evidencia_repetida`.
       Diff limitado a `handle_memory_save` (+ `memoria.py` y CHANGELOG).
-- [ ] 16M. `memory_search` solo busca en `semantic` por defecto
+- [x] 16M. `memory_search` solo busca en `semantic` por defecto
       (`mcp_bridge.py:433` y schema L168-173), pero `.ai/MEMORY.md` (este repo y
       5 mas) promete "combina busqueda episodica + semantica" y
       `clients/memoria.py:114` si busca en las dos. Un episodio recien guardado
@@ -538,7 +534,14 @@ ERROR (tool loop, 2 intentos).
       Nota: el `.ai/` de este repo no entra en el prompt de la suite
       (`debug_test_flow.py:76` verifica que NO se lee), asi que este cambio de
       documentacion **no obliga a re-correr nada**.
-- [ ] 16N. Documentar "MCP ausente del esquema != servicio caido" + script de
+      **C1 APLICADO 29/09** (commit brain-ai-01 `099d053`, validado en vivo
+      por la sesion duena): `retrieval.retrieve()` acepta `"both"`, defaults
+      del bridge y `mcp_server.py` a `"both"`; `.ai/MEMORY.md` de este repo
+      actualizado. Verificado end-to-end en la suite del mismo dia
+      (`tool_calls` D3 con `"collection": "both"` exitoso) → **D3/16G se
+      cierran** con residuales en `docs/tests/sesion_20260929.md` (qwen D8
+      BLOCKED_TPD + D9 sin correr; FAIL conductuales historicos T4/C2/T1).
+- [x] 16N. Documentar "MCP ausente del esquema != servicio caido" + script de
       diagnostico (nuevo, 28/09 23:05). La conexion MCP `brain-ai` del proceso
       OpenCode de larga duracion (`run=d5c3b641`, arrancado el 26/09 10:55)
       murio **1,9 s despues** de que alguien lanzara `python
