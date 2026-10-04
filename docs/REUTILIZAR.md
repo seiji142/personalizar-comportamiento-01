@@ -1,64 +1,98 @@
 # Reutilizar el Framework de Comportamiento
 
-Guía para adoptar el framework de archivos `.ai/` + `opencode.json` + piezas de gitflow en otro proyecto.
+Guía para adoptar el framework en otro proyecto.
+
+> **§0 — Lee esto primero.** Toda adopción del framework incluye SIEMPRE el
+> **Núcleo** (comportamiento + estructura). El MCP `brain-ai` y la plantilla
+> `gitflow-scaffold` son **opcionales** y solo se agregan si se piden
+> explícitamente. Una adopción que solo copie `.ai/` está incompleta por
+> definición (ver Checklist).
+>
+> **Forma preferida de adoptar:** abre OpenCode en el proyecto destino
+> (vacío) e invoca `/adoptar-framework` (comando global en
+> `~/.config/opencode/commands/adoptar-framework.md`; reinicia OpenCode tras
+> instalarlo). El comando pregunta dominio/stack/modelo y ejecuta el Núcleo
+> solo. El prompt manual de abajo es el fallback si el comando no está
+> instalado.
 
 ---
 
 ## Fuentes
 
-El framework se compone de dos orígenes:
+| Fuente | Qué aporta | Ubicación | Obligatoria |
+|--------|-----------|-----------|-------------|
+| **Este proyecto** (`personalizar-comportamiento-01`) | Núcleo: `.ai/` de comportamiento (guardrails, plantilla de rechazo, memoria conceptual) + estructura base (`src/`, `tests/`, `docs/`, `scripts/`, raíz) | `Proyecto AI/personalizar-comportamiento-01/` | **Sí, siempre** |
+| **MCP brain-ai** (proyecto `brain-ai-01`) | Memoria persistente + provenance/handles (`brain-ai_*`) | Proyecto `brain-ai-01`, bloque `mcp` en `opencode.json` | Solo si se pide MCP |
+| **gitflow-scaffold** (template, v2026.09.25) | Piezas de gitflow: ramas, CI, gh-publish, `VERSION` | `Proyecto AI/templates/gitflow-scaffold/` | Solo si se pide gitflow |
 
-| Fuente | Qué aporta | Ubicación |
-|--------|-----------|-----------|
-| **Este proyecto** (`personalizar-comportamiento-01`) | `.ai/` de comportamiento: guardrails, plantilla de rechazo, provenance, memoria | `Proyecto AI/personalizar-comportamiento-01/.ai/` |
-| **gitflow-scaffold** (template, v2026.09.25) | Piezas de gitflow: ramas, CI, gh-publish, checklist pre-PR, `opencode.json` base | `Proyecto AI/templates/gitflow-scaffold/` |
-
-**Nota:** las piezas de gitflow (`ci.yml`, `gh-publish.ps1`, sección de ramas) se copian **desde el template**, no desde este proyecto — nuestro `ci.yml` ya está adaptado a Python.
+**Nota:** las piezas de gitflow (`ci.yml`, `gh-publish.ps1`, `VERSION`, sección de ramas) se copian **desde el template**, no desde este proyecto — nuestro `ci.yml` ya está adaptado a Python.
 
 ---
 
 ## Qué es lo reutilizable
 
+### Núcleo (siempre)
+
 | Componente | Fuente | Descripción |
 |------------|--------|-------------|
-| `.ai/` | Este proyecto | System prompt del agente (rol, reglas, contexto, agentes) |
-| `opencode.json` | Template | Configuración de modelo, permisos e instrucciones |
+| `.ai/` (limpio, sin `brain-ai_*`) | Este proyecto | System prompt del agente (rol, reglas, contexto, agentes) |
+| `opencode.json` (sin bloque `mcp`) | Este proyecto | Configuración de modelo, permisos e instrucciones |
 | `AGENTS.md` | Este proyecto | Punto de entrada de OpenCode |
+| `src/`, `tests/`, `docs/`, `scripts/` (con `.gitkeep` + `README.md` breve) | Crear nuevos | Estructura base de código, pruebas, documentación y tooling |
+| `.env.example` | Crear nuevo | Plantilla con las variables que el proyecto necesita |
+| `.gitignore` | Este proyecto (adaptar) | Exclusiones estándar (`.env`, `node_modules/`, `__pycache__/`, `logs/`, etc.) |
+| `README.md` | Crear nuevo | Documentación principal del nuevo proyecto |
+| `requirements.txt` | Crear nuevo | Solo cuando el stack lo exija |
+
+### Opcional MCP brain-ai (solo si se pide)
+
+Secciones `brain-ai_*` en `system.md`, §9 de `rules.md` (procedencia/handles),
+tools de memoria en `commands.md`/`MEMORY.md` y bloque `mcp.brain-ai` en
+`opencode.json`.
+
+### Opcional gitflow (solo si se pide)
+
+| Componente | Fuente | Descripción |
+|------------|--------|-------------|
 | `scripts/gh-publish.ps1` | Template | Creación/merge de PRs vía gh CLI |
 | `.github/workflows/ci.yml` | Template | CI offline en PRs y push |
-| `.github/workflows/deploy.yml` | Template | Deploy a GitHub Pages (opcional, solo si aplica) |
+| `.github/workflows/deploy.yml` | Template | Deploy a GitHub Pages (solo si aplica) |
 | `TEMPLATE_GITFLOW_GH_PAGES.md` | Template | Guía completa de setup de gitflow |
 | `VERSION` + `CHANGELOG.md` | Template | Control de versiones del kit para upgrades |
 
-**No incluye:** la suite de tests (`src/doc/ESTRUCTURA/`). Los tests son específicos de este proyecto.
+**No incluye nunca:** la suite de tests (`src/doc/ESTRUCTURA/`). Los tests son específicos de este proyecto.
 
 ---
 
-## Estructura Esencial
+## Estructura del Núcleo (obligatoria)
 
 ```
 nuevo-proyecto/
 ├── .ai/
 │   ├── system.md          # Rol, tono y estilo del agente
 │   ├── rules.md           # Reglas obligatorias (seguridad, git, calidad)
-│   ├── context.md         # Stack, arquitectura, ramas y convenciones
+│   ├── context.md         # Stack, arquitectura y convenciones
 │   ├── agents.md          # Agentes especialistas
-│   ├── commands.md        # Checklist pre-PR + publicación
-│   └── MEMORY.md          # Persistencia de contexto
-├── .github/workflows/
-│   ├── ci.yml             # CI offline en PRs/push
-│   └── deploy.yml         # Deploy Pages (opcional)
-├── scripts/
-│   └── gh-publish.ps1     # Crear/mergear PRs vía gh CLI
-├── src/                   # Código fuente
-├── tests/                 # Pruebas
-├── docs/                  # Documentación
-├── opencode.json          # Configuración de OpenCode
+│   ├── commands.md        # Checklist pre-PR (genérica, sin gh-publish)
+│   └── MEMORY.md          # Principios de memoria (sin MCP salvo opcional)
+├── src/                   # Código fuente (.gitkeep + README breve)
+├── tests/                 # Pruebas (.gitkeep + README breve)
+├── docs/                  # Documentación (.gitkeep + README breve)
+├── scripts/               # Scripts utilitarios (.gitkeep + README breve)
+├── opencode.json          # Configuración de OpenCode (sin mcp salvo opcional)
 ├── AGENTS.md              # Punto de entrada
 ├── .env.example           # Plantilla de variables
 ├── .gitignore             # Exclusiones
-├── requirements.txt       # Dependencias
 └── README.md              # Documentación principal
+```
+
+### Bloques opcionales (solo si se piden)
+
+```
+# Solo si MCP:  bloque "mcp": {"brain-ai": ...} en opencode.json
+#               + secciones brain-ai_* en .ai/
+# Solo si gitflow: .github/workflows/ci.yml (+ deploy.yml si Pages)
+#                  scripts/gh-publish.ps1, VERSION, ramas main/develop
 ```
 
 ---
@@ -68,11 +102,11 @@ nuevo-proyecto/
 | Archivo | Copiar tal cual | Adaptar | Solo si hay MCP brain-ai | No copiar |
 |---------|-----------------|---------|--------------------------|-----------|
 | `.ai/system.md` | Jerarquía de prioridad, plantilla de rechazo, ejemplos few-shot, rol, tono, estructura de respuestas, postura epistémica, sección Git (tools `git_ver_*` / `git_subir_cambios`, config global de opencode) | Nombre de proyecto en ejemplos | Memoria persistente + Herramientas de provenance | — |
-| `.ai/rules.md` | Secciones 1-5 (código, git, seguridad, calidad, documentación), 6 (hard constraints), 7 (memoria), 8.1-8.3 (verificación básica) | Ejemplos con nombre propio | Sección 9 (procedencia y referencias) | 8.5 (rutas de log específicas), 8.6 (incidente brain-ai-01) |
+| `.ai/rules.md` | Secciones 1-5 (código, git, seguridad, calidad, documentación), 6 (hard constraints), 7 (memoria conceptual), 8.1-8.4 (verificación básica) | Ejemplos con nombre propio | Sección 9 (procedencia y referencias) | 8.5 (rutas de log específicas), 8.6 (incidente brain-ai-01) |
 | `.ai/context.md` | Estructura de plantilla | Todo el contenido (stack, arquitectura, variables) | — | Convenciones de tests específicas |
 | `.ai/agents.md` | **Todo (100% común)** | — | — | — |
-| `.ai/commands.md` | Estructura general, nota de comandos slash, sección de publicación con gh-publish | Checklist pre-PR con tests del nuevo proyecto | Tablas de tools brain-ai | Variante B específica de este proyecto |
-| `.ai/MEMORY.md` | Descripción de tools, cuándo usar cada una, categorías de memoria, flujo obligatorio | Nombre de proyecto (param default) | Todo el contenido de uso de tools | Hallazgos fechados, 429 TPD, incidentes específicos |
+| `.ai/commands.md` | Estructura general, nota de comandos slash | Checklist pre-PR con tests del nuevo proyecto | Tablas de tools brain-ai, sección de publicación con gh-publish | Variante B específica de este proyecto |
+| `.ai/MEMORY.md` | Categorías de memoria, qué (no) guardar, flujo conceptual | Nombre de proyecto | Descripción de tools, params (`project`/`top_k`/`collection`), hallazgos fechados | 429 TPD, incidentes específicos |
 | `scripts/gh-publish.ps1` | **Casi todo** (es del template) | Comentario "Python sin GitHub Pages" | — | — |
 | `.github/workflows/ci.yml` | Estructura y triggers | `<RUTA_APP>`, pasos de test al stack del nuevo proyecto | — | Comandos de test de este proyecto |
 | `.github/workflows/deploy.yml` | Solo si el nuevo proyecto usa GitHub Pages | `<SUB_PROYECTO>` | — | — |
@@ -98,14 +132,55 @@ Estas instrucciones deben quedarse siempre en cualquier proyecto, sin importar e
 
 ## Paso a Paso
 
-### 1. Copiar archivos base desde este proyecto
+### 1. Copiar el Núcleo desde este proyecto (obligatorio, siempre)
 
 ```bash
 cp -r .ai/ /ruta/nuevo-proyecto/
-cp opencode.json AGENTS.md /ruta/nuevo-proyecto/
+cp opencode.json AGENTS.md .gitignore /ruta/nuevo-proyecto/
 ```
 
-### 2. Copiar piezas de gitflow desde el template
+Quitar el bloque `mcp` de `opencode.json` salvo que se haya pedido el opcional MCP.
+Permisos recomendados para proyecto nuevo: todo en `ask`.
+
+### 2. Crear la estructura base (obligatorio, siempre)
+
+```bash
+mkdir /ruta/nuevo-proyecto/src /ruta/nuevo-proyecto/tests /ruta/nuevo-proyecto/docs /ruta/nuevo-proyecto/scripts
+```
+
+En cada carpeta: `.gitkeep` + `README.md` breve (propósito + convención de `.ai/context.md` + ejemplo de ruta).
+
+### 3. Crear archivos raíz (obligatorio, siempre)
+
+- `.env.example` — plantilla con las variables que el proyecto necesita
+- `README.md` — documentación del nuevo proyecto
+- `requirements.txt` — solo cuando el stack lo exija
+
+### 4. Limpiar contenido no reutilizable (obligatorio, siempre)
+
+Siguiendo la tabla "Qué copiar de cada archivo", eliminar del nuevo proyecto:
+
+- De `rules.md`: secciones 8.5 y 8.6, y §9 completa salvo opcional MCP
+- De `context.md`: convenciones de tests específicas; stack/architectura a lo real del nuevo proyecto
+- De `commands.md`: Variante B específica de este proyecto; tablas `brain-ai_*` salvo opcional MCP; `gh-publish` salvo opcional gitflow
+- De `MEMORY.md`: hallazgos fechados y sección de 429 TPD; tools salvo opcional MCP
+- De `system.md`: secciones de `brain-ai_*` salvo opcional MCP
+
+### 5. Adaptar contenido específico (obligatorio, siempre)
+
+- `system.md` — rol, nombre de proyecto en ejemplos
+- `rules.md` — reglas del dominio, convenciones del nuevo proyecto
+- `context.md` — stack real, arquitectura, dependencias, variables de entorno
+- `commands.md` — checklist de validación con tests del nuevo proyecto
+- `MEMORY.md` — nombre del nuevo proyecto
+- `opencode.json` — modelo deseado
+
+### 6. Opcional MCP (solo si se pide explícitamente)
+
+Agregar bloque `mcp.brain-ai` en `opencode.json` y restaurar las secciones
+`brain-ai_*` según la columna "Solo si hay MCP brain-ai" de la tabla.
+
+### 7. Opcional gitflow (solo si se pide explícitamente)
 
 ```bash
 cp Proyecto\ AI/templates/gitflow-scaffold/scripts/gh-publish.ps1 /ruta/nuevo-proyecto/scripts/
@@ -115,83 +190,75 @@ cp Proyecto\ AI/templates/gitflow-scaffold/VERSION /ruta/nuevo-proyecto/
 ```
 
 Seguir `TEMPLATE_GITFLOW_GH_PAGES.md` para ramas, protección de `main` y autenticación de `gh`.
+Adaptar `ci.yml` (`<RUTA_APP>` + tests del stack) y `commands.md` (checklist con CI + publicación vía script).
 
-### 3. Limpiar contenido no reutilizable
-
-Siguiendo la tabla "Qué copiar de cada archivo", eliminar del nuevo proyecto:
-
-- De `rules.md`: secciones 8.5 y 8.6
-- De `context.md`: convenciones de tests específicas
-- De `commands.md`: Variante B específica de este proyecto
-- De `MEMORY.md`: hallazgos fechados y sección de 429 TPD
-- De todos: secciones de brain-ai si el nuevo proyecto no usa ese MCP
-
-### 4. Adaptar contenido específico
-
-- `system.md` — rol, nombre de proyecto en ejemplos
-- `rules.md` — reglas del dominio, convenciones del nuevo proyecto
-- `context.md` — stack real, arquitectura, dependencias, variables de entorno, ramas (desde el template)
-- `commands.md` — checklist de validación con tests del nuevo proyecto
-- `MEMORY.md` — nombre de proyecto en params default
-- `ci.yml` — `<RUTA_APP>` + comandos de test del stack del nuevo proyecto
-- `gh-publish.ps1` — ajustar comentario final si el stack es distinto
-
-### 5. Verificar guardrails
+### 8. Verificar guardrails (obligatorio, siempre)
 
 Confirmar que las 8 instrucciones de "Guardrails Recomendados" siguen presentes.
-
-### 6. Configurar `opencode.json`
-
-```json
-{
-  "model": "tu-modelo/aqui",
-  "instructions": [".ai/system.md", ".ai/rules.md", ".ai/context.md", ".ai/agents.md"],
-  "permission": {
-    "bash": "ask",
-    "write": "ask",
-    "edit": "ask"
-  }
-}
-```
-
-### 7. Crear archivos raíz
-
-- `.env.example` — plantilla con las variables que el proyecto necesita
-- `.gitignore` — exclusiones estándar (`.env`, `node_modules/`, `__pycache__/`, `logs/`, etc.)
-- `README.md` — documentación del nuevo proyecto
 
 ---
 
 ## Checklist de Adopción
 
-- [ ] Copiar `.ai/`, `opencode.json` y `AGENTS.md` desde este proyecto
-- [ ] Copiar `gh-publish.ps1`, `ci.yml` (y `deploy.yml` si aplica) desde el template gitflow-scaffold
-- [ ] Copiar `VERSION` del template para control de upgrades
+### Núcleo (bloqueante, siempre)
+- [ ] Copiar `.ai/`, `opencode.json` (sin `mcp`), `AGENTS.md` y `.gitignore` desde este proyecto
+- [ ] Crear `src/`, `tests/`, `docs/`, `scripts/` con `.gitkeep` + `README.md` breve
 - [ ] Limpiar contenido no reutilizable (tabla "Qué copiar de cada archivo")
 - [ ] Adaptar `system.md` con el rol correcto
 - [ ] Adaptar `rules.md` con las reglas del dominio
-- [ ] Adaptar `context.md` con el stack real y ramas del template
+- [ ] Adaptar `context.md` con el stack real
 - [ ] Adaptar `commands.md` con la checklist del nuevo proyecto
 - [ ] Adaptar `MEMORY.md` con el nombre del nuevo proyecto
-- [ ] Adaptar `ci.yml` con `<RUTA_APP>` y tests del stack
 - [ ] Verificar que los 8 guardrails siguen presentes
 - [ ] Configurar `opencode.json` con el modelo deseado
-- [ ] Crear `.env.example`, `.gitignore` y `README.md`
+- [ ] Crear `.env.example` y `README.md` (`requirements.txt` si el stack lo exige)
+
+### Opcional MCP (solo si se pidió)
+- [ ] Bloque `mcp.brain-ai` en `opencode.json` + secciones `brain-ai_*` restauradas
+
+### Opcional gitflow (solo si se pidió)
+- [ ] Copiar `gh-publish.ps1`, `ci.yml` (y `deploy.yml` si aplica) y `VERSION` desde el template gitflow-scaffold
+- [ ] Adaptar `ci.yml` con `<RUTA_APP>` y tests del stack
+- [ ] Ramas y protección de `main` según `TEMPLATE_GITFLOW_GH_PAGES.md`
 
 ---
 
 ## Ejemplo de Prompt para el Agente del Nuevo Proyecto
 
+Forma preferida (comando global, lo habitual):
+
+```
+/adoptar-framework
+```
+
+(Desde el proyecto destino. El comando pregunta dominio/stack/modelo y
+ejecuta el Núcleo. Requiere el archivo en
+`~/.config/opencode/commands/adoptar-framework.md` + reinicio de OpenCode.)
+
+Fallback manual (si el comando no está instalado):
+
+Mínimo (Núcleo):
+
 ```
 Adopta el framework de personalizar-comportamiento-01 siguiendo su guía
-docs/REUTILIZAR.md. Copia .ai/, opencode.json y AGENTS.md desde
-Proyecto AI/personalizar-comportamiento-01/. Copia scripts/gh-publish.ps1,
-.github/workflows/ (ci.yml, deploy.yml si hay Pages) y VERSION desde
-Proyecto AI/templates/gitflow-scaffold/, siguiendo su guía
-TEMPLATE_GITFLOW_GH_PAGES.md para ramas y protección de main.
+docs/REUTILIZAR.md (§0: Núcleo obligatorio = comportamiento + estructura).
+Copia .ai/, opencode.json (sin mcp), AGENTS.md y .gitignore desde
+Proyecto AI/personalizar-comportamiento-01/. Crea src/, tests/, docs/,
+scripts/ con .gitkeep + README breve. Crea .env.example y README.md.
 Limpia contenido específico de ese proyecto (secciones 8.5 y 8.6 de
-rules.md, convenciones de tests, Variante B, hallazgos fechados).
-Adapta system.md para un especialista en [DOMINIO], context.md con el
-stack [STACK], ci.yml con los tests del proyecto. Configura opencode.json
+rules.md, §9 salvo MCP, convenciones de tests, Variante B, hallazgos
+fechados, secciones brain-ai_*). Adapta system.md para un especialista
+en [DOMINIO] y context.md con el stack [STACK]. Configura opencode.json
 con el modelo [MODELO]. Verifica que los 8 guardrails sigan presentes.
+```
+
+Con opcionales (agregar solo lo pedido):
+
+```
+# + MCP: ...agrega el bloque mcp.brain-ai y restaura las secciones
+# brain-ai_* según la tabla de REUTILIZAR.md.
+# + Gitflow: ...copia scripts/gh-publish.ps1, .github/workflows/
+# (ci.yml, deploy.yml si hay Pages) y VERSION desde
+# Proyecto AI/templates/gitflow-scaffold/, siguiendo su guía
+# TEMPLATE_GITFLOW_GH_PAGES.md para ramas y protección de main.
 ```

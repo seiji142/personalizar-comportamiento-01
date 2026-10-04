@@ -82,6 +82,17 @@ Ver `docs/RESULTADOS_TEST_AI.md` para el analisis completo.
 
 ## Uso
 
+### Adoptar el framework en otro proyecto (forma preferida)
+
+```text
+/adoptar-framework
+```
+
+Abre OpenCode en el proyecto destino (vacío) e invoca el comando global
+(`~/.config/opencode/commands/adoptar-framework.md`; reinicia OpenCode tras
+instalarlo). Pregunta dominio/stack/modelo y aplica el Núcleo
+(comportamiento + estructura). Detalle en `docs/REUTILIZAR.md` §0.
+
 ```bash
 # Iniciar OpenCode con la configuracion del proyecto
 opencode
