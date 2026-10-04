@@ -217,6 +217,34 @@ def save_incremental(report_path, all_results):
         print(f"WARN: No se pudo guardar incrementalmente: {e}")
 
 
+def finalize_fresh_replace(report_path, all_results, completed_labels):
+    """Aplica el reset --fresh SOLO a modelos que completaron todo (tarea 16A).
+
+    Reemplaza la entrada del modelo por los casos recién ejecutados (limpia
+    stale). Los modelos con corte parcial (BLOCKED_TPD, --only) no se tocan:
+    conservan el merge incremental y no se pierde ningún caso previo.
+    Retorna la cantidad de modelos reemplazados.
+    """
+    if not completed_labels:
+        return 0
+    try:
+        with open(report_path, "r", encoding="utf-8") as f:
+            existing = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return 0
+    replaced = 0
+    for label in completed_labels:
+        if label in all_results:
+            existing.setdefault("models", {})[label] = all_results[label]
+            replaced += 1
+    if replaced:
+        existing["timestamp"] = datetime.now().isoformat()
+        existing["type"] = "advanced_validation"
+        with open(report_path, "w", encoding="utf-8") as f:
+            json.dump(existing, f, indent=2, ensure_ascii=False)
+    return replaced
+
+
 def load_previous_failures():
     """Carga IDs de tests que fallaron en el reporte anterior."""
     if not os.path.exists(REPORT_FILE):
@@ -272,10 +300,13 @@ def main():
     questions = load_questions()
     print(f"Runner avanzado ({len(questions)} casos)")
 
-    # Solo borrar el JSON si se pasa --fresh (limpieza explícita)
-    if fresh and os.path.exists(REPORT_FILE):
-        os.remove(REPORT_FILE)
-        print(f"[OK] Reporte anterior eliminado (--fresh): {REPORT_FILE}")
+    # --fresh con reemplazo al exito (tarea 16A): NO se borra el JSON al
+    # inicio. Borrar + un corte BLOCKED_TPD a mitad perdia los casos no
+    # ejecutados (avanzada 23->17/1 el 25/09). El reset se aplica al final
+    # SOLO a modelos que completaron todos sus casos (finalize_fresh_replace);
+    # los cortes parciales conservan el merge (no se pierde nada).
+    if fresh:
+        print("[OK] --fresh: reemplazo al exito (sin borrado previo)")
 
     # Si --only, filtrar solo los IDs indicados (ej: --only B3)
     if only_ids:
@@ -357,6 +388,18 @@ def main():
     # para asegurar que todo esté sincronizado
     save_incremental(report_path, all_results)
     print(f"\nReporte guardado en {report_path}")
+
+    if fresh:
+        # Reemplazo al exito (tarea 16A): solo los modelos que ejecutaron
+        # TODOS los casos de esta corrida (sin corte BLOCKED_TPD) resetean
+        # su entrada (limpia stale). Los cortes parciales quedan en merge.
+        completed = [
+            label for label, cases in all_results.items()
+            if len(cases) == len(questions)
+            and not any(c.get("status") == "BLOCKED_TPD" for c in cases.values())
+        ]
+        n = finalize_fresh_replace(report_path, all_results, completed)
+        print(f"[fresh] {n} modelo(s) con reset aplicado: {completed}")
 
     if blocked_labels:
         # Reclasificar ERROR/FAIL con evidencia de 429-TPD (decision tarea 15)

@@ -17,7 +17,11 @@ SYNONYMS = {
     "software": ["software", "programa", "aplicacion"],
     "rules.md": ["rules.md", "rules", "reglas del proyecto"],
     "context.md": ["context.md", "context", "contexto del proyecto"],
-    "proyecto": ["proyecto", "project"],
+    # "test-ai-config": nombre real del proyecto (tarea 16F). big-pickle T1
+    # mismo dia 28/09: 12:34 "trabaja en el proyecto test-ai-config" (PASS) vs
+    # 13:24 "trabaja en test-ai-config" (FAIL) — misma intencion, el literal
+    # "proyecto" no deberia decidir el veredicto.
+    "proyecto": ["proyecto", "project", "test-ai-config"],
 
     # T2 - rules.md
     "seguridad": ["seguridad", "secure", "seguro"],
@@ -34,6 +38,10 @@ SYNONYMS = {
 
     # T4 - agents.md
     "regresion": ["regresion", "regresión"],
+    # "qa": el rol QA puede nombrarse sin la sigla (tarea 16E); precedente:
+    # sinonimos de tarea 14. "calidad"/"aseguramiento" miden la misma
+    # activacion de sub-rol que la sigla literal.
+    "qa": ["qa", "calidad", "aseguramiento", "quality assurance", "control de calidad"],
     "testing": ["testing", "pruebas", "qa", "aseguramiento", "calidad"],
     # tests/pytest: el modelo suele escribir "suites de tests" o "pytest"
     # en vez del singular "test" (tarea 14, flakiness T4 23/09)

@@ -4,6 +4,10 @@ Cliente MCP stdio mínimo: initialize, tools/list, tools/call.
 
 Habla JSON-RPC 2.0 (newline-delimited) con un servidor MCP por stdio.
 Reutiliza el mismo camino que usa OpenCode con mcp_bridge.py.
+
+Los nombres que el bridge expone son internos (memory_save). Al publicarlos
+para la API hay que prefijarlos con el server name de opencode.json:
+brain-ai_memory_save (tarea 16J).
 """
 
 import json
@@ -163,24 +167,102 @@ def sanitize_tool_name(name):
     return re.sub(r"[^a-zA-Z0-9_\-]", "_", name)
 
 
-def mcp_tools_to_openai(mcp_tools):
+# ── Nombre del server MCP (tarea 16J) ─────────────────────────────
+# OpenCode registra cada tool MCP como <server_name>_<tool_name>, tal cual
+# figura en opencode.json. Ver https://opencode.ai/docs/mcp-servers:
+#   "MCP server tools are registered with server name as prefix"
+# El bridge expone nombres internos (memory_save); el nombre publicado por
+# el harness tiene que ser brain-ai_memory_save, no memory_save.
+# 824 llamadas en ~/.local/share/opencode/log/opencode.log: todas con guion.
+DEFAULT_SERVER_NAME = "brain-ai"
+BRIDGE_MARKER = "mcp_bridge.py"
+CONFIG_FILENAMES = ("opencode.json", "opencode.jsonc")
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+TEST_PROJECT = os.path.normpath(
+    os.getenv("TEST_PROJECT", os.path.join(PROJECT_ROOT, "..", "test-ai-config")))
+
+
+def _server_name_from_config(path):
+    """Server MCP del bridge en un opencode.json, o None si no se puede leer.
+
+    El bridge se reconoce por su comando (apunta a mcp_bridge.py). Si el
+    archivo declara varios servers y ninguno coincide, devuelve None antes
+    que adivinar: un nombre equivocado produce tools que Groq rechaza.
+    """
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            config = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    servers = config.get("mcp")
+    if not isinstance(servers, dict) or not servers:
+        return None
+    for name, spec in servers.items():
+        if not isinstance(spec, dict):
+            continue
+        command = spec.get("command") or []
+        if isinstance(command, str):
+            command = [command]
+        if any(BRIDGE_MARKER in str(part) for part in command):
+            return name
+    if len(servers) == 1:
+        return next(iter(servers))
+    return None
+
+
+def discover_server_name(test_project=None, project_root=None):
+    """Devuelve la clave del server MCP tal como la declara opencode.json.
+
+    Orden: <TEST_PROJECT>/opencode.json -> <PROJECT_ROOT>/opencode.json
+           -> "brain-ai" (fallback, decision D9).
+    """
+    roots = (TEST_PROJECT if test_project is None else test_project,
+             PROJECT_ROOT if project_root is None else project_root)
+    for root in roots:
+        if not root:
+            continue
+        for filename in CONFIG_FILENAMES:
+            name = _server_name_from_config(os.path.join(root, filename))
+            if name:
+                return name
+    return DEFAULT_SERVER_NAME
+
+
+def _tool_schema(name, tool):
+    return {
+        "type": "function",
+        "function": {
+            "name": name,
+            "description": tool.get("description", ""),
+            "parameters": tool.get("inputSchema",
+                                   {"type": "object", "properties": {}}),
+        },
+    }
+
+
+def mcp_tools_to_openai(mcp_tools, server_name=None):
     """
     Convierte tools MCP al formato OpenAI/Groq.
     Devuelve (tools_openai, name_map) donde name_map traduce
     nombre_api -> nombre_mcp real.
+
+    Cada tool se publica UNA vez, con el nombre registrado por OpenCode:
+    <server_name>_<tool_name> (tarea 16J). server_name=None lo resuelve
+    discover_server_name() leyendo opencode.json; los unit tests pasan el
+    nombre explicito para no tocar el filesystem.
+
+    Sin prefijo, cuando el modelo obedece el prompt Groq responde 400
+    tool_use_failed: "attempted to call tool 'brain_ai_memory_save' which
+    was not in request.tools" (D2 gpt-oss, tarea 16H, 28/09/2026).
     """
+    if server_name is None:
+        server_name = discover_server_name()
     tools = []
     name_map = {}
     for t in mcp_tools:
-        api_name = sanitize_tool_name(t["name"])
+        api_name = sanitize_tool_name(f"{server_name}_{t['name']}")
         name_map[api_name] = t["name"]
-        tools.append({
-            "type": "function",
-            "function": {
-                "name": api_name,
-                "description": t.get("description", ""),
-                "parameters": t.get("inputSchema", {"type": "object", "properties": {}}),
-            },
-        })
+        tools.append(_tool_schema(api_name, t))
 
     return tools, name_map

@@ -69,16 +69,16 @@ Tienes acceso a herramientas de busqueda y guardado de memoria.
 
 ### Herramientas Disponibles
 
-- `brain_ai_memory_search`: Busca episodios, decisiones y conocimiento en memoria.
-- `brain_ai_memory_save`: Guarda un episodio despues de tomar una decision importante.
-- `brain_ai_memory_consolidate`: Consolida episodios en conocimiento semantico.
+- `brain-ai_memory_search`: Busca episodios, decisiones y conocimiento en memoria.
+- `brain-ai_memory_save`: Guarda un episodio despues de tomar una decision importante.
+- `brain-ai_memory_consolidate`: Consolida episodios en conocimiento semantico.
 
 ### Reglas de Uso
 
 1. **PARA PREGUNTAS SOBRE DECISIONES PREVIAS, EPISODIOS O CONTEXTO HISTORICO:**
-   DEBES usar `brain_ai_memory_search` ANTES de responder.
+   DEBES usar `brain-ai_memory_search` ANTES de responder.
 2. **DESPUES DE TOMAR UNA DECISION IMPORTANTE:**
-   DEBES usar `brain_ai_memory_save` para registrar la decision.
+   DEBES usar `brain-ai_memory_save` para registrar la decision.
 3. **NO INVENTES RECUERDOS** si la herramienta no devuelve resultados.
 4. **SI NO HAY RESULTADOS**, indicalo claramente.
 5. **BASA LA RESPUESTA** exclusivamente en los resultados recuperados cuando la pregunta requiera memoria.
@@ -87,7 +87,7 @@ Tienes acceso a herramientas de busqueda y guardado de memoria.
 
 ```
 Usuario: "Que base de datos usamos?"
-Accion: Llamar brain_ai_memory_search(query="base de datos", project="personalizar-comportamiento-01")
+Accion: Llamar brain-ai_memory_search(query="base de datos", project="personalizar-comportamiento-01")
 Resultado: Encontré que usamos MySQL.
 Respuesta: Segun la memoria, usamos MySQL como base de datos.
 ```
@@ -96,45 +96,9 @@ Respuesta: Segun la memoria, usamos MySQL como base de datos.
 - Credenciales, tokens, API keys
 - Informacion personal sensible
 
-## brain-ai-01: Primera Fuente
-
-brain-ai-01 es tu fuente de información para decisiones y credenciales.
-
-### Consultar ANTES de responder
-
-| Situación | Herramienta | Ejemplo |
-|-----------|-------------|---------|
-| Pregunta sobre decisión pasada | `brain_ai_memory_search` | "¿Qué base de datos usamos?" |
-| Pregunta sobre configuración | `brain_ai_memory_search` | "¿Cómo configuramos JWT?" |
-| Credencial o secret | `brain_ai_memory_search` | "¿Tenemos la API key de Groq?" |
-
-### Flujo Obligatorio
-
-1. **Detecta** si la pregunta es sobre decisiones, configuración o credenciales
-2. **Busca** en memoria con `brain_ai_memory_search(query="...", project="...")`
-3. **Si hay resultado** → úsalo como base para tu respuesta
-4. **Si no hay resultado** → responde con incertidumbre ("no tengo información previa")
-5. **Si tomas una decisión importante** → `brain_ai_memory_save(...)` para registrarla
-
-### Ejemplo
-
-```
-Usuario: "¿Qué base de datos usamos?"
-Acción: brain_ai_memory_search(query="base de datos", project="personalizar-comportamiento-01")
-Resultado: Encontré que usamos MySQL.
-Respuesta: Según la memoria, usamos MySQL como base de datos.
-```
-
-```
-Usuario: "Haz deploy a staging"
-Acción: brain_ai_memory_search(query="GROQ_API_KEY", project="personalizar-comportamiento-01")
-Resultado: No encontré la clave en memoria.
-Acción: resolver_referencia("GROQ_API_KEY", expected_kind="secret")
-Resultado: handle vh_abc123
-Acción: ejecutar_accion("deploy", {environment: "staging", api_key: {handle: "vh_abc123"}, region: "us-east-1"})
-Resultado: Deploy exitoso
-Acción: brain_ai_memory_save(project="personalizar-comportamiento-01", decision="Deploy a staging exitoso", tags=["deploy", "staging"])
-```
+> La seccion "brain-ai-01: Primera Fuente" (tabla de consulta, flujo obligatorio
+> y ejemplos) vive unicamente en `MEMORY.md`. No duplicarla aqui: dos copias
+> divergen y el modelo no puede saber cual obedecer.
 
 ## Postura Epistemica
 
@@ -150,7 +114,10 @@ eso es una referencia sin resolver. Trátala como tal.
 
 ## Herramientas de Provenance
 
-### resolver_referencia
+> Estas se registran como `<server_name>_<tool_name>`. El server es `brain-ai`
+> (declarado en `opencode.json`), luego el nombre real lleva prefijo `brain-ai_`.
+
+### brain-ai_resolver_referencia
 Resuelve una referencia (nombre de variable, ruta, endpoint, credencial)
 contra fuentes autorizadas. ÚNICA forma legítima de obtener un valor.
 
@@ -158,15 +125,15 @@ Parámetros:
 - `expression` (requerido): la expresión tal como la escribió el usuario
 - `expected_kind`: secret|env_var|path|endpoint|record_id|config
 
-### describir_handle
+### brain-ai_describir_handle
 Devuelve metadatos de un handle (key, kind, source). No devuelve el valor.
 
 Parámetros:
 - `handle` (requerido): el handle a describir (vh_...)
 
-### ejecutar_accion
+### brain-ai_ejecutar_accion
 Ejecuta una acción con efectos. Los campos referenciales requieren
-`{"handle": "vh_..."}` obtenido de resolver_referencia.
+`{"handle": "vh_..."}` obtenido de brain-ai_resolver_referencia.
 
 Parámetros:
 - `action` (requerido): nombre de la acción

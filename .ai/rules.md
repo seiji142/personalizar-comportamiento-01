@@ -103,7 +103,28 @@ ANTES de concluir que un servicio, servidor o herramienta MCP está caído o no 
 3. **NO** pidas al usuario que ejecute acciones manuales sin haber agotado las verificaciones automáticas
 4. Si una herramienta falla una vez, **re-inténtala** antes de diagnosticar como "caído"
 
-*Ejemplo: Si `memory_save` falla, re-intenta `memory_search` antes de concluir que brain-ai-01 está muerto.*
+*Ejemplo: Si `brain-ai_memory_save` falla, re-intenta `brain-ai_memory_search` antes de concluir que brain-ai-01 está muerto.*
+
+### 8.5 MCP ausente del esquema ≠ servicio caído (16N)
+
+Si una tool MCP no está en el esquema de la sesión:
+
+1. **No asumas caída del servicio** — verifica `GET /health` del backend.
+2. Busca en `~/.local/share/opencode/log/opencode.log` las líneas
+   `MCP connection closed server=<nombre>` y
+   `server unavailable key=<nombre>` (o corre
+   `tests/scripts/verificar_mcp_esquema.py`).
+3. Si la última conexión murió y no hay uso posterior, **reinicia OpenCode**:
+   el proceso de larga duración no reconecta. La señal de que volvió es
+   que la tool aparezca en el esquema, no que el servidor responda al health.
+
+### 8.6 Límite entre proyectos (29/09/2026)
+
+Desde este proyecto está prohibido modificar archivos, procesos o
+servicios de otro proyecto — en especial del proyecto MCP (brain-ai-01).
+Del MCP solo se consumen sus tools. Diagnóstico, código, reinicios y
+commits del otro proyecto se hacen en su propia sesión. Regla espejo
+acordada con brain-ai-01 tras el incidente C1/servidor del 29/09.
 
 ## 9. PROCEDENCIA Y REFERENCIAS
 
@@ -111,18 +132,18 @@ ANTES de concluir que un servicio, servidor o herramienta MCP está caído o no 
 
 Una expresión es una REFERENCIA NO RESUELTA si no viene de:
 (a) el mensaje literal del usuario en esta conversación, o
-(b) un resultado de `resolver_referencia`.
+(b) un resultado de `brain-ai_resolver_referencia`.
 
 Para una referencia no resuelta:
 - NO la sustituyas por un valor.
 - NO infieras el nombre de la clave por plausibilidad.
-- Llama a `resolver_referencia(expression, expected_kind)`.
+- Llama a `brain-ai_resolver_referencia(expression, expected_kind)`.
 
 Emitir "no resuelto" es una respuesta CORRECTA y COMPLETA, no un fallo.
 
 ### 6.6 Uso de handles
 
-`resolver_referencia` devuelve uno de estos estados:
+`brain-ai_resolver_referencia` devuelve uno de estos estados:
 
 | status | Qué hacer |
 |---|---|
@@ -161,21 +182,21 @@ por ti será rechazado y la acción quedará registrada como violación.
 ### 6.10 Consulta Obligatoria a Memoria
 
 ANTES de responder preguntas sobre decisiones, configuración o credenciales,
-DEBES usar `brain_ai_memory_search`.
+DEBES usar `brain-ai_memory_search`.
 
 | Situación | Acción |
 |-----------|--------|
-| "¿Qué base de datos usamos?" | `brain_ai_memory_search(query="base de datos")` |
-| "¿Cómo configuramos JWT?" | `brain_ai_memory_search(query="JWT configuración")` |
-| "¿Tenemos la API key de Groq?" | `brain_ai_memory_search(query="GROQ_API_KEY")` |
+| "¿Qué base de datos usamos?" | `brain-ai_memory_search(query="base de datos")` |
+| "¿Cómo configuramos JWT?" | `brain-ai_memory_search(query="JWT configuración")` |
+| "¿Tenemos la API key de Groq?" | `brain-ai_memory_search(query="GROQ_API_KEY")` |
 
 ### 6.11 Guardado Obligatorio
 
 DESPUÉS de tomar una decisión importante o resolver un error,
-DEBES usar `brain_ai_memory_save` para registrar la decisión.
+DEBES usar `brain-ai_memory_save` para registrar la decisión.
 
 ```
-brain_ai_memory_save(
+brain-ai_memory_save(
     project="personalizar-comportamiento-01",
     decision="Descripción de la decisión",
     tags=["tag1", "tag2"]

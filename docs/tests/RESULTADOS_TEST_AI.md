@@ -213,6 +213,8 @@ Registrar aqui cada 429 visto. Fuente machine-readable:
 | 25/09 15:25 | GROQ_CUENTA_2 | qwen/qwen3.8-27b | sondeo post-reparacion | sin 429 (OK) | remaining 978/7979 tras reparacion (17 tests); 1x espera exacta 44.5s (429 transitorio) |
 | 25/09 16:31 | GROQ_CUENTA_1 | openai/gpt-oss-20b | suite end-to-end (corte en D3) | 199181/200000, reintento en 1709s | avanzada BLOCKED_TPD (exit 7); 14 PASS + C2/D2 FAIL (replies VACÍAS, evidencia débil) + D3 BLOCKED |
 | 25/09 16:43 | GROQ_CUENTA_2 | qwen/qwen3.8-27b | suite end-to-end (corte en A1) | 199320/200000, reintento en 1924s | avanzada BLOCKED_TPD (exit 7); A1 BLOCKED, resto no ejecutado |
+| 28/09 12:34 | GROQ_CUENTA_1 | openai/gpt-oss-20b | suite post-fix (completa) | sin 429 (OK) | 23/23 ejecutados, 0 BLOCKED_TPD; C2 FAIL estable, D2 ERROR 400, D3 cortado por techo 16C (18501t) |
+| 28/09 13:35 | GROQ_CUENTA_2 | qwen/qwen3.8-27b | suite post-fix (kill 1200s) | sin 429 (OK) | proceso matado por step timeout; D8 no re-ejecutado (valor viejo 27325); D2 ERROR upstream connect |
 
 Modelo de costo por query (derivado 25/09, rango ±30% por tool loops):
 - gpt-oss-20b ≈ 4k tokens/query → ~50 queries/día; suite completa (28q) ≈ 115k, cabe en día fresco.

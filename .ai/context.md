@@ -43,3 +43,26 @@
 
 ## Notas de Desarrollo
 [Cualquier informacion adicional relevante para desarrolladores]
+
+## Ramas del Proyecto
+
+> Setup gitflow 26/09/2026 (fuente: `Proyecto AI/templates/gitflow-scaffold`,
+> versión `2026.09.25`; plan `docs/PLAN_GITFLOW_20260926.md`).
+
+| Rama | Proposito | Sale de | Vuelve a | Proteccion |
+|------|-----------|---------|----------|------------|
+| `main` | Produccion (estable) | — | — | Requiere PR, SIN "Require approvals" |
+| `develop` | Desarrollo diario (rama por defecto) | `main` | `main` (PR al publicar) | No |
+| `clean-main` | Rama historica (trabajo previo, se mantiene) | — | — | No |
+| `feature/<desc>` | Cada tarea o experimento | `develop` | `develop` (PR) | No |
+
+Reglas de comportamiento:
+- Trabajar SIEMPRE en `develop`. Antes de modificar, verificar la rama actual con
+  `git status`/`git branch`; si se esta en `main`, no trabajar ahi.
+- `main` solo se toca para publicar, via PR desde `develop`.
+- Tareas grandes o experimentos: crear `feature/<desc>` desde `develop` y
+  mergear de vuelta a `develop`.
+- La proteccion de `main` es "Requerir PR" SIN "Require approvals": en repo personal
+  el autor no puede aprobar su propio PR (bloqueo permanente si se activa).
+- Este repo es Python sin GitHub Pages: no hay deploy automatico; la validacion
+  pre-prod es local (checklist Variante B en `.ai/commands.md`).
