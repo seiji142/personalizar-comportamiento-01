@@ -2,6 +2,11 @@
 
 Guía para adoptar el framework en otro proyecto.
 
+> **FRAMEWORK_VERSION: 2026.10.05.2** — el comando `/adoptar-framework`
+> instala esta versión y el proyecto destino la anota en su README.
+> Capas: Núcleo (siempre) ≠ dominios de ejemplo (MCP YouTube, corpus de
+> videos — solo si se piden) ≠ gitflow (solo si se pide).
+
 > **§0 — Lee esto primero.** Toda adopción del framework incluye SIEMPRE el
 > **Núcleo** (comportamiento + estructura). El MCP `brain-ai` y la plantilla
 > `gitflow-scaffold` son **opcionales** y solo se agregan si se piden
@@ -36,8 +41,13 @@ Guía para adoptar el framework en otro proyecto.
 | Componente | Fuente | Descripción |
 |------------|--------|-------------|
 | `.ai/` (limpio, sin `brain-ai_*`) | Este proyecto | System prompt del agente (rol, reglas, contexto, agentes) |
-| `opencode.json` (sin bloque `mcp`) | Este proyecto | Configuración de modelo, permisos e instrucciones |
+| `opencode.json` (sin bloque `mcp`, con `skills.paths`) | Este proyecto | Configuración de modelo, permisos e instrucciones |
 | `AGENTS.md` | Este proyecto | Punto de entrada de OpenCode |
+| `.agents/skills/` (my-review, my-review-security, fx-test, fx-changelog, fx-replan) | Este proyecto | Skills genéricos invocables por nombre |
+| `docs/specs/PLANTILLA.md` | Este proyecto | Plantilla de spec con frontmatter validable |
+| `scripts/ci_checks.py` | Este proyecto | CI de artefactos stdlib (checks docs/specs se auto-omiten) |
+| `.github/workflows/ci.yml` | Crear (plantilla mínima en el comando) | Job `build`: Python 3.12 + `ci_checks.py` |
+| `docs/CHANGELOG.md` | Este proyecto (`docs/PLANTILLA-CHANGELOG.md`) | Registro de merges + índice de lecciones |
 | `src/`, `tests/`, `docs/`, `scripts/` (con `.gitkeep` + `README.md` breve) | Crear nuevos | Estructura base de código, pruebas, documentación y tooling |
 | `.env.example` | Crear nuevo | Plantilla con las variables que el proyecto necesita |
 | `.gitignore` | Este proyecto (adaptar) | Exclusiones estándar (`.env`, `node_modules/`, `__pycache__/`, `logs/`, etc.) |
@@ -72,18 +82,23 @@ nuevo-proyecto/
 │   ├── system.md          # Rol, tono y estilo del agente
 │   ├── rules.md           # Reglas obligatorias (seguridad, git, calidad)
 │   ├── context.md         # Stack, arquitectura y convenciones
-│   ├── agents.md          # Agentes especialistas
+│   ├── agents.md          # 4 roles + regla de división
 │   ├── commands.md        # Checklist pre-PR (genérica, sin gh-publish)
 │   └── MEMORY.md          # Principios de memoria (sin MCP salvo opcional)
+├── .agents/skills/        # my-review, my-review-security, fx-test, fx-changelog, fx-replan
 ├── src/                   # Código fuente (.gitkeep + README breve)
 ├── tests/                 # Pruebas (.gitkeep + README breve)
 ├── docs/                  # Documentación (.gitkeep + README breve)
+│   ├── specs/PLANTILLA.md # Plantilla de spec con frontmatter
+│   └── CHANGELOG.md       # Registro + índice de lecciones
 ├── scripts/               # Scripts utilitarios (.gitkeep + README breve)
+│   └── ci_checks.py       # CI de artefactos (stdlib)
+├── .github/workflows/ci.yml  # Job build: Python + ci_checks.py
 ├── opencode.json          # Configuración de OpenCode (sin mcp salvo opcional)
 ├── AGENTS.md              # Punto de entrada
 ├── .env.example           # Plantilla de variables
 ├── .gitignore             # Exclusiones
-└── README.md              # Documentación principal
+└── README.md              # Documentación principal (+ FRAMEWORK_VERSION)
 ```
 
 ### Bloques opcionales (solo si se piden)
@@ -201,7 +216,8 @@ Confirmar que las 8 instrucciones de "Guardrails Recomendados" siguen presentes.
 ## Checklist de Adopción
 
 ### Núcleo (bloqueante, siempre)
-- [ ] Copiar `.ai/`, `opencode.json` (sin `mcp`), `AGENTS.md` y `.gitignore` desde este proyecto
+- [ ] Copiar `.ai/`, `opencode.json` (sin `mcp`, con `skills.paths`), `AGENTS.md` y `.gitignore` desde este proyecto
+- [ ] Copiar `.agents/skills/`, `docs/specs/PLANTILLA.md`, `scripts/ci_checks.py` y crear `.github/workflows/ci.yml` + `docs/CHANGELOG.md` (plantilla)
 - [ ] Crear `src/`, `tests/`, `docs/`, `scripts/` con `.gitkeep` + `README.md` breve
 - [ ] Limpiar contenido no reutilizable (tabla "Qué copiar de cada archivo")
 - [ ] Adaptar `system.md` con el rol correcto

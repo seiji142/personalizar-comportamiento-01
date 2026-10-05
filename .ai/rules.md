@@ -17,6 +17,9 @@
 - Usar variables de entorno para configuracion sensible
 - Validar todas las entradas de usuario
 - Mantener dependencias actualizadas
+- Prohibidos sin backup + confirmación explícita del humano:
+  `push --force`, `reset --hard`, `clean -fd`, DROP/ALTER destructivos,
+  truncar archivos. Sin excepción por «cambio chico».
 
 ## 4. Calidad
 - Todas las funciones deben tener tests unitarios
