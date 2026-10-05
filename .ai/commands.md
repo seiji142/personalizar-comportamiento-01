@@ -56,9 +56,13 @@ por "cambio chico". Este es codigo no visual → **Variante B**.
 
 ### Cierre
 
-5. [ ] Abrir el PR via `scripts/gh-publish.ps1` (SIN `-Merge` todavia).
-6. [ ] CI en verde en el PR (obligatorio; `main` lo exige por proteccion).
-7. [ ] Recien entonces: merge via script (`-Merge`) -> verificar merge.
+5. [ ] Tras cada fix: repetir pruebas afectadas + auditoría si toca sus
+   disparadores (ver `.ai/agents.md` rol 3). Un fix sin re-verificación
+   no existe.
+6. [ ] Abrir el PR via `scripts/gh-publish.ps1` (SIN `-Merge` todavia).
+7. [ ] CI en verde en el PR (obligatorio; `main` lo exige por proteccion).
+8. [ ] Recien entonces: merge via script (`-Merge`) -> verificar merge ->
+   changelog + replan documentado.
 
 Regla: el riesgo percibido NUNCA saltea pasos. Lo que no tiene evidencia
 (segun su variante + CI verde) se considera NO verificado.
