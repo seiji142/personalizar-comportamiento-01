@@ -20,3 +20,14 @@ specs viejos no sean cementerío: lo promovible vive aquí, no solo en §8).
 - Add .agents/skills (5), docs/specs/PLANTILLA.md, scripts/ci_checks.py
 - Add docs/PLANTILLA-CHANGELOG.md template
 - Set FRAMEWORK_VERSION 2026.10.05.2 in REUTILIZAR.md
+
+Merge: PR [#3](https://github.com/seiji142/personalizar-comportamiento-01/pull/3) → `1971eb7`
+(Criterios 1-5 cumplidos; excepción de suites API documentada en el PR.)
+
+**Replan:**
+- **Estado:** mergeado (2026-10-05).
+- **Spec vigente:** sin spec previo (backport directo de auditoría); Núcleo
+  `FRAMEWORK_VERSION 2026.10.05.2` vigente en `docs/REUTILIZAR.md`.
+- **Lección:** 2 `[GENERAL]` promovidas al índice de arriba.
+- **Próxima tarea:** primera corrida de suites API con cuota disponible
+  (pendiente registrada en PR #3); después, spec para la siguiente feature.
