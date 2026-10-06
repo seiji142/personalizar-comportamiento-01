@@ -85,3 +85,21 @@ Merge: PR [#6](https://github.com/seiji142/personalizar-comportamiento-01/pull/6
 - **Lección:** 1 `[GENERAL]` ya promovida (CI verde día uno vía job
   base + stack opt-in, sin bump: texto).
 - **Próxima tarea:** nada pendiente de este lote.
+
+### 2026-10-06 — Backport reglas de cuerpo al Núcleo (sin bump)
+
+- Port literal del bloque de 3 reglas a `scripts/ci_checks.py`
+  (sin exención: aquí no existe spec legado)
+- Add spec `docs/specs/backport-spec-body.md` (origen: spec del lab
+  ya probada con prueba negativa)
+
+Merge: PR [#7](https://github.com/seiji142/personalizar-comportamiento-01/pull/7) → `c5bd6d3`
+(CI `build` + GitGuardian en verde; `tests/unit` 3 passed; spec
+temporal rota → rojo provocado → borrada.)
+
+**Replan:**
+- **Estado:** mergeado (2026-10-06).
+- **Spec vigente:** sí; §8 [GENERAL] llenado.
+- **Lección:** 1 `[GENERAL]` ya promovida (el Núcleo distribuye el
+  check completo; sin bump: texto).
+- **Próxima tarea:** nada pendiente de este lote.
