@@ -65,3 +65,23 @@ Merge: PR [#5](https://github.com/seiji142/personalizar-comportamiento-01/pull/5
 - **Spec vigente:** sí; §8 [GENERAL] llenado.
 - **Lección:** 1 `[GENERAL]` ya promovida (§8.7, sin bump: texto).
 - **Próxima tarea:** nada pendiente de este lote.
+
+### 2026-10-06 — CI base versionado en el Núcleo (docs-only, sin bump)
+
+- Add `templates/ci-base.yml` (job `artefactos` siempre verde + bloques
+  comentados Python con `pip install`/Node para descomentar por stack)
+- Fila REUTILIZAR apunta al archivo (adiós "plantilla en el comando");
+  comando global `adoptar-framework.md` actualizado a copiarlo
+  (cambio en `~/.config`, fuera de git)
+- Add spec `docs/specs/nucleo-ci-base.md` (origen: primer run remoto
+  rojo en H3 por falta de `pip install`)
+
+Merge: PR [#6](https://github.com/seiji142/personalizar-comportamiento-01/pull/6) → `cff2bbe`
+(CI `build` + GitGuardian en verde; YAML validado; suites API/MCP no tocadas.)
+
+**Replan:**
+- **Estado:** mergeado (2026-10-06).
+- **Spec vigente:** sí; §8 [GENERAL] llenado.
+- **Lección:** 1 `[GENERAL]` ya promovida (CI verde día uno vía job
+  base + stack opt-in, sin bump: texto).
+- **Próxima tarea:** nada pendiente de este lote.
