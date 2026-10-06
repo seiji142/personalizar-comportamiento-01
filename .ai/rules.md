@@ -129,6 +129,21 @@ Del MCP solo se consumen sus tools. Diagnóstico, código, reinicios y
 commits del otro proyecto se hacen en su propia sesión. Regla espejo
 acordada con brain-ai-01 tras el incidente C1/servidor del 29/09.
 
+### 8.7 Capacidades externas se prueban antes de afirmarse
+
+ANTES de afirmar "puedo crear/pushear/mergear/ejecutar X con una
+herramienta externa (`gh`, red, permisos, scopes):
+
+1. **Pruébalo primero** (`--dry-run`, permiso, alcance del token).
+2. Si no puedes probarlo, di "no sé si alcanza; lo intento y si
+   falla te toca a ti" — nunca lo prometas.
+3. Habla de **intentos, no de garantías**: "voy a intentarlo con X"
+   en vez de "lo hago yo".
+
+Motivo: afirmar capacidad por plausibilidad ("`gh` funcionó para el
+PR, luego puede crear repos") ya produjo una afirmación falsa
+(token sin scope `createRepository`).
+
 ## 9. PROCEDENCIA Y REFERENCIAS
 
 ### 6.5 Referencias no resueltas
