@@ -47,6 +47,10 @@ por "cambio chico". Este es codigo no visual → **Variante B**.
    `python -m pytest tests/unit -q`,
    `python tests/scripts/test_validators.py`,
    `python tests/scripts/test_rate_limit_tpd.py`
+   1b. [ ] Si el cambio toca dependencias: instalación limpia +
+   suite verde (el "verde local" con entorno heredado es falso verde).
+   1c. [ ] Si el producto corre en otro SO/entorno: pruebas allí (el
+   verde en el SO del agente no transfiere).
 2. [ ] Lint/typecheck: **N/A por ahora** (ruff en requirements pero sin
    verificación local; agregarlo al gate y al CI cuando se adopte).
 3. [ ] Suites con API/MCP (`suite_runner.py`, `quota_probe.py`) NO corren en CI;
