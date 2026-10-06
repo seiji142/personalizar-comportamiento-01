@@ -46,7 +46,7 @@ Guía para adoptar el framework en otro proyecto.
 | `.agents/skills/` (my-review, my-review-security, fx-test, fx-changelog, fx-replan) | Este proyecto | Skills genéricos invocables por nombre |
 | `docs/specs/PLANTILLA.md` | Este proyecto | Plantilla de spec con frontmatter validable |
 | `scripts/ci_checks.py` | Este proyecto | CI de artefactos stdlib (checks docs/specs se auto-omiten) |
-| `.github/workflows/ci.yml` | Crear (plantilla mínima en el comando) | Job `build`: Python 3.12 + `ci_checks.py` |
+| `.github/workflows/ci.yml` | Copiar `templates/ci-base.yml` y descomentar el bloque del stack | Job `artefactos`: Python 3.12 + `ci_checks.py` (verde día uno); tests por stack opt-in |
 | `docs/CHANGELOG.md` | Este proyecto (`docs/PLANTILLA-CHANGELOG.md`) | Registro de merges + índice de lecciones |
 | `src/`, `tests/`, `docs/`, `scripts/` (con `.gitkeep` + `README.md` breve) | Crear nuevos | Estructura base de código, pruebas, documentación y tooling |
 | `.env.example` | Crear nuevo | Plantilla con las variables que el proyecto necesita |

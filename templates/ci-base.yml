@@ -1,0 +1,44 @@
+name: CI
+
+# Plantilla base del Núcleo (FRAMEWORK): copiar a .github/workflows/ci.yml
+# del proyecto adoptado y descomentar el bloque del stack.
+# El job `artefactos` (sin dependencias) corre siempre: CI verde día uno.
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop, "feature/*"]
+
+jobs:
+  artefactos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/ci_checks.py
+
+  # --- Descomentar según el stack (uno solo) ---
+  # Python (stdlib o con deps): instala SIEMPRE las deps de test;
+  # el runner no trae pytest (lección H3/E8).
+  # tests:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v6
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.12"
+  #     - run: pip install -r requirements-dev.txt
+  #     - run: python -m pytest tests/ -q
+
+  # Node:
+  # tests:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v6
+  #     - uses: actions/setup-node@v6
+  #       with:
+  #         node-version: 24
+  #     - run: npm ci
+  #     - run: npm test
