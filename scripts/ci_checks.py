@@ -74,6 +74,25 @@ def check_specs():
         for field in REQUIRED_FRONTMATTER:
             if field not in m.group(1):
                 errors.append(f"spec {f.name}: frontmatter sin {field}")
+        body = f.read_text(encoding="utf-8")[m.end():]
+        for n in range(1, 9):
+            if not re.search(rf"^## {n}\.", body, re.M):
+                errors.append(f"spec {f.name}: falta sección ## {n}")
+        estado = re.search(r"^estado:\s*(\S+)", m.group(1), re.M)
+        if not estado or estado.group(1) not in (
+            "borrador",
+            "aprobado",
+            "implementado",
+        ):
+            errors.append(f"spec {f.name}: estado inválido o ausente")
+        elif estado.group(1) == "implementado" and re.search(
+            r"^-(?: Fix aplicado(?:\s*\[.*\])?"
+            r"|Qué sección de este spec cambia por el fix"
+            r"|Test anti-regresión que lo cubre):\s*$",
+            body,
+            re.M,
+        ):
+            errors.append(f"spec {f.name}: §8 con placeholders vacíos")
 
 
 check_opencode()
