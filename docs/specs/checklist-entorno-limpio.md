@@ -1,6 +1,6 @@
 ---
 titulo: checklist-entorno-limpio
-estado: borrador
+estado: implementado
 entradas:
   - .ai/commands.md (Variante B pre-PR)
   - Evidencia pilotos H1/H2 del lab hermano (E6/E7): falso verde de entorno
