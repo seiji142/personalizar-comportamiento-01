@@ -49,3 +49,19 @@ Merge: PR [#4](https://github.com/seiji142/personalizar-comportamiento-01/pull/4
   2 líneas de texto no justifican re-adopción).
 - **Próxima tarea:** bump a `2026.10.05.3` cuando acumule otro cambio de
   Núcleo; nada pendiente de este lote.
+
+### 2026-10-06 — Regla no-afirmar-sin-probar (docs-only, sin bump)
+
+- Add §8.7 a `.ai/rules.md` (probar capacidad externa antes de
+  afirmarla: `--dry-run`/permiso/scope; intentos, no garantías)
+- Add spec `docs/specs/no-afirmar-sin-probar.md` (caso real:
+  afirmación falsa de `gh createRepository` por plausibilidad)
+
+Merge: PR [#5](https://github.com/seiji142/personalizar-comportamiento-01/pull/5) → `2d9d805`
+(CI `build` + GitGuardian en verde; suites API/MCP no tocadas.)
+
+**Replan:**
+- **Estado:** mergeado (2026-10-06).
+- **Spec vigente:** sí; §8 [GENERAL] llenado.
+- **Lección:** 1 `[GENERAL]` ya promovida (§8.7, sin bump: texto).
+- **Próxima tarea:** nada pendiente de este lote.
