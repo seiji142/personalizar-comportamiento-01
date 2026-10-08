@@ -43,7 +43,7 @@ Guía para adoptar el framework en otro proyecto.
 | `.ai/` (limpio, sin `brain-ai_*`) | Este proyecto | System prompt del agente (rol, reglas, contexto, agentes) |
 | `opencode.json` (sin bloque `mcp`, con `skills.paths`) | Este proyecto | Configuración de modelo, permisos e instrucciones |
 | `AGENTS.md` | Este proyecto | Punto de entrada de OpenCode |
-| `.agents/skills/` (my-review, my-review-security, fx-test, fx-changelog, fx-replan) | Este proyecto | Skills genéricos invocables por nombre |
+| `.agents/skills/` (my-review, my-review-security, fx-test, fx-changelog, fx-replan, fx-git) | Este proyecto | Skills genéricos invocables por nombre |
 | `docs/specs/PLANTILLA.md` | Este proyecto | Plantilla de spec con frontmatter validable |
 | `scripts/ci_checks.py` | Este proyecto | CI de artefactos stdlib (checks docs/specs se auto-omiten) |
 | `.github/workflows/ci.yml` | Copiar `templates/ci-base.yml` y descomentar el bloque del stack | Job `artefactos`: Python 3.12 + `ci_checks.py` (verde día uno); tests por stack opt-in |
@@ -85,7 +85,7 @@ nuevo-proyecto/
 │   ├── agents.md          # 4 roles + regla de división
 │   ├── commands.md        # Checklist pre-PR (genérica, sin gh-publish)
 │   └── MEMORY.md          # Principios de memoria (sin MCP salvo opcional)
-├── .agents/skills/        # my-review, my-review-security, fx-test, fx-changelog, fx-replan
+├── .agents/skills/        # my-review, my-review-security, fx-test, fx-changelog, fx-replan, fx-git
 ├── src/                   # Código fuente (.gitkeep + README breve)
 ├── tests/                 # Pruebas (.gitkeep + README breve)
 ├── docs/                  # Documentación (.gitkeep + README breve)
