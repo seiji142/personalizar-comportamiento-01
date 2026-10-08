@@ -199,10 +199,12 @@ Agregar bloque `mcp.brain-ai` en `opencode.json` y restaurar las secciones
 
 Forma preferida: invocar `/adoptar-gitflow` en el proyecto destino.
 Fusiona el job `build` en el mismo `.github/workflows/ci.yml` sin borrar
-`artefactos` (prohibido `cp` directo de `ci.yml`). `deploy.yml` solo si
-Pages. Fallback manual: copiar `gh-publish.ps1` y `VERSION` desde el
-scaffold, y para `ci.yml` insertar el job `build` a mano con `<RUTA_APP>`
-adaptado (no reemplazar el archivo).
+`artefactos` (prohibido `cp` directo de `ci.yml`) y registra el flujo en
+`.ai/` (Ramas en `context.md`, Publicación en `commands.md`). `deploy.yml`
+solo si Pages. Fallback manual: copiar `gh-publish.ps1` y `VERSION` desde el
+scaffold, para `ci.yml` insertar el job `build` a mano con `<RUTA_APP>`
+adaptado (no reemplazar el archivo) y registrar Ramas/Publicación en `.ai/`
+(ver `TEMPLATE_GITFLOW_GH_PAGES.md` Fase 2).
 
 ```bash
 cp Proyecto\ AI/templates/gitflow-scaffold/scripts/gh-publish.ps1 /ruta/nuevo-proyecto/scripts/
