@@ -46,8 +46,9 @@ Todo cambio autorizado se clasifica ANTES de escribir codigo. O lleva spec
 Modo ODD solo si se cumplen las tres:
 1. **Entendido**: no queda ninguna decision de producto abierta.
 2. **Riesgo contenido**: no toca ningun escalador duro.
-3. **Reanudable**: otro agente podria retomarlo solo con el pedido original
-   y `git diff`.
+3. **Reanudable**: enumera las decisiones abiertas. Si alguna no se resuelve
+   con el pedido o con `git diff` (incluida cualquier convencion que tengas
+   que suponer), entonces no es ODD.
 
 Falla cualquiera -> modo SDD (spec completo, y FICHA si hay entregable).
 
@@ -58,7 +59,9 @@ una linea en auth es SDD; uno de 20 en un README puede ser ODD.
 
 Seguridad/auth, datos o migraciones, contratos de API que otros consumen,
 dependencias nuevas, CI/workflows, crypto, permisos de `opencode.json`,
-operaciones irreversibles, y `scripts/`.
+reglas y roles (`.ai/system.md`, `.ai/rules.md`, `.ai/commands.md`,
+`.ai/agents.md`) o skills (`.agents/skills/`), operaciones irreversibles,
+y `scripts/`.
 
 ### Que entrega cada modo
 
