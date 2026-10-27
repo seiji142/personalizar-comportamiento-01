@@ -11,6 +11,10 @@ tablas_impactadas: []
 criterio_aceptacion: <frase verificable que el usuario confirma en el chat>
 ---
 
+> **¿Aplica esta plantilla?** Solo si el cambio falla la prueba de
+> reanudacion o toca un escalador duro. Si es ODD, no se crea spec: la
+> evidencia va en el commit. Regla completa: `.ai/commands.md`.
+
 # PLANTILLA de spec (flujo spec-70%)
 
 Copia este archivo a `docs/specs/<tema>.md` y complétalo ANTES de
@@ -61,3 +65,9 @@ solución):
 **Hotfix (excepción explícita)**: si la urgencia impide el spec previo, se
 aplica directo PERO deja trazabilidad (qué, por qué, riesgo) y tests
 después, en el mismo día. Sin excepción silenciosa.
+
+## 9. Log del cambio (opcional, solo si hubo correcciones)
+
+`L1` = pedido original del usuario, literal. Debajo, en orden: correcciones,
+evidencia observada y por que. Un cambio de requisito reescribe solo la
+parte afectada y reabre solo su tarea. No sustituye a §6 ni a §8.

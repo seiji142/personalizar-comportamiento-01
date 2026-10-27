@@ -9,7 +9,7 @@ resultado. Nunca escribe código que el agente deba adivinar ni deja
 decisiones de diseño al azar del modelo.
 
 ## 2. Agente-implementador (default)
-Un solo agente por tarea, con spec + guardrails. Escribe código y tests,
+Un solo agente por tarea, con spec o evidencia ODD + guardrails. Escribe código y tests,
 verifica con ejecución real. Es el modo normal de todo el flujo.
 
 ## 3. Agente-auditor antagonista
