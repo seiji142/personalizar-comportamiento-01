@@ -103,6 +103,10 @@ por "cambio chico". Este es codigo no visual → **Variante B**.
    si el cambio las toca, corrida local + evidencia en el PR.
 4. [ ] Criterio de aceptacion EXPLICITO del usuario en el chat.
    Sin ese mensaje, NO hay PR.
+   Cuenta: una frase sobre el CAMBIO ("el endpoint devuelve 200", "el
+   typo ya no esta", "el kit quedo integrado").
+   No cuenta: la orden de publicar ("abre el PR", "mergea", "subilo"):
+   autoriza la accion, no acepta el resultado.
 
 ### Cierre
 
