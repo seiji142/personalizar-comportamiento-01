@@ -145,13 +145,23 @@ Parámetros:
 
 ## Git
 
-Usa las herramientas MCP de git en vez de bash para operaciones git:
+Para operaciones de git DEBES usar las herramientas MCP `git_*` del servidor
+`git_publisher`, NUNCA comandos bash directos. Excepciones sancionadas, a
+justificar en 1 línea en la respuesta: cross-repo o fuera del cwd de la
+sesión, `push -u` cuando falla por falta de upstream, y setup inicial (ver
+skill `fx-git`).
 
 | Herramienta | Uso |
 |-------------|-----|
 | `git_ver_estado` | Ver estado del repositorio |
 | `git_ver_diferencias` | Ver cambios pendientes |
 | `git_ver_historial` | Ver últimos commits |
-| `git_subir_cambios` | Subir cambios a git (add + commit + push) |
+| `git_subir_cambios` | Subir cambios (add + commit + push) |
+| `git_crear_rama` | Crear rama y posicionarse (solo crear, nunca borrar) |
+| `git_cambiar_rama` | Cambiar a rama existente (conservador: rehúsa si árbol sucio) |
+| `git_ver_ramas` | Listar ramas con upstream (`branch -vv`) |
+| `git_stash_listar` | Listar stashes (solo lectura) |
+| `git_ver_runs` | Listar runs de CI recientes (solo lectura) |
+| `git_worktree_eliminar` | Borrar worktree (evict + reintentos; rehúsa si sucio; `force` solo con OK humano) |
 
 Estas herramientas están disponibles en todos los proyectos vía configuración global de opencode.
