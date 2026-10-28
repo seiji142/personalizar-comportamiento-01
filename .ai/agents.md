@@ -30,7 +30,7 @@ Por defecto, todo lo hace el rol 2. Se divide solo si:
 - (a) hay auditoría requerida → rol 3;
 - (b) hay trabajos independientes en paralelo → un rol 2 por trabajo;
 - (c) hay colisión de archivos → rol 2 + un worktree por `feature/<desc>`,
-  ambos desde `develop` (ver `.ai/commands.md` §Publicacion).
+  ambos desde `develop` (ver `.ai/commands.md` §Worktrees).
 
 ## Especialidades por stack (sombreros del implementador)
 Según la tarea, el implementador adopta el sombrero correspondiente; no son

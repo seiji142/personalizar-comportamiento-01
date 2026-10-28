@@ -36,6 +36,21 @@ Este proyecto **no define comandos slash**. Crear uno requiere un archivo en
 `.opencode/commands/<nombre>.md` o una sección `command` en `opencode.json`; ninguno
 de los dos existe. Los built-in de OpenCode son `/init`, `/undo`, `/redo`, `/share`, `/help`.
 
+## Worktrees (cambios que colisionan)
+
+Si dos trabajos tocan los mismos archivos (ej. un subagente integra OAuth
+en todo el proyecto mientras otro hilo lee esos archivos), el segundo va en
+**worktree**: copia aislada del repo donde trabaja sin colisionar y luego
+fusiona. Sin pedirlo, el agente trabaja sobre la sesión misma.
+
+Regla: cambios que barren backend+frontend o chocan entre sí → subagente +
+worktree cada uno; trabajo independiente → subagentes en la misma rama.
+
+Al cerrar la tarea, el worktree se borra con `git_worktree_eliminar`
+(MCP git_publisher): rehúsa por defecto (árbol sucio / carpeta no vacía) y
+`force` solo con OK humano. No borrar a mano con `Remove-Item`/`rm`.
+Crear con `worktree_create` (MCP opencode).
+
 ## Clasificacion del cambio: SDD u ODD
 
 Todo cambio autorizado se clasifica ANTES de escribir codigo. O lleva spec
