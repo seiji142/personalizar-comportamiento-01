@@ -17,9 +17,6 @@
     { "action": "edit", "resource": "*", "effect": "ask" },
     { "action": "webfetch", "resource": "*", "effect": "ask" }
   ],
-  "skills": {
-    "paths": [".agents/skills"]
-  },
   "mcp": {
     "servers": {
       "brain-ai": {
