@@ -1,6 +1,6 @@
 ---
 titulo: RDD - auditor en proceso aparte con maquina de estados
-estado: borrador
+estado: aprobado
 entradas:
   - docs/research/odd-youtube.md §7 - RDD corre de 1 a 4 agentes segun la severidad, en
     un proceso separado "para que no venga infectado de contexto ajeno"
@@ -194,3 +194,20 @@ producen `APPROVED`.
 - Fix aplicado [LOCAL/GENERAL]:
 - Que seccion de este spec cambia por el fix:
 - Test anti-regresion que lo cubre:
+
+## 9. Log del cambio
+
+`L1` = pedido original del usuario, literal (2026-11-02):
+
+> "#3 - RDD: no puede ir aca, y no es excusa. gentle-ai tiene src/ y tests/
+> vacios... Va al framework... Un agente auditor con permisos de solo
+> lectura. Un script que lance opencode run --standalone --agent auditor -
+> 1 a 4 procesos segun la severidad. La maquina de estados que decide
+> severidad y consume los dictamenes."
+
+`L2`: "ok" (2026-11-03) - aprueba el diseno de este spec y autoriza el PR a
+`develop`. Desvio registrado: el worktree se creo primero en gentle-ai porque
+`worktree_create` opera sobre el repo de la sesion; se cerro y se rehizo contra
+el framework. `git_crear_rama` movio el `HEAD` de gentle-ai (resuelve el repo
+antes del `session_move`); se devolvio a `develop` y la rama se creo con
+`git switch -c` dentro del worktree.
