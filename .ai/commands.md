@@ -36,39 +36,74 @@ Este proyecto **no define comandos slash**. Crear uno requiere un archivo en
 `.opencode/commands/<nombre>.md` o una sección `command` en `opencode.json`; ninguno
 de los dos existe. Los built-in de OpenCode son `/init`, `/undo`, `/redo`, `/share`, `/help`.
 
-## Worktrees (cambios que colisionan)
+## Worktrees (una rama por sesión)
 
-Si dos trabajos tocan los mismos archivos (ej. un subagente integra OAuth
-en todo el proyecto mientras otro hilo lee esos archivos), el segundo va en
-**worktree**: copia aislada del repo donde trabaja sin colisionar y luego
-fusiona. Sin pedirlo, el agente trabaja sobre la sesión misma.
+Un checkout tiene **un solo `HEAD`**: si una sesión se cambia a `feature/x`,
+la otra commitea sobre esa rama sin enterarse. Por eso toda feature va en un
+worktree, que trae carpeta, rama y `HEAD` propios.
 
-Regla: cambios que barren backend+frontend o chocan entre sí → subagente +
-worktree cada uno; trabajo independiente → subagentes en la misma rama.
+- **La carpeta principal vive en `develop`.** No se checkoutea una
+  `feature/*` ahí, nunca.
+- **Toda `feature/*` se trabaja en un worktree**, y el orden importa:
+  1. `worktree_create` (MCP opencode). Nace *detached*: todavía no tiene rama.
+  2. `session_move` (MCP opencode) a la carpeta que devolvió. **La sesión se
+     muda ahí.** Saltear este paso deja la sesión en la carpeta compartida:
+     el `git -C` commitea en la rama correcta mientras las rutas relativas,
+     los permisos y `grep`/`glob` siguen apuntando a `develop`.
+  3. `git_crear_rama` (MCP git_publisher) ya desde adentro: crea la rama **y**
+     posiciona. Desde la carpeta principal ese mismo tool es el que roba el
+     `HEAD` de la otra sesión; desde el worktree no toca a nadie.
+- **La ruta no se escribe acá**: la resuelve la config global
+  (`worktree.directory`). Una ruta hardcodeada se rompe en silencio al mudar
+  de máquina.
+- **Una tarea por worktree**, una sola rama.
+- Trabajos independientes sobre `develop` no necesitan worktree: van en la
+  carpeta principal, que ya está en `develop`.
+
+Guard de rama (ver `.ai/rules.md` §10): al empezar, declarar
+`git rev-parse --show-toplevel` y `git branch --show-current`; en la carpeta
+principal, `git_ver_estado` antes de **cada** commit.
 
 Al cerrar la tarea, el worktree se borra con `git_worktree_eliminar`
 (MCP git_publisher): rehúsa por defecto (árbol sucio / carpeta no vacía) y
 `force` solo con OK humano. No borrar a mano con `Remove-Item`/`rm`.
-Crear con `worktree_create` (MCP opencode).
 
-## Clasificacion del cambio: SDD u ODD
+**Antes** de borrar, la sesión vuelve a la carpeta principal con
+`session_move`. Si no, su cwd vive dentro del worktree y el borrado en Windows
+choca con un proceso vivo: la propia tool lo documenta (hace evict de los
+hijos que tienen cwd adentro). El orden es: merge → `session_move` → borrar.
 
-Todo cambio autorizado se clasifica ANTES de escribir codigo. O lleva spec
-(`docs/specs/<tema>.md`) o va en modo ODD. No hay tercera via.
+## Clasificacion del cambio: ODD por defecto, SDD cuando se dispara
+
+Todo cambio autorizado se clasifica ANTES de escribir codigo. Por defecto va
+en modo ODD: la evidencia vive en el commit. La spec
+(`docs/specs/<tema>.md`) se escribe solo cuando se dispara. No hay tercera via.
 
 ### Prueba de reanudacion (decide; el tamano no)
 
-Modo ODD solo si se cumplen las tres:
+ODD es el default cuando se cumplen las tres:
 1. **Entendido**: no queda ninguna decision de producto abierta.
 2. **Riesgo contenido**: no toca ningun escalador duro.
 3. **Reanudable**: enumera las decisiones abiertas. Si alguna no se resuelve
    con el pedido o con `git diff` (incluida cualquier convencion que tengas
-   que suponer), entonces no es ODD.
+   que suponer), entonces el cambio no es reanudable.
 
-Falla cualquiera -> modo SDD (spec completo, y FICHA si hay entregable).
+### Disparador de SDD (dos clausulas, ambas verificables)
+
+El cambio pasa a modo SDD -spec completo, y FICHA si hay entregable- cuando:
+1. **Toca un escalador duro** de la lista de abajo, aunque sea una linea; o
+2. **Falla alguna** de las tres preguntas de reanudacion.
+
+Ninguna otra cosa dispara SDD: ni el tamano, ni la cantidad de archivos, ni
+la sensacion de que el cambio "parece grande".
 
 El conteo de archivos, lineas, tests o tareas NUNCA decide: un cambio de
 una linea en auth es SDD; uno de 20 en un README puede ser ODD.
+
+Al partir trabajo para un subagente, la unidad sugerida ronda las 400
+lineas: con "cuatro ladrillos" no intenta una torre, hace una casita. Es un
+freno a la sobreingenieria, no un limite de calidad ni un gate: una tarea
+mas grande no falla el PR, solo se divide.
 
 ### Escaladores duros (siempre SDD)
 
@@ -78,6 +113,12 @@ reglas y roles (`.ai/system.md`, `.ai/rules.md`, `.ai/commands.md`,
 `.ai/agents.md`) o skills (`.agents/skills/`), operaciones irreversibles,
 y `scripts/`.
 
+La lista se cierra con su borde negativo: un escalador **cuenta cuando el
+cambio lo modifica**. Si el pedido solo lo **menciona** -preguntar que dice
+`.ai/commands.md`, reportar un bug del `ci.yml`, citar un skill para explicar
+otra cosa- no es SDD: no hay nada del escalador que cambie. Mover o renombrar
+si es SDD: rompe a sus lectores aunque su contenido no cambie.
+
 ### Que entrega cada modo
 
 | | SDD | ODD |
@@ -86,6 +127,12 @@ y `scripts/`.
 | Evidencia | §6, §7 y §8 del spec | commit + resultado observado en el chat |
 | Verificacion pre-PR | obligatoria | obligatoria (identica) |
 | Auditoria, si el proyecto la define | segun sus disparadores | segun sus disparadores |
+
+La auditoria corre en un **proceso aparte** (rol 3 de `.ai/agents.md`): un
+auditor que hereda el contexto del implementador revisa su propia version del
+problema. Mientras no exista un agente auditor propio, el aislamiento minimo
+es `opencode run --standalone` o una sesion nueva del humano, sin pegarle esta
+conversacion.
 
 En ODD la evidencia vive en el commit: asunto en imperativo y en el cuerpo
 `ODD: <por que> / <que se observo>`. Sin esa linea no es ODD: es un cambio
