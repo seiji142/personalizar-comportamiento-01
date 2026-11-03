@@ -229,3 +229,36 @@ alerta al usuario:
 > "Encontré [X] en memoria, pero mencionas [Y]. ¿Cuál es correcto?"
 
 No asumas que uno es correcto: pide confirmación.
+
+## 10. Worktrees y sesiones
+
+Un worktree es un checkout propio (carpeta + rama + `HEAD`). Es lo que permite
+que dos sesiones trabajen el mismo repo sin pisarse.
+
+- **Un worktree = una tarea = una rama.** Nunca dos tareas en la misma rama ni
+  dos ramas en el mismo worktree.
+- **La carpeta principal vive en `develop`** y no cambia de rama: las
+  `feature/*` se trabajan solo en worktree.
+- **`worktree_create` nace detached.** La rama se crea adentro, ya con la
+  sesión allí: `git_crear_rama` (MCP git_publisher), que crea **y** posiciona.
+  Sin rama, el commit no pertenece a nadie.
+- **El orden no es decorativo**: `git_crear_rama` crea y posiciona en el repo
+  donde está parada la sesión. Desde la carpeta principal eso es exactamente lo
+  que robó el `HEAD` el 2026-10-28. Con la sesión ya en el worktree, opera sobre
+  el worktree y no toca a nadie.
+- **Crear el worktree no basta: la sesión se muda ahí** (`session_move`).
+  Una sesión parada en la carpeta principal que le habla al worktree con
+  `git -C` deja el commit en la rama correcta, pero los paths relativos, los
+  permisos y `grep`/`glob` siguen apuntando a la carpeta compartida. Es el
+  mismo error del incidente, más silencioso: parece que trabajás en la
+  feature y editás `develop`.
+- **Guard de rama**: al iniciar dentro de un worktree, declarar en el primer
+  mensaje `git rev-parse --show-toplevel` y `git branch --show-current`. En la
+  carpeta principal, `git_ver_estado` antes de **cada** commit: si la rama no
+  es la esperada, no se commitea — se investiga.
+- **Cierre**: `git_worktree_eliminar` (MCP git_publisher). Nunca
+  `Remove-Item`/`rm`. Antes de borrar, la sesión se muda a la carpeta
+  principal (`session_move`): con el cwd dentro del worktree, el borrado en
+  Windows choca con el proceso vivo.
+
+Detalle operativo y ruta: `.ai/commands.md` §Worktrees.

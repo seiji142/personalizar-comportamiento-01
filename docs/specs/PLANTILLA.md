@@ -15,15 +15,22 @@ criterio_aceptacion: <frase verificable que el usuario confirma en el chat>
 > reanudacion o toca un escalador duro. Si es ODD, no se crea spec: la
 > evidencia va en el commit. Regla completa: `.ai/commands.md`.
 
-# PLANTILLA de spec (flujo spec-70%)
+# PLANTILLA de spec (rama SDD, no el default)
 
-Copia este archivo a `docs/specs/<tema>.md` y complétalo ANTES de
-implementar. El frontmatter es validable por script (ver
-`scripts/ci_checks.py`); el cuerpo se revisa con el humano. El spec
-principal debe cubrir ~70-80% del trabajo.
+Copia este archivo a `docs/specs/<tema>.md` **solo cuando el cambio se
+dispara a SDD**, y complétalo ANTES de implementar. El default es ODD, sin
+spec. El frontmatter es validable por script (ver `scripts/ci_checks.py`); el
+cuerpo se revisa con el humano. El spec principal debe cubrir ~70-80% del
+trabajo.
 
 ## 1. Problema
 ¿Qué problema resuelve? ¿Para quién?
+
+### Fallas conocidas
+
+Qué ya fallaba **antes** de este cambio. Sirve para no atribuirle al cambio
+un fallo preexistente: si un check falla después y estaba anotado acá, el
+spec no se cae por eso. Vale "ninguna"; lo que no vale es dejarlo en blanco.
 
 ## 2. Alcance
 - Incluye:
