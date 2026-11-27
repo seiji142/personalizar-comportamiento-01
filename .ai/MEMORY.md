@@ -1,5 +1,26 @@
 # Memoria Persistente - Instrucciones de Uso
 
+Dos capas, dos memorias distintas. No son alternativas: se complementan y ningún
+contenido se duplica en las dos.
+
+| Capa | Responde | Herramientas | Dónde vive |
+|---|---|---|---|
+| **Operativa (Engram)** | ¿qué estábamos haciendo, qué decidimos, qué quedó pendiente? | `mem_current_project`, `mem_context`, `mem_search`, `mem_get_observation`, `mem_save`, `mem_session_summary` | fuera del repo; la inyecta la config global de OpenCode (protocolo Engram) |
+| **Conocimiento (brain-ai)** | ¿qué se decidió y por qué, con qué evidencia? ¿qué handle corresponde a un secreto? | `brain-ai_memory_search`, `brain-ai_memory_save`, `brain-ai_memory_consolidate`, `brain-ai_resolver_referencia`, `brain-ai_ejecutar_accion` | servidor brain-ai-01 (este documento) |
+
+**Reparto.** Engram para lo operativo y en vuelo: contexto de sesión, decisiones
+todavía abiertas, handoff entre sesiones. brain-ai para el conocimiento que ya
+maduró: decisiones con evidencia, patrones de error, procedencia y handles de
+secretos.
+
+**Promoción.** Una decisión que se asienta sale de Engram hacia (a) un archivo
+versionado del repo, si un revisor tiene que verla en un PR, o (b) brain-ai, si es
+conocimiento durable que se va a buscar después. Nunca a las dos a la vez.
+
+**Lo que este documento NO repite:** la mecánica de Engram (proyecto, sesión,
+formato de guardado, conflictos) vive en el protocolo global de la config de
+OpenCode. Acá se documenta la capa brain-ai y el reparto entre las dos.
+
 ## Servidor
 - **Endpoint:** http://localhost:8000
 - **Proyecto:** personalizar-comportamiento-01

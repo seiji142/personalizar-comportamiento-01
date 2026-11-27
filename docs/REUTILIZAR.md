@@ -2,7 +2,7 @@
 
 Guía para adoptar el framework en otro proyecto.
 
-> **FRAMEWORK_VERSION: 2026.10.05.2** — el comando `/adoptar-framework`
+> **FRAMEWORK_VERSION: 2026.11.27.1** - el comando `/adoptar-framework`
 > instala esta versión y el proyecto destino la anota en su README.
 > Capas: Núcleo (siempre) ≠ dominios de ejemplo (MCP YouTube, corpus de
 > videos — solo si se piden) ≠ gitflow (solo si se pide).
@@ -46,7 +46,7 @@ Guía para adoptar el framework en otro proyecto.
 | `.agents/skills/` (my-review, my-review-security, fx-test, fx-changelog, fx-replan) | Este proyecto | Skills genéricos invocables por nombre |
 | `docs/specs/PLANTILLA.md` | Este proyecto | Plantilla de spec con frontmatter validable |
 | `scripts/ci_checks.py` | Este proyecto | CI de artefactos stdlib (checks docs/specs se auto-omiten) |
-| `.github/workflows/ci.yml` | Crear (plantilla mínima en el comando) | Job `build`: Python 3.12 + `ci_checks.py` |
+| `.github/workflows/ci.yml` | Copiar `templates/ci-base.yml` y descomentar el bloque del stack | Job `artefactos`: Python 3.12 + `ci_checks.py` (verde día uno); tests por stack opt-in |
 | `docs/CHANGELOG.md` | Este proyecto (`docs/PLANTILLA-CHANGELOG.md`) | Registro de merges + índice de lecciones |
 | `src/`, `tests/`, `docs/`, `scripts/` (con `.gitkeep` + `README.md` breve) | Crear nuevos | Estructura base de código, pruebas, documentación y tooling |
 | `.env.example` | Crear nuevo | Plantilla con las variables que el proyecto necesita |
@@ -57,8 +57,9 @@ Guía para adoptar el framework en otro proyecto.
 ### Opcional MCP brain-ai (solo si se pide)
 
 Secciones `brain-ai_*` en `system.md`, §9 de `rules.md` (procedencia/handles),
-tools de memoria en `commands.md`/`MEMORY.md` y bloque `mcp.brain-ai` en
-`opencode.json`.
+las tools brain-ai de `MEMORY.md` y bloque `mcp.brain-ai` en `opencode.json`.
+La capa **Engram** de `MEMORY.md` no es opcional: la inyecta la config global de
+OpenCode en todos los proyectos, y el reparto entre las dos capas va siempre.
 
 ### Opcional gitflow (solo si se pide)
 
@@ -71,6 +72,19 @@ tools de memoria en `commands.md`/`MEMORY.md` y bloque `mcp.brain-ai` en
 | `VERSION` + `CHANGELOG.md` | Template | Control de versiones del kit para upgrades |
 
 **No incluye nunca:** la suite de tests (`src/doc/ESTRUCTURA/`). Los tests son específicos de este proyecto.
+
+### Opcional registro de issues (solo si se pide)
+
+| Componente | Fuente | Descripción |
+|------------|--------|-------------|
+| `templates/issues/` | Este proyecto | Capa completa: validador, esqueleto del registro, metodología, skill y tests |
+
+Es el registro "qué está roto y qué se reparó", con cierre **sólo humano** por
+frase literal. Se copia desde `templates/issues/` a las rutas del proyecto; el
+detalle de cada archivo está en `templates/issues/README.md`.
+
+El hook del CI es **condicional**: sin `docs/issue/LISTA-ISSUES.md` no aplica,
+así que el Núcleo queda verde aunque la capa no se adopte.
 
 ---
 
@@ -101,6 +115,32 @@ nuevo-proyecto/
 └── README.md              # Documentación principal (+ FRAMEWORK_VERSION)
 ```
 
+### Carga de contexto: siempre vs bajo demanda
+
+`opencode.json` → `instructions` NO tiene que listar los 6 archivos de `.ai/`.
+Hay dos formas válidas y la elección depende de cuánto pesa la documentación del
+proyecto:
+
+| Forma | `instructions` | Cuándo |
+|---|---|---|
+| **Todo cargado** | los 6 (`system`, `rules`, `context`, `commands`, `agents`, `MEMORY`) | proyecto chico, sin `docs/` grande |
+| **Bajo demanda (recomendada)** | los 4 estables (`system`, `rules`, `context`, `agents`) | proyecto con `docs/` o `MEMORY.md` grandes |
+
+En la forma bajo demanda, **`AGENTS.md` raíz es el índice**: una tabla
+`| Tema | Archivo | Cuándo leerlo |` que dispara la lectura de `commands.md`,
+`MEMORY.md` y `docs/**` sólo cuando la tarea los toca.
+
+- **Por qué**: cada turno paga el contexto completo; un archivo que se lee una vez
+  por sesión no tiene por qué viajar en todas las llamadas. La documentación
+  grande cargada siempre consume el presupuesto de tokens del modelo.
+- **La contra, y por eso el índice es obligatorio**: lo que no está en
+  `instructions` no se lee solo. Si `AGENTS.md` no dice *cuándo* leer cada
+  archivo, no se lee nunca. El índice tiene que estar siempre cargado y ser
+  explícito: tema + archivo + disparador.
+- `commands.md` y `MEMORY.md` son los candidatos naturales a bajo demanda: se
+  necesitan al commitear/publicar (ODD) y al guardar o buscar memoria, no en
+  cada respuesta.
+
 ### Bloques opcionales (solo si se piden)
 
 ```
@@ -121,7 +161,7 @@ nuevo-proyecto/
 | `.ai/context.md` | Estructura de plantilla | Todo el contenido (stack, arquitectura, variables) | — | Convenciones de tests específicas |
 | `.ai/agents.md` | **Todo (100% común)** | — | — | — |
 | `.ai/commands.md` | Estructura general, nota de comandos slash | Checklist pre-PR con tests del nuevo proyecto | Tablas de tools brain-ai, sección de publicación con gh-publish | Variante B específica de este proyecto |
-| `.ai/MEMORY.md` | Categorías de memoria, qué (no) guardar, flujo conceptual | Nombre de proyecto | Descripción de tools, params (`project`/`top_k`/`collection`), hallazgos fechados | 429 TPD, incidentes específicos |
+| `.ai/MEMORY.md` | **Reparto de las dos capas** (Engram operativa + brain-ai de conocimiento) y categorías de memoria | Nombre de proyecto | Descripción de tools brain-ai, params (`project`/`top_k`/`collection`) y consolidación | Hallazgos fechados, 429 TPD, incidentes específicos |
 | `scripts/gh-publish.ps1` | **Casi todo** (es del template) | Comentario "Python sin GitHub Pages" | — | — |
 | `.github/workflows/ci.yml` | Estructura y triggers | `<RUTA_APP>`, pasos de test al stack del nuevo proyecto | — | Comandos de test de este proyecto |
 | `.github/workflows/deploy.yml` | Solo si el nuevo proyecto usa GitHub Pages | `<SUB_PROYECTO>` | — | — |
@@ -197,9 +237,18 @@ Agregar bloque `mcp.brain-ai` en `opencode.json` y restaurar las secciones
 
 ### 7. Opcional gitflow (solo si se pide explícitamente)
 
+Forma preferida: invocar `/adoptar-gitflow` en el proyecto destino.
+Fusiona el job `build` en el mismo `.github/workflows/ci.yml` sin borrar
+`artefactos` (prohibido `cp` directo de `ci.yml`) y registra el flujo en
+`.ai/` (Ramas en `context.md`, Publicación en `commands.md`). `deploy.yml`
+solo si Pages. Fallback manual: copiar `gh-publish.ps1` y `VERSION` desde el
+scaffold, para `ci.yml` insertar el job `build` a mano con `<RUTA_APP>`
+adaptado (no reemplazar el archivo) y registrar Ramas/Publicación en `.ai/`
+(ver `TEMPLATE_GITFLOW_GH_PAGES.md` Fase 2).
+
 ```bash
 cp Proyecto\ AI/templates/gitflow-scaffold/scripts/gh-publish.ps1 /ruta/nuevo-proyecto/scripts/
-cp Proyecto\ AI/templates/gitflow-scaffold/.github/workflows/ci.yml /ruta/nuevo-proyecto/.github/workflows/
+# NO hacer cp directo de ci.yml (pisa artefactos). Usar /adoptar-gitflow.
 cp Proyecto\ AI/templates/gitflow-scaffold/.github/workflows/deploy.yml /ruta/nuevo-proyecto/.github/workflows/  # solo si Pages
 cp Proyecto\ AI/templates/gitflow-scaffold/VERSION /ruta/nuevo-proyecto/
 ```
@@ -216,7 +265,7 @@ Confirmar que las 8 instrucciones de "Guardrails Recomendados" siguen presentes.
 ## Checklist de Adopción
 
 ### Núcleo (bloqueante, siempre)
-- [ ] Copiar `.ai/`, `opencode.json` (sin `mcp`, con `skills.paths`), `AGENTS.md` y `.gitignore` desde este proyecto
+- [ ] Copiar `.ai/`, `opencode.json` (sin `mcp`, con `skills.paths`), `AGENTS.md` y `.gitignore` desde este proyecto; en `instructions`, los 4 estables y `AGENTS.md` como índice de los bajo demanda (ver §Carga de contexto)
 - [ ] Copiar `.agents/skills/`, `docs/specs/PLANTILLA.md`, `scripts/ci_checks.py` y crear `.github/workflows/ci.yml` + `docs/CHANGELOG.md` (plantilla)
 - [ ] Crear `src/`, `tests/`, `docs/`, `scripts/` con `.gitkeep` + `README.md` breve
 - [ ] Limpiar contenido no reutilizable (tabla "Qué copiar de cada archivo")
@@ -236,6 +285,11 @@ Confirmar que las 8 instrucciones de "Guardrails Recomendados" siguen presentes.
 - [ ] Copiar `gh-publish.ps1`, `ci.yml` (y `deploy.yml` si aplica) y `VERSION` desde el template gitflow-scaffold
 - [ ] Adaptar `ci.yml` con `<RUTA_APP>` y tests del stack
 - [ ] Ramas y protección de `main` según `TEMPLATE_GITFLOW_GH_PAGES.md`
+
+### Opcional registro de issues (solo si se pidió)
+- [ ] Copiar `templates/issues/` a sus rutas (ver `templates/issues/README.md`)
+- [ ] Agregar la fila de ruteo en `AGENTS.md`
+- [ ] `python scripts/issue_state.py --write` y `python tests/test-issue-state.py` → 36 OK
 
 ---
 

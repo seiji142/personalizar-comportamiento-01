@@ -11,15 +11,26 @@ tablas_impactadas: []
 criterio_aceptacion: <frase verificable que el usuario confirma en el chat>
 ---
 
-# PLANTILLA de spec (flujo spec-70%)
+> **¿Aplica esta plantilla?** Solo si el cambio falla la prueba de
+> reanudacion o toca un escalador duro. Si es ODD, no se crea spec: la
+> evidencia va en el commit. Regla completa: `.ai/commands.md`.
 
-Copia este archivo a `docs/specs/<tema>.md` y complétalo ANTES de
-implementar. El frontmatter es validable por script (ver
-`scripts/ci_checks.py`); el cuerpo se revisa con el humano. El spec
-principal debe cubrir ~70-80% del trabajo.
+# PLANTILLA de spec (rama SDD, no el default)
+
+Copia este archivo a `docs/specs/<tema>.md` **solo cuando el cambio se
+dispara a SDD**, y complétalo ANTES de implementar. El default es ODD, sin
+spec. El frontmatter es validable por script (ver `scripts/ci_checks.py`); el
+cuerpo se revisa con el humano. El spec principal debe cubrir ~70-80% del
+trabajo.
 
 ## 1. Problema
 ¿Qué problema resuelve? ¿Para quién?
+
+### Fallas conocidas
+
+Qué ya fallaba **antes** de este cambio. Sirve para no atribuirle al cambio
+un fallo preexistente: si un check falla después y estaba anotado acá, el
+spec no se cae por eso. Vale "ninguna"; lo que no vale es dejarlo en blanco.
 
 ## 2. Alcance
 - Incluye:
@@ -61,3 +72,9 @@ solución):
 **Hotfix (excepción explícita)**: si la urgencia impide el spec previo, se
 aplica directo PERO deja trazabilidad (qué, por qué, riesgo) y tests
 después, en el mismo día. Sin excepción silenciosa.
+
+## 9. Log del cambio (opcional, solo si hubo correcciones)
+
+`L1` = pedido original del usuario, literal. Debajo, en orden: correcciones,
+evidencia observada y por que. Un cambio de requisito reescribe solo la
+parte afectada y reabre solo su tarea. No sustituye a §6 ni a §8.
