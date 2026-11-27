@@ -148,8 +148,9 @@ Parámetros:
 Para operaciones de git DEBES usar las herramientas MCP `git_*` del servidor
 `git_publisher`, NUNCA comandos bash directos. Excepciones sancionadas, a
 justificar en 1 línea en la respuesta: cross-repo o fuera del cwd de la
-sesión, `push -u` cuando falla por falta de upstream, y setup inicial (ver
-skill `fx-git`).
+sesión, `push -u` cuando falla por falta de upstream, y setup inicial. El detalle
+está en la skill `fx-git`, que instala `/adoptar-gitflow` cuando el proyecto
+adopta gitflow.
 
 | Herramienta | Uso |
 |-------------|-----|
