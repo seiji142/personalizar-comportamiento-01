@@ -57,8 +57,9 @@ Guía para adoptar el framework en otro proyecto.
 ### Opcional MCP brain-ai (solo si se pide)
 
 Secciones `brain-ai_*` en `system.md`, §9 de `rules.md` (procedencia/handles),
-tools de memoria en `commands.md`/`MEMORY.md` y bloque `mcp.brain-ai` en
-`opencode.json`.
+las tools brain-ai de `MEMORY.md` y bloque `mcp.brain-ai` en `opencode.json`.
+La capa **Engram** de `MEMORY.md` no es opcional: la inyecta la config global de
+OpenCode en todos los proyectos, y el reparto entre las dos capas va siempre.
 
 ### Opcional gitflow (solo si se pide)
 
@@ -121,7 +122,7 @@ nuevo-proyecto/
 | `.ai/context.md` | Estructura de plantilla | Todo el contenido (stack, arquitectura, variables) | — | Convenciones de tests específicas |
 | `.ai/agents.md` | **Todo (100% común)** | — | — | — |
 | `.ai/commands.md` | Estructura general, nota de comandos slash | Checklist pre-PR con tests del nuevo proyecto | Tablas de tools brain-ai, sección de publicación con gh-publish | Variante B específica de este proyecto |
-| `.ai/MEMORY.md` | Categorías de memoria, qué (no) guardar, flujo conceptual | Nombre de proyecto | Descripción de tools, params (`project`/`top_k`/`collection`), hallazgos fechados | 429 TPD, incidentes específicos |
+| `.ai/MEMORY.md` | **Reparto de las dos capas** (Engram operativa + brain-ai de conocimiento) y categorías de memoria | Nombre de proyecto | Descripción de tools brain-ai, params (`project`/`top_k`/`collection`) y consolidación | Hallazgos fechados, 429 TPD, incidentes específicos |
 | `scripts/gh-publish.ps1` | **Casi todo** (es del template) | Comentario "Python sin GitHub Pages" | — | — |
 | `.github/workflows/ci.yml` | Estructura y triggers | `<RUTA_APP>`, pasos de test al stack del nuevo proyecto | — | Comandos de test de este proyecto |
 | `.github/workflows/deploy.yml` | Solo si el nuevo proyecto usa GitHub Pages | `<SUB_PROYECTO>` | — | — |
