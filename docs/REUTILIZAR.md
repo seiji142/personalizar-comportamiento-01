@@ -2,7 +2,7 @@
 
 Guía para adoptar el framework en otro proyecto.
 
-> **FRAMEWORK_VERSION: 2026.10.05.2** — el comando `/adoptar-framework`
+> **FRAMEWORK_VERSION: 2026.11.27.1** - el comando `/adoptar-framework`
 > instala esta versión y el proyecto destino la anota en su README.
 > Capas: Núcleo (siempre) ≠ dominios de ejemplo (MCP YouTube, corpus de
 > videos — solo si se piden) ≠ gitflow (solo si se pide).
@@ -72,6 +72,19 @@ OpenCode en todos los proyectos, y el reparto entre las dos capas va siempre.
 | `VERSION` + `CHANGELOG.md` | Template | Control de versiones del kit para upgrades |
 
 **No incluye nunca:** la suite de tests (`src/doc/ESTRUCTURA/`). Los tests son específicos de este proyecto.
+
+### Opcional registro de issues (solo si se pide)
+
+| Componente | Fuente | Descripción |
+|------------|--------|-------------|
+| `templates/issues/` | Este proyecto | Capa completa: validador, esqueleto del registro, metodología, skill y tests |
+
+Es el registro "qué está roto y qué se reparó", con cierre **sólo humano** por
+frase literal. Se copia desde `templates/issues/` a las rutas del proyecto; el
+detalle de cada archivo está en `templates/issues/README.md`.
+
+El hook del CI es **condicional**: sin `docs/issue/LISTA-ISSUES.md` no aplica,
+así que el Núcleo queda verde aunque la capa no se adopte.
 
 ---
 
@@ -272,6 +285,11 @@ Confirmar que las 8 instrucciones de "Guardrails Recomendados" siguen presentes.
 - [ ] Copiar `gh-publish.ps1`, `ci.yml` (y `deploy.yml` si aplica) y `VERSION` desde el template gitflow-scaffold
 - [ ] Adaptar `ci.yml` con `<RUTA_APP>` y tests del stack
 - [ ] Ramas y protección de `main` según `TEMPLATE_GITFLOW_GH_PAGES.md`
+
+### Opcional registro de issues (solo si se pidió)
+- [ ] Copiar `templates/issues/` a sus rutas (ver `templates/issues/README.md`)
+- [ ] Agregar la fila de ruteo en `AGENTS.md`
+- [ ] `python scripts/issue_state.py --write` y `python tests/test-issue-state.py` → 36 OK
 
 ---
 
