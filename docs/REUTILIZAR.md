@@ -102,6 +102,32 @@ nuevo-proyecto/
 └── README.md              # Documentación principal (+ FRAMEWORK_VERSION)
 ```
 
+### Carga de contexto: siempre vs bajo demanda
+
+`opencode.json` → `instructions` NO tiene que listar los 6 archivos de `.ai/`.
+Hay dos formas válidas y la elección depende de cuánto pesa la documentación del
+proyecto:
+
+| Forma | `instructions` | Cuándo |
+|---|---|---|
+| **Todo cargado** | los 6 (`system`, `rules`, `context`, `commands`, `agents`, `MEMORY`) | proyecto chico, sin `docs/` grande |
+| **Bajo demanda (recomendada)** | los 4 estables (`system`, `rules`, `context`, `agents`) | proyecto con `docs/` o `MEMORY.md` grandes |
+
+En la forma bajo demanda, **`AGENTS.md` raíz es el índice**: una tabla
+`| Tema | Archivo | Cuándo leerlo |` que dispara la lectura de `commands.md`,
+`MEMORY.md` y `docs/**` sólo cuando la tarea los toca.
+
+- **Por qué**: cada turno paga el contexto completo; un archivo que se lee una vez
+  por sesión no tiene por qué viajar en todas las llamadas. La documentación
+  grande cargada siempre consume el presupuesto de tokens del modelo.
+- **La contra, y por eso el índice es obligatorio**: lo que no está en
+  `instructions` no se lee solo. Si `AGENTS.md` no dice *cuándo* leer cada
+  archivo, no se lee nunca. El índice tiene que estar siempre cargado y ser
+  explícito: tema + archivo + disparador.
+- `commands.md` y `MEMORY.md` son los candidatos naturales a bajo demanda: se
+  necesitan al commitear/publicar (ODD) y al guardar o buscar memoria, no en
+  cada respuesta.
+
 ### Bloques opcionales (solo si se piden)
 
 ```
@@ -226,7 +252,7 @@ Confirmar que las 8 instrucciones de "Guardrails Recomendados" siguen presentes.
 ## Checklist de Adopción
 
 ### Núcleo (bloqueante, siempre)
-- [ ] Copiar `.ai/`, `opencode.json` (sin `mcp`, con `skills.paths`), `AGENTS.md` y `.gitignore` desde este proyecto
+- [ ] Copiar `.ai/`, `opencode.json` (sin `mcp`, con `skills.paths`), `AGENTS.md` y `.gitignore` desde este proyecto; en `instructions`, los 4 estables y `AGENTS.md` como índice de los bajo demanda (ver §Carga de contexto)
 - [ ] Copiar `.agents/skills/`, `docs/specs/PLANTILLA.md`, `scripts/ci_checks.py` y crear `.github/workflows/ci.yml` + `docs/CHANGELOG.md` (plantilla)
 - [ ] Crear `src/`, `tests/`, `docs/`, `scripts/` con `.gitkeep` + `README.md` breve
 - [ ] Limpiar contenido no reutilizable (tabla "Qué copiar de cada archivo")
